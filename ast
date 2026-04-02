@@ -1,0 +1,347 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# ── Constants ───────────────────────────────────────
+readonly VERSION="0.1.0"
+readonly BASE_URL="https://aistupidlevel.info"
+readonly DASHBOARD_URL="${BASE_URL}/dashboard/cached?period=latest&sortBy=combined&analyticsPeriod=latest"
+readonly GLOBAL_INDEX_URL="${BASE_URL}/dashboard/global-index"
+readonly BOX_WIDTH=54
+
+# ── Dependency Check ────────────────────────────────
+if ! command -v jq &>/dev/null; then
+  echo "Error: jq is required but not installed."
+  echo "Install it via: brew install jq"
+  exit 1
+fi
+
+if ! command -v curl &>/dev/null; then
+  echo "Error: curl is required but not installed."
+  exit 1
+fi
+
+# ── Colors ──────────────────────────────────────────
+if [[ -n "${NO_COLOR:-}" ]]; then
+  RST="" BOLD="" DIM="" RED="" GREEN="" YELLOW="" CYAN="" GRAY="" WHITE=""
+else
+  RST='\033[0m'
+  BOLD='\033[1m'
+  DIM='\033[2m'
+  RED='\033[31m'
+  GREEN='\033[32m'
+  YELLOW='\033[33m'
+  CYAN='\033[36m'
+  GRAY='\033[90m'
+  WHITE='\033[97m'
+fi
+
+# ── Symbols ─────────────────────────────────────────
+readonly SYM_CHECK='✓'
+readonly SYM_CROSS='✗'
+readonly SYM_WARN='⚠'
+readonly SYM_DIAMOND='◆'
+readonly SYM_ARROW='→'
+readonly SYM_BULLET='•'
+
+# ── Box Drawing Helpers ─────────────────────────────
+box_top() {
+  local title="$1"
+  local title_len=${#title}
+  local dashes=$((BOX_WIDTH - title_len - 5))
+  printf "  ${DIM}╭──${RST} ${BOLD}%s${RST} ${DIM}%s╮${RST}\n" "$title" "$(printf '%*s' "$dashes" '' | tr ' ' '─')"
+}
+
+box_row() {
+  local content="$1"
+  # Strip ANSI codes to calculate visible length
+  local stripped
+  stripped=$(printf '%b' "$content" | sed $'s/\033\\[[0-9;]*m//g')
+  local visible_len=${#stripped}
+  local padding=$((BOX_WIDTH - visible_len - 3))
+  if ((padding < 0)); then padding=0; fi
+  printf "  ${DIM}│${RST} %b%*s ${DIM}│${RST}\n" "$content" "$padding" ""
+}
+
+box_bottom() {
+  printf "  ${DIM}╰%s╯${RST}\n" "$(printf '%*s' $((BOX_WIDTH - 2)) '' | tr ' ' '─')"
+}
+
+box_empty() {
+  box_row "${GRAY}$1"
+}
+
+# ── Dot Leader Helper ───────────────────────────────
+dot_row() {
+  local label="$1" value="$2"
+  local label_stripped
+  label_stripped=$(printf '%b' "$label" | sed $'s/\033\\[[0-9;]*m//g')
+  local value_stripped
+  value_stripped=$(printf '%b' "$value" | sed $'s/\033\\[[0-9;]*m//g')
+  local total_content=$((${#label_stripped} + ${#value_stripped}))
+  local dots=$((BOX_WIDTH - total_content - 5))
+  if ((dots < 2)); then dots=2; fi
+  local dot_str
+  dot_str=$(printf '%*s' "$dots" '' | tr ' ' '·')
+  box_row "${label} ${DIM}${dot_str}${RST} ${value}"
+}
+
+# ── Status Color Helper ─────────────────────────────
+status_color() {
+  local status="$1"
+  case "$status" in
+    stable|good)      printf '%b' "${GREEN}" ;;
+    volatile|warning|minor) printf '%b' "${YELLOW}" ;;
+    degraded|critical|unreliable|major) printf '%b' "${RED}" ;;
+    recovering)       printf '%b' "${CYAN}" ;;
+    *)               printf '%b' "${RST}" ;;
+  esac
+}
+
+status_label() {
+  local status="$1"
+  case "$status" in
+    stable|good)     echo "STABLE" ;;
+    volatile|warning) echo "VOLATILE" ;;
+    degraded|critical) echo "DEGRADED" ;;
+    recovering)      echo "RECOVERING" ;;
+    *)               echo "$status" | tr '[:lower:]' '[:upper:]' ;;
+  esac
+}
+
+# ── Fetch Data ──────────────────────────────────────
+fetch_data() {
+  local url="$1"
+  local response
+  response=$(curl -sf --max-time 10 "$url" 2>/dev/null)
+  if [[ -z "$response" ]]; then
+    printf "  ${RED}${SYM_CROSS} Failed to fetch data from API${RST}\n"
+    exit 1
+  fi
+  echo "$response"
+}
+
+# ── Main ────────────────────────────────────────────
+main() {
+  # Fetch both endpoints
+  local dashboard global_index
+  dashboard=$(fetch_data "$DASHBOARD_URL")
+  global_index=$(fetch_data "$GLOBAL_INDEX_URL")
+
+  local now
+  now=$(date +"%Y-%m-%d %H:%M")
+
+  # ── Header ──────────────────────────────────────
+  printf "\n"
+  printf "  ${BOLD}${CYAN}${SYM_DIAMOND} AST${RST}  ${DIM}v${VERSION} ${GRAY}${SYM_BULLET} ${now}${RST}\n"
+  printf "\n"
+
+  # ── Global Index ────────────────────────────────
+  local g_score g_trend g_performing g_total
+  g_score=$(echo "$global_index" | jq -r '.data.current.globalScore')
+  g_trend=$(echo "$global_index" | jq -r '.data.trend')
+  g_performing=$(echo "$global_index" | jq -r '.data.performingWell')
+  g_total=$(echo "$global_index" | jq -r '.data.totalModels')
+
+  local trend_color
+  trend_color=$(status_color "$g_trend")
+
+  box_top "Global Index"
+  dot_row "Score" "${BOLD}${trend_color}${g_score}${RST}/100 ${trend_color}$(status_label "$g_trend")${RST}"
+  dot_row "Models performing well" "${BOLD}${g_performing}${RST}/${g_total}"
+  box_bottom
+  printf "\n"
+
+  # ── Claude Rankings ─────────────────────────────
+  local claude_models
+  claude_models=$(echo "$dashboard" | jq -r '
+    [.data.modelScores | to_entries[] |
+     select(.value.provider == "anthropic") |
+     {rank: (.key + 1), name: .value.name, score: .value.currentScore, status: .value.status, trend: .value.trend}]
+  ')
+
+  local claude_count
+  claude_count=$(echo "$claude_models" | jq 'length')
+
+  box_top "Claude Rankings"
+  if ((claude_count == 0)); then
+    box_empty "No Claude models found in rankings"
+  else
+    echo "$claude_models" | jq -r '.[] | "\(.rank)|\(.name)|\(.score)|\(.status)"' | while IFS='|' read -r rank name score status; do
+      local sc
+      sc=$(status_color "$status")
+      local sl
+      sl=$(status_label "$status")
+      # Pad rank, name, score for alignment
+      local rank_str
+      rank_str=$(printf '#%-2s' "$rank")
+      local name_str
+      name_str=$(printf '%-28s' "$name")
+      local score_str
+      score_str=$(printf '%-3s' "$score")
+      box_row "${BOLD}${WHITE}${rank_str}${RST}  ${name_str} ${BOLD}${score_str}${RST} ${sc}${SYM_WARN} ${sl}${RST}"
+    done
+  fi
+  box_bottom
+  printf "\n"
+
+  # ── Best For Categories ─────────────────────────
+  local reco
+  reco=$(echo "$dashboard" | jq '.data.recommendations')
+
+  local best_code_vendor best_reliable_vendor best_fast_vendor best_value_vendor
+  best_code_vendor=$(echo "$reco" | jq -r '.bestForCode.vendor // empty')
+  best_reliable_vendor=$(echo "$reco" | jq -r '.mostReliable.vendor // empty')
+  best_fast_vendor=$(echo "$reco" | jq -r '.fastestResponse.vendor // empty')
+  # bestValue may be nested differently
+  best_value_vendor=$(echo "$reco" | jq -r '.bestValue.vendor // empty')
+
+  local has_best=false
+  local best_lines=()
+
+  if [[ "$best_code_vendor" == "anthropic" ]]; then
+    has_best=true
+    local name score
+    name=$(echo "$reco" | jq -r '.bestForCode.name')
+    score=$(echo "$reco" | jq -r '.bestForCode.score')
+    best_lines+=("${GREEN}${SYM_CHECK} BEST FOR CODE${RST}      ${name} (${BOLD}${score}${RST})")
+  fi
+
+  if [[ "$best_reliable_vendor" == "anthropic" ]]; then
+    has_best=true
+    local name score
+    name=$(echo "$reco" | jq -r '.mostReliable.name')
+    score=$(echo "$reco" | jq -r '.mostReliable.score')
+    best_lines+=("${GREEN}${SYM_CHECK} MOST RELIABLE${RST}     ${name} (${BOLD}${score}${RST})")
+  fi
+
+  if [[ "$best_fast_vendor" == "anthropic" ]]; then
+    has_best=true
+    local name score
+    name=$(echo "$reco" | jq -r '.fastestResponse.name')
+    score=$(echo "$reco" | jq -r '.fastestResponse.score')
+    best_lines+=("${GREEN}${SYM_CHECK} FASTEST RESPONSE${RST}  ${name} (${BOLD}${score}${RST})")
+  fi
+
+  if [[ "$best_value_vendor" == "anthropic" ]]; then
+    has_best=true
+    local name score
+    name=$(echo "$reco" | jq -r '.bestValue.name')
+    score=$(echo "$reco" | jq -r '.bestValue.score')
+    best_lines+=("${GREEN}${SYM_CHECK} BEST VALUE${RST}        ${name} (${BOLD}${score}${RST})")
+  fi
+
+  box_top "Best For Categories"
+  if [[ "$has_best" == false ]]; then
+    box_empty "No Claude model in any best-for category"
+  else
+    for line in "${best_lines[@]}"; do
+      box_row "$line"
+    done
+  fi
+  box_bottom
+  printf "\n"
+
+  # ── Alerts (Unreliable + Degradations) ──────────
+  # Check degradations for Claude models
+  local claude_degradations
+  claude_degradations=$(echo "$dashboard" | jq '[.data.degradations[] | select(.provider == "anthropic")]')
+  local deg_count
+  deg_count=$(echo "$claude_degradations" | jq 'length')
+
+  # Check avoidNow for Claude models
+  local avoid_models
+  avoid_models=$(echo "$reco" | jq -r '[(.avoidNow // [])[] | select(.vendor == "anthropic" or .provider == "anthropic")] | .[].name' 2>/dev/null)
+
+  local has_alerts=false
+  if [[ -n "$avoid_models" ]] || ((deg_count > 0)); then
+    has_alerts=true
+  fi
+
+  box_top "Alerts"
+  if [[ "$has_alerts" == false ]]; then
+    box_row "${GREEN}${SYM_CHECK} No active alerts for Claude models${RST}"
+  else
+    # Show models to avoid
+    if [[ -n "$avoid_models" ]]; then
+      echo "$avoid_models" | while read -r name; do
+        box_row "${RED}${SYM_CROSS} AVOID${RST}  ${name}"
+      done
+    fi
+
+    # Show degradations grouped by severity
+    if ((deg_count > 0)); then
+      echo "$claude_degradations" | jq -r '.[] | "\(.modelName)|\(.severity)|\(.type)|\(.message)"' | while IFS='|' read -r name severity dtype message; do
+        # Clean message: strip emoji, leading label, and truncate
+        local clean_msg
+        clean_msg=$(printf '%s' "$message" | LC_ALL=C tr -cd '\11\12\40-\176' | sed 's/^ *//; s/^[A-Z_ ]*: //')
+        # Truncate to fit box
+        if ((${#clean_msg} > BOX_WIDTH - 6)); then
+          clean_msg="${clean_msg:0:$((BOX_WIDTH - 9))}..."
+        fi
+        local sc
+        sc=$(status_color "$severity")
+        local label
+        case "$dtype" in
+          unstable_performance) label="UNSTABLE" ;;
+          critical_failure)     label="CRITICAL" ;;
+          performance_variance) label="VARIANCE" ;;
+          poor_performance)     label="POOR" ;;
+          *)                    label=$(echo "$severity" | tr '[:lower:]' '[:upper:]') ;;
+        esac
+        box_row "${sc}${SYM_WARN} ${label}${RST}  ${name}"
+        box_row "  ${DIM}${clean_msg}${RST}"
+      done
+    fi
+  fi
+  box_bottom
+  printf "\n"
+
+  # ── Anthropic Provider Trust ────────────────────
+  local provider_data
+  provider_data=$(echo "$dashboard" | jq '.data.providerReliability[] | select(.provider == "anthropic")')
+
+  if [[ -n "$provider_data" ]]; then
+    local trust_score trust_trend incidents
+    trust_score=$(echo "$provider_data" | jq -r '.trustScore')
+    trust_trend=$(echo "$provider_data" | jq -r '.trend')
+    incidents=$(echo "$provider_data" | jq -r '.incidentsPerMonth')
+
+    local tc
+    tc=$(status_color "$trust_trend")
+
+    box_top "Anthropic Provider Trust"
+    dot_row "Trust Score" "${BOLD}${tc}${trust_score}${RST}/100"
+    dot_row "Trend" "${tc}${trust_trend}${RST}"
+    dot_row "Incidents/month" "${YELLOW}${incidents}${RST}"
+    box_bottom
+    printf "\n"
+  fi
+
+  # ── Drift Incidents ─────────────────────────────
+  local claude_drift
+  claude_drift=$(echo "$dashboard" | jq '
+    [.data.driftIncidents // [] | .[] |
+     select(.provider == "anthropic" or (.modelName | test("claude"; "i")))] |
+    group_by(.modelName) |
+    map({name: .[0].modelName, severity: (.[0].severity // "unknown"), count: length})
+  ')
+  local drift_count
+  drift_count=$(echo "$claude_drift" | jq 'length')
+
+  if ((drift_count > 0)); then
+    box_top "Drift Incidents"
+    echo "$claude_drift" | jq -r '.[] | "\(.name)|\(.severity)|\(.count)"' | while IFS='|' read -r name severity count; do
+      local sc
+      sc=$(status_color "$severity")
+      local count_str=""
+      if ((count > 1)); then
+        count_str=" ${DIM}(${count}x)${RST}"
+      fi
+      box_row "${sc}${SYM_WARN}${RST} ${name}${count_str}"
+    done
+    box_bottom
+    printf "\n"
+  fi
+}
+
+main "$@"
