@@ -262,35 +262,13 @@ output_json() {
     '
 }
 
-# ── Main ────────────────────────────────────────────
-main() {
-  # Check for --json flag
-  local json_mode=false
-  for arg in "$@"; do
-    if [[ "$arg" == "--json" ]]; then
-      json_mode=true
-      break
-    fi
-  done
-
-  if [[ "$json_mode" == true ]]; then
-    output_json
-    return
-  fi
-
-  # Fetch both endpoints
-  spinner_start "Fetching Claude status"
-  local dashboard global_index
-  dashboard=$(fetch_data "$DASHBOARD_URL")
-  global_index=$(fetch_data "$GLOBAL_INDEX_URL")
-  spinner_stop
-
-  local now
-  now=$(date +"%Y-%m-%d %H:%M")
+# ── Render ─────────────────────────────────────────
+render() {
+  local dashboard="$1" global_index="$2" last_updated="$3"
 
   # ── Header ──────────────────────────────────────
   printf "\n"
-  printf "  ${BOLD}${CYAN}${SYM_DIAMOND} AST${RST}  ${DIM}v${VERSION} ${GRAY}${SYM_BULLET} ${now}${RST}\n"
+  printf "  ${BOLD}${CYAN}${SYM_DIAMOND} AST${RST}  ${DIM}v${VERSION} ${GRAY}${SYM_BULLET} ${last_updated}${RST}\n"
   printf "\n"
 
   # ── Global Index ────────────────────────────────
@@ -512,6 +490,72 @@ main() {
     box_bottom
     printf "\n"
   fi
+}
+
+# ── Main ────────────────────────────────────────────
+main() {
+  local json_mode=false
+  local watch_mode=false
+  for arg in "$@"; do
+    case "$arg" in
+      --json)  json_mode=true ;;
+      --watch) watch_mode=true ;;
+    esac
+  done
+
+  if [[ "$json_mode" == true ]]; then
+    output_json
+    return
+  fi
+
+  if [[ "$watch_mode" == true ]]; then
+    watch_loop
+    return
+  fi
+
+  # One-shot mode
+  spinner_start "Fetching Claude status"
+  local dashboard global_index
+  dashboard=$(fetch_data "$DASHBOARD_URL")
+  global_index=$(fetch_data "$GLOBAL_INDEX_URL")
+  spinner_stop
+
+  local now
+  now=$(date +"%Y-%m-%d %H:%M")
+
+  render "$dashboard" "$global_index" "$now"
+}
+
+# ── Watch Loop ─────────────────────────────────────
+watch_loop() {
+  local WATCH_INTERVAL=60
+
+  trap 'spinner_stop; exit 0' INT TERM
+
+  while true; do
+    # Clear screen and move to top
+    printf '\033[2J\033[H'
+
+    spinner_start "Fetching Claude status"
+    local dashboard global_index
+    dashboard=$(fetch_data "$DASHBOARD_URL")
+    global_index=$(fetch_data "$GLOBAL_INDEX_URL")
+    spinner_stop
+
+    local now
+    now=$(date +"%Y-%m-%d %H:%M")
+
+    printf '\033[2J\033[H'
+    render "$dashboard" "$global_index" "$now"
+
+    printf "  ${DIM}Last updated ${now} ${GRAY}${SYM_BULLET}${RST} ${DIM}refreshing every ${WATCH_INTERVAL}s ${GRAY}${SYM_BULLET}${RST} ${DIM}Ctrl+C to exit${RST}\n"
+
+    local i=0
+    while ((i < WATCH_INTERVAL)); do
+      sleep 1
+      ((i++))
+    done
+  done
 }
 
 main "$@"
