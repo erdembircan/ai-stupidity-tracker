@@ -198,14 +198,16 @@ output_json() {
   jq -n \
     --arg version "$VERSION" \
     --arg timestamp "$now" \
+    --arg provider "$PROVIDER" \
+    --arg model_pattern "$MODEL_NAME_PATTERN" \
     --argjson global_index "$global_index" \
     --argjson dashboard "$dashboard" \
     --argjson reco "$reco" \
     '
-    # Global index
     {
       version: $version,
       timestamp: $timestamp,
+      provider: $provider,
       globalIndex: {
         score: $global_index.data.current.globalScore,
         trend: $global_index.data.trend,
@@ -213,10 +215,9 @@ output_json() {
         totalModels: $global_index.data.totalModels
       },
 
-      # Claude rankings
-      claudeRankings: [
+      rankings: [
         $dashboard.data.modelScores | to_entries[] |
-        select(.value.provider == "anthropic") |
+        select(.value.provider == $provider) |
         {
           rank: (.key + 1),
           name: .value.name,
@@ -230,32 +231,30 @@ output_json() {
         }
       ],
 
-      # Best for categories
       bestFor: {
-        code: (if $reco.bestForCode.vendor == "anthropic"
+        code: (if $reco.bestForCode.vendor == $provider
           then {name: $reco.bestForCode.name, score: $reco.bestForCode.score}
           else null end),
-        reliable: (if $reco.mostReliable.vendor == "anthropic"
+        reliable: (if $reco.mostReliable.vendor == $provider
           then {name: $reco.mostReliable.name, score: $reco.mostReliable.score}
           else null end),
-        fastest: (if $reco.fastestResponse.vendor == "anthropic"
+        fastest: (if $reco.fastestResponse.vendor == $provider
           then {name: $reco.fastestResponse.name, score: $reco.fastestResponse.score}
           else null end),
-        value: (if ($reco.bestValue // {}).vendor == "anthropic"
+        value: (if ($reco.bestValue // {}).vendor == $provider
           then {name: $reco.bestValue.name, score: $reco.bestValue.score}
           else null end)
       },
 
-      # Alerts
       alerts: {
         avoid: [
           ($reco.avoidNow // [])[] |
-          select(.vendor == "anthropic" or .provider == "anthropic") |
+          select(.vendor == $provider or .provider == $provider) |
           .name
         ],
         degradations: [
           $dashboard.data.degradations[] |
-          select(.provider == "anthropic") |
+          select(.provider == $provider) |
           {
             model: .modelName,
             severity: .severity,
@@ -265,9 +264,8 @@ output_json() {
         ]
       },
 
-      # Provider trust
       providerTrust: (
-        [$dashboard.data.providerReliability[] | select(.provider == "anthropic")] |
+        [$dashboard.data.providerReliability[] | select(.provider == $provider)] |
         if length > 0 then
           .[0] | {
             score: .trustScore,
@@ -277,10 +275,9 @@ output_json() {
         else null end
       ),
 
-      # Drift incidents
       driftIncidents: [
         ($dashboard.data.driftIncidents // []) |
-        [.[] | select(.provider == "anthropic" or (.modelName | test("claude"; "i")))] |
+        [.[] | select(.provider == $provider or (.modelName | test($model_pattern; "i")))] |
         group_by(.modelName)[] |
         {
           model: .[0].modelName,
@@ -305,34 +302,34 @@ render() {
 
   # ── Extract all dashboard data in one call ──────
   local d
-  d=$(printf '%s\n' "$dashboard" | jq '
-    (.data.modelScores | to_entries | [.[] | select(.value.provider == "anthropic")]) as $claude |
+  d=$(printf '%s\n' "$dashboard" | jq --arg provider "$PROVIDER" --arg model_pattern "$MODEL_NAME_PATTERN" '
+    (.data.modelScores | to_entries | [.[] | select(.value.provider == $provider)]) as $models |
     (.data.recommendations) as $reco |
     {
       goodModels: ([.data.modelScores[] | select(.status == "good") | .name] | join(", ")),
-      claudeModels: [$claude[] | {rank: (.key + 1), name: .value.name, score: .value.currentScore, status: .value.status}],
-      claudeCount: ($claude | length),
-      maxNameLen: ([$claude[].value.name | length] | max // 0),
+      models: [$models[] | {rank: (.key + 1), name: .value.name, score: .value.currentScore, status: .value.status}],
+      modelCount: ($models | length),
+      maxNameLen: ([$models[].value.name | length] | max // 0),
       bestFor: [
-        (if $reco.bestForCode.vendor == "anthropic"
-         then {label: "BEST FOR CODE", pad: 6, name: $reco.bestForCode.name, score: $reco.bestForCode.score} else empty end),
-        (if $reco.mostReliable.vendor == "anthropic"
+        (if $reco.bestForCode.vendor == $provider
+         then {label: "BEST FOR CODE", pad: 5, name: $reco.bestForCode.name, score: $reco.bestForCode.score} else empty end),
+        (if $reco.mostReliable.vendor == $provider
          then {label: "MOST RELIABLE", pad: 5, name: $reco.mostReliable.name, score: $reco.mostReliable.score} else empty end),
-        (if $reco.fastestResponse.vendor == "anthropic"
+        (if $reco.fastestResponse.vendor == $provider
          then {label: "FASTEST RESPONSE", pad: 2, name: $reco.fastestResponse.name, score: $reco.fastestResponse.score} else empty end),
-        (if ($reco.bestValue // {}).vendor == "anthropic"
+        (if ($reco.bestValue // {}).vendor == $provider
          then {label: "BEST VALUE", pad: 8, name: $reco.bestValue.name, score: $reco.bestValue.score} else empty end)
       ],
-      avoidNow: [($reco.avoidNow // [])[] | select(.vendor == "anthropic" or .provider == "anthropic") | .name],
-      degradations: [.data.degradations[] | select(.provider == "anthropic") | {name: .modelName, severity, type, message}],
+      avoidNow: [($reco.avoidNow // [])[] | select(.vendor == $provider or .provider == $provider) | .name],
+      degradations: [.data.degradations[] | select(.provider == $provider) | {name: .modelName, severity, type, message}],
       providerTrust: (
-        [.data.providerReliability[] | select(.provider == "anthropic")] |
+        [.data.providerReliability[] | select(.provider == $provider)] |
         if length > 0 then .[0] | {score: .trustScore, trend, incidents: .incidentsPerMonth}
         else null end
       ),
       driftIncidents: [
         (.data.driftIncidents // []) |
-        [.[] | select(.provider == "anthropic" or (.modelName | test("claude"; "i")))] |
+        [.[] | select(.provider == $provider or (.modelName | test($model_pattern; "i")))] |
         group_by(.modelName)[] |
         {name: .[0].modelName, severity: (.[0].severity // "unknown"), count: length}
       ]
@@ -340,9 +337,9 @@ render() {
   ')
 
   # ── Read all scalar fields from extracted data ──
-  local claude_count max_name_len best_count avoid_count deg_count drift_count
-  read -r claude_count max_name_len best_count avoid_count deg_count drift_count < <(
-    printf '%s\n' "$d" | jq -r '[.claudeCount, .maxNameLen, (.bestFor | length), (.avoidNow | length), (.degradations | length), (.driftIncidents | length)] | @tsv'
+  local model_count max_name_len best_count avoid_count deg_count drift_count
+  read -r model_count max_name_len best_count avoid_count deg_count drift_count < <(
+    printf '%s\n' "$d" | jq -r '[.modelCount, .maxNameLen, (.bestFor | length), (.avoidNow | length), (.degradations | length), (.driftIncidents | length)] | @tsv'
   )
   local good_models
   good_models=$(printf '%s\n' "$d" | jq -r '.goodModels')
@@ -369,12 +366,12 @@ render() {
   box_bottom
   printf "\n"
 
-  # ── Claude Rankings ─────────────────────────────
-  box_top "Claude Rankings"
-  if ((claude_count == 0)); then
-    box_empty "No Claude models found in rankings"
+  # ── Model Rankings ───────────────────────────────
+  box_top "${PROVIDER_LABEL} Rankings"
+  if ((model_count == 0)); then
+    box_empty "No ${PROVIDER_LABEL} models found in rankings"
   else
-    printf '%s\n' "$d" | jq -r '.claudeModels[] | "\(.rank)|\(.name)|\(.score)|\(.status)"' | while IFS='|' read -r rank name score status; do
+    printf '%s\n' "$d" | jq -r '.models[] | "\(.rank)|\(.name)|\(.score)|\(.status)"' | while IFS='|' read -r rank name score status; do
       local sc
       sc=$(status_color "$status")
       local sl
@@ -419,7 +416,7 @@ render() {
   # ── Best For Categories ─────────────────────────
   box_top "Best For Categories"
   if ((best_count == 0)); then
-    box_empty "No Claude model in any best-for category"
+    box_empty "No ${PROVIDER_LABEL} model in any best-for category"
   else
     printf '%s\n' "$d" | jq -r '.bestFor[] | "\(.label)|\(.pad)|\(.name)|\(.score)"' | while IFS='|' read -r label pad_len name score; do
       local pad
@@ -433,7 +430,7 @@ render() {
   # ── Alerts (Unreliable + Degradations) ──────────
   box_top "Alerts"
   if ((avoid_count == 0)) && ((deg_count == 0)); then
-    box_row "${GREEN}${SYM_CHECK} No active alerts for Claude models${RST}"
+    box_row "${GREEN}${SYM_CHECK} No active alerts for ${PROVIDER_LABEL} models${RST}"
   else
     if ((avoid_count > 0)); then
       printf '%s\n' "$d" | jq -r '.avoidNow[]' | while read -r name; do
@@ -467,7 +464,7 @@ render() {
   box_bottom
   printf "\n"
 
-  # ── Anthropic Provider Trust ────────────────────
+  # ── Provider Trust ──────────────────────────────
   local trust_tsv
   trust_tsv=$(printf '%s\n' "$d" | jq -r 'if .providerTrust then [.providerTrust.score, .providerTrust.trend, .providerTrust.incidents] | @tsv else empty end')
   if [[ -n "$trust_tsv" ]]; then
@@ -476,7 +473,7 @@ render() {
     local tc
     tc=$(status_color "$trust_trend")
 
-    box_top "Anthropic Provider Trust"
+    box_top "${PROVIDER_LABEL} Provider Trust"
     dot_row "Trust Score" "${BOLD}${tc}${trust_score}${RST}/100"
     dot_row "Trend" "${tc}${trust_trend}${RST}"
     dot_row "Incidents/month" "${YELLOW}${incidents}${RST}"
@@ -506,12 +503,17 @@ main() {
   local json_mode=false
   local watch_mode=false
   local watch_interval=60
+  local provider_mode=claude
   while [[ $# -gt 0 ]]; do
     case "$1" in
     -h | --help)
       printf '%s\n' "  ${BOLD}${CYAN}${SYM_DIAMOND} AST${RST}  ${DIM}v${VERSION}${RST} — AI Stupidity Tracker"
       printf '\n'
-      printf '%s\n' "  ${BOLD}Usage:${RST}  ast [options]"
+      printf '%s\n' "  ${BOLD}Usage:${RST}  ast [--claude|--openai] [options]"
+      printf '\n'
+      printf '%s\n' "  ${BOLD}Provider:${RST}"
+      printf '%s\n' "    --claude            Track Claude/Anthropic models (default)"
+      printf '%s\n' "    --openai            Track OpenAI models"
       printf '\n'
       printf '%s\n' "  ${BOLD}Options:${RST}"
       printf '%s\n' "    --json              Machine-readable JSON output"
@@ -523,6 +525,8 @@ main() {
       exit 0
       ;;
     --json) json_mode=true ;;
+    --claude) provider_mode=claude ;;
+    --openai) provider_mode=openai ;;
     --watch=*)
       watch_mode=true
       watch_interval="${1#--watch=}"
@@ -540,17 +544,31 @@ main() {
       ;;
     -*)
       printf "  ${RED}${SYM_CROSS} Unknown option: %s${RST}\n" "$1"
-      printf "  Usage: ast [--json] [--watch[=SECONDS]] [--help]\n"
+      printf "  Usage: ast [--claude|--openai] [--json] [--watch[=SECONDS]] [--help]\n"
       exit 1
       ;;
     *)
       printf "  ${RED}${SYM_CROSS} Unexpected argument: %s${RST}\n" "$1"
-      printf "  Usage: ast [--json] [--watch[=SECONDS]] [--help]\n"
+      printf "  Usage: ast [--claude|--openai] [--json] [--watch[=SECONDS]] [--help]\n"
       exit 1
       ;;
     esac
     shift
   done
+
+  # Provider configuration
+  case "$provider_mode" in
+  claude)
+    PROVIDER="anthropic"
+    PROVIDER_LABEL="Claude"
+    MODEL_NAME_PATTERN="claude"
+    ;;
+  openai)
+    PROVIDER="openai"
+    PROVIDER_LABEL="OpenAI"
+    MODEL_NAME_PATTERN="gpt"
+    ;;
+  esac
 
   if [[ "$json_mode" == true ]]; then
     output_json
@@ -563,7 +581,7 @@ main() {
   fi
 
   # One-shot mode
-  spinner_start "Fetching Claude status"
+  spinner_start "Fetching ${PROVIDER_LABEL} status"
   local dashboard global_index
   dashboard=$(fetch_data "$DASHBOARD_URL")
   global_index=$(fetch_data "$GLOBAL_INDEX_URL")
@@ -586,7 +604,7 @@ watch_loop() {
   while true; do
     if [[ "$first_run" == true ]]; then
       # First run: show spinner since there's nothing on screen yet
-      spinner_start "Fetching Claude status"
+      spinner_start "Fetching ${PROVIDER_LABEL} status"
     fi
 
     local dashboard global_index
@@ -601,11 +619,11 @@ watch_loop() {
     local now
     now=$(date +"%Y-%m-%d %H:%M")
 
-    # Extract current Claude rankings as {name: rank} map
+    # Extract current rankings as {name: rank} map
     local curr_ranks
-    curr_ranks=$(echo "$dashboard" | jq '
+    curr_ranks=$(echo "$dashboard" | jq --arg provider "$PROVIDER" '
       [.data.modelScores | to_entries[] |
-       select(.value.provider == "anthropic")] |
+       select(.value.provider == $provider)] |
       map({(.value.name): (.key + 1)}) | add // {}
     ')
 

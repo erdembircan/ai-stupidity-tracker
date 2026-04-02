@@ -47,27 +47,35 @@ setup() {
   [ "$status" -eq 0 ]
   echo "$output" | jq -e '.version' >/dev/null
   echo "$output" | jq -e '.timestamp' >/dev/null
+  echo "$output" | jq -e '.provider' >/dev/null
   echo "$output" | jq -e '.globalIndex' >/dev/null
-  echo "$output" | jq -e '.claudeRankings' >/dev/null
+  echo "$output" | jq -e '.rankings' >/dev/null
   echo "$output" | jq -e '.bestFor' >/dev/null
   echo "$output" | jq -e '.alerts' >/dev/null
   echo "$output" | jq -e '.providerTrust' >/dev/null
   echo "$output" | jq -e '.driftIncidents' >/dev/null
 }
 
-@test "--json claudeRankings contains only anthropic models" {
+@test "--json default provider is anthropic" {
   run "$AST" --json
   [ "$status" -eq 0 ]
-  non_claude=$(echo "$output" | jq '[.claudeRankings[] | select(.name | test("claude"; "i") | not)] | length')
+  provider=$(echo "$output" | jq -r '.provider')
+  [ "$provider" = "anthropic" ]
+}
+
+@test "--json rankings contains only anthropic models by default" {
+  run "$AST" --json
+  [ "$status" -eq 0 ]
+  non_claude=$(echo "$output" | jq '[.rankings[] | select(.name | test("claude"; "i") | not)] | length')
   [ "$non_claude" -eq 0 ]
 }
 
-@test "--json claudeRankings entries have rank, name, score, status" {
+@test "--json rankings entries have rank, name, score, status" {
   run "$AST" --json
   [ "$status" -eq 0 ]
-  count=$(echo "$output" | jq '.claudeRankings | length')
+  count=$(echo "$output" | jq '.rankings | length')
   if [ "$count" -gt 0 ]; then
-    echo "$output" | jq -e '.claudeRankings[0] | .rank and .name and .score and .status' >/dev/null
+    echo "$output" | jq -e '.rankings[0] | .rank and .name and .score and .status' >/dev/null
   fi
 }
 
@@ -114,7 +122,7 @@ setup() {
   [[ "$output" == *"Global AI Index"* ]]
 }
 
-@test "default output contains Claude Rankings section" {
+@test "default output contains Claude Rankings section header" {
   run "$AST"
   [ "$status" -eq 0 ]
   [[ "$output" == *"Claude Rankings"* ]]
@@ -131,4 +139,104 @@ setup() {
   [ "$status" -eq 0 ]
   [[ "$output" == *"╭"* ]]
   [[ "$output" == *"╰"* ]]
+}
+
+# ── --claude Flag ───────────────────────────────────
+
+@test "--claude flag produces Claude Rankings header" {
+  run "$AST" --claude
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Claude Rankings"* ]]
+}
+
+@test "--claude --json sets provider to anthropic" {
+  run "$AST" --claude --json
+  [ "$status" -eq 0 ]
+  provider=$(echo "$output" | jq -r '.provider')
+  [ "$provider" = "anthropic" ]
+}
+
+# ── --openai Flag ───────────────────────────────────
+
+@test "--openai output contains OpenAI Rankings header" {
+  run "$AST" --openai
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"OpenAI Rankings"* ]]
+}
+
+@test "--openai output does not contain Claude Rankings" {
+  run "$AST" --openai
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"Claude Rankings"* ]]
+}
+
+@test "--openai output shows OpenAI Provider Trust header" {
+  run "$AST" --openai
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"OpenAI Provider Trust"* ]]
+}
+
+@test "--openai --json sets provider to openai" {
+  run "$AST" --openai --json
+  [ "$status" -eq 0 ]
+  provider=$(echo "$output" | jq -r '.provider')
+  [ "$provider" = "openai" ]
+}
+
+@test "--openai --json produces valid JSON" {
+  run "$AST" --openai --json
+  [ "$status" -eq 0 ]
+  echo "$output" | jq empty
+}
+
+@test "--openai --json rankings contain only openai models" {
+  run "$AST" --openai --json
+  [ "$status" -eq 0 ]
+  non_openai=$(echo "$output" | jq '[.rankings[] | select(.name | test("gpt"; "i") | not)] | length')
+  [ "$non_openai" -eq 0 ]
+}
+
+@test "--openai --json rankings entries have expected fields" {
+  run "$AST" --openai --json
+  [ "$status" -eq 0 ]
+  count=$(echo "$output" | jq '.rankings | length')
+  [ "$count" -gt 0 ]
+  echo "$output" | jq -e '.rankings[0] | .rank and .name and .score and .status' >/dev/null
+}
+
+@test "--openai --json bestFor reflects openai vendor" {
+  run "$AST" --openai --json
+  [ "$status" -eq 0 ]
+  # In the fixture, openai holds bestForCode
+  echo "$output" | jq -e '.bestFor.code' >/dev/null
+  code_name=$(echo "$output" | jq -r '.bestFor.code.name')
+  [[ "$code_name" == gpt* ]]
+}
+
+@test "--openai --json providerTrust is populated" {
+  run "$AST" --openai --json
+  [ "$status" -eq 0 ]
+  echo "$output" | jq -e '.providerTrust.score' >/dev/null
+}
+
+@test "--openai NO_COLOR output contains OpenAI Rankings" {
+  run env NO_COLOR=1 "$AST" --openai
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"OpenAI Rankings"* ]]
+  [[ "$output" == *"OpenAI Provider Trust"* ]]
+}
+
+# ── Flag Combinations ──────────────────────────────
+
+@test "last provider flag wins" {
+  run "$AST" --claude --openai --json
+  [ "$status" -eq 0 ]
+  provider=$(echo "$output" | jq -r '.provider')
+  [ "$provider" = "openai" ]
+}
+
+@test "--openai can combine with --json" {
+  run "$AST" --openai --json
+  [ "$status" -eq 0 ]
+  echo "$output" | jq -e '.rankings' >/dev/null
 }

@@ -2,18 +2,18 @@
 
 [![CI](https://github.com/erdembircan/ai-stupidity-tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/erdembircan/ai-stupidity-tracker/actions/workflows/ci.yml)
 
-A CLI tool that checks how Claude/Anthropic models are performing on [aistupidlevel.info](https://aistupidlevel.info/) — right from your terminal.
+A CLI tool that checks how Claude/Anthropic and OpenAI models are performing on [aistupidlevel.info](https://aistupidlevel.info/) — right from your terminal.
 
 ![AST screenshot](assets/screenshot.png)
 
 ## What it shows
 
 - **Global Index** — overall AI health score and trend
-- **Claude Rankings** — where all Claude models rank on the leaderboard
-- **Best For Categories** — whether Claude is best for code, most reliable, fastest, or best value
+- **Model Rankings** — where all tracked models rank on the leaderboard
+- **Best For Categories** — whether the provider is best for code, most reliable, fastest, or best value
 - **Alerts** — active degradations, instability warnings, and models to avoid
-- **Anthropic Provider Trust** — trust score, trend, and incident count
-- **Drift Incidents** — detected performance drift for Claude models
+- **Provider Trust** — trust score, trend, and incident count
+- **Drift Incidents** — detected performance drift for tracked models
 
 ## Requirements
 
@@ -36,12 +36,21 @@ ln -s "$(pwd)/ast" /usr/local/bin/ast
 ## Usage
 
 ```bash
-ast              # Claude status report
+ast              # Claude status report (default)
+ast --openai     # OpenAI status report
+ast --claude     # Claude status report (explicit)
 ast --watch      # Live dashboard, refreshes every 60s
 ast --watch 300  # Live dashboard, custom interval (300s)
 ast --json       # Machine-readable JSON output
 ast --help       # Show usage info
 NO_COLOR=1 ast   # Disable colors
+```
+
+Provider flags can be combined with any other option:
+
+```bash
+ast --openai --json       # OpenAI data as JSON
+ast --openai --watch      # Live OpenAI dashboard
 ```
 
 ## Development
