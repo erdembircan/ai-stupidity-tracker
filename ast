@@ -529,23 +529,30 @@ main() {
 # ── Watch Loop ─────────────────────────────────────
 watch_loop() {
   local WATCH_INTERVAL=60
+  local first_run=true
 
-  trap 'spinner_stop; exit 0' INT TERM
+  trap 'exit 0' INT TERM
 
   while true; do
-    # Clear screen and move to top
-    printf '\033[2J\033[H'
+    if [[ "$first_run" == true ]]; then
+      # First run: show spinner since there's nothing on screen yet
+      spinner_start "Fetching Claude status"
+    fi
 
-    spinner_start "Fetching Claude status"
     local dashboard global_index
     dashboard=$(fetch_data "$DASHBOARD_URL")
     global_index=$(fetch_data "$GLOBAL_INDEX_URL")
-    spinner_stop
+
+    if [[ "$first_run" == true ]]; then
+      spinner_stop
+      first_run=false
+    fi
 
     local now
     now=$(date +"%Y-%m-%d %H:%M")
 
-    printf '\033[2J\033[H'
+    # Move cursor to top and overwrite existing content
+    printf '\033[H\033[J'
     render "$dashboard" "$global_index" "$now"
 
     printf "  ${DIM}Last updated ${now} ${GRAY}${SYM_BULLET}${RST} ${DIM}refreshing every ${WATCH_INTERVAL}s ${GRAY}${SYM_BULLET}${RST} ${DIM}Ctrl+C to exit${RST}\n"
