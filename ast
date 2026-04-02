@@ -44,30 +44,32 @@ readonly SYM_ARROW='→'
 readonly SYM_BULLET='•'
 
 # ── Box Drawing Helpers ─────────────────────────────
+# Right border column (2 indent + BOX_WIDTH)
+readonly RIGHT_COL=$((BOX_WIDTH + 2))
+
 box_top() {
   local title="$1"
   local title_len=${#title}
-  local dashes=$((BOX_WIDTH - title_len - 5))
+  # ╭── (3) + space (1) + title + space (1) + dashes + ╮ (1) = BOX_WIDTH
+  local dashes=$((BOX_WIDTH - title_len - 6))
+  if ((dashes < 1)); then dashes=1; fi
   printf "  ${DIM}╭──${RST} ${BOLD}%s${RST} ${DIM}%s╮${RST}\n" "$title" "$(printf '%*s' "$dashes" '' | tr ' ' '─')"
 }
 
 box_row() {
   local content="$1"
-  # Strip ANSI codes to calculate visible length
-  local stripped
-  stripped=$(printf '%b' "$content" | sed $'s/\033\\[[0-9;]*m//g')
-  local visible_len=${#stripped}
-  local padding=$((BOX_WIDTH - visible_len - 3))
-  if ((padding < 0)); then padding=0; fi
-  printf "  ${DIM}│${RST} %b%*s ${DIM}│${RST}\n" "$content" "$padding" ""
+  # Use cursor positioning to place right border at fixed column
+  # This avoids all Unicode display-width issues
+  printf "  ${DIM}│${RST} %b${RST}\033[${RIGHT_COL}G${DIM}│${RST}\n" "$content"
 }
 
 box_bottom() {
+  # ╰ (1) + dashes + ╯ (1) = BOX_WIDTH
   printf "  ${DIM}╰%s╯${RST}\n" "$(printf '%*s' $((BOX_WIDTH - 2)) '' | tr ' ' '─')"
 }
 
 box_empty() {
-  box_row "${GRAY}$1"
+  box_row "${GRAY}${1}${RST}"
 }
 
 # ── Dot Leader Helper ───────────────────────────────
@@ -78,6 +80,7 @@ dot_row() {
   local value_stripped
   value_stripped=$(printf '%b' "$value" | sed $'s/\033\\[[0-9;]*m//g')
   local total_content=$((${#label_stripped} + ${#value_stripped}))
+  # 1 (│) + 1 (space) + label + dots + value + 1 (space) + 1 (│) = BOX_WIDTH
   local dots=$((BOX_WIDTH - total_content - 5))
   if ((dots < 2)); then dots=2; fi
   local dot_str
@@ -108,12 +111,41 @@ status_label() {
   esac
 }
 
+# ── Spinner ─────────────────────────────────────────
+SPINNER_PID=""
+
+spinner_start() {
+  local msg="${1:-Fetching data}"
+  local frames=(⠋ ⠙ ⠹ ⠸ ⠼ ⠴ ⠦ ⠧ ⠇ ⠏)
+  (
+    local i=0
+    while true; do
+      printf "\r  ${DIM}${frames[$i]} ${msg}${RST}" >&2
+      i=$(( (i + 1) % ${#frames[@]} ))
+      sleep 0.08
+    done
+  ) &
+  SPINNER_PID=$!
+}
+
+spinner_stop() {
+  if [[ -n "$SPINNER_PID" ]]; then
+    kill "$SPINNER_PID" 2>/dev/null || true
+    wait "$SPINNER_PID" 2>/dev/null || true
+    SPINNER_PID=""
+    printf "\r\033[2K" >&2
+  fi
+}
+
+trap spinner_stop EXIT
+
 # ── Fetch Data ──────────────────────────────────────
 fetch_data() {
   local url="$1"
   local response
   response=$(curl -sf --max-time 10 "$url" 2>/dev/null)
   if [[ -z "$response" ]]; then
+    spinner_stop
     printf "  ${RED}${SYM_CROSS} Failed to fetch data from API${RST}\n"
     exit 1
   fi
@@ -123,9 +155,11 @@ fetch_data() {
 # ── Main ────────────────────────────────────────────
 main() {
   # Fetch both endpoints
+  spinner_start "Fetching Claude status"
   local dashboard global_index
   dashboard=$(fetch_data "$DASHBOARD_URL")
   global_index=$(fetch_data "$GLOBAL_INDEX_URL")
+  spinner_stop
 
   local now
   now=$(date +"%Y-%m-%d %H:%M")
@@ -145,9 +179,21 @@ main() {
   local trend_color
   trend_color=$(status_color "$g_trend")
 
-  box_top "Global Index"
+  # Get names of well-performing models
+  local good_models
+  good_models=$(echo "$dashboard" | jq -r '[.data.modelScores[] | select(.status == "good") | .name] | join(", ")')
+
+  box_top "Global AI Index"
   dot_row "Score" "${BOLD}${trend_color}${g_score}${RST}/100 ${trend_color}$(status_label "$g_trend")${RST}"
-  dot_row "Models performing well" "${BOLD}${g_performing}${RST}/${g_total}"
+  dot_row "Performing well" "${BOLD}${g_performing}${RST}/${g_total}"
+  if [[ -n "$good_models" ]]; then
+    # Truncate if too long for box (max ~46 visible chars for indented line)
+    local max_len=44
+    if ((${#good_models} > max_len)); then
+      good_models="${good_models:0:$((max_len - 3))}..."
+    fi
+    box_row "  ${GREEN}${SYM_ARROW}${RST} ${DIM}${good_models}${RST}"
+  fi
   box_bottom
   printf "\n"
 
