@@ -1,5 +1,7 @@
 # AST - AI Stupidity Tracker
 
+[![CI](https://github.com/erdembircan/ai-stupidity-tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/erdembircan/ai-stupidity-tracker/actions/workflows/ci.yml)
+
 A CLI tool that checks how Claude/Anthropic models are performing on [aistupidlevel.info](https://aistupidlevel.info/) — so you don't have to visit the site.
 
 ## What it shows
