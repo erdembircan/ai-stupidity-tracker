@@ -32,15 +32,9 @@ ln -s "$(pwd)/ast" /usr/local/bin/ast
 ## Usage
 
 ```bash
-ast
-```
-
-That's it. Run `ast` and get a quick Claude status report.
-
-### Disable colors
-
-```bash
-NO_COLOR=1 ast
+ast              # Claude status report
+ast --json       # Machine-readable JSON output
+NO_COLOR=1 ast   # Disable colors
 ```
 
 ## Data source
