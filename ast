@@ -584,9 +584,10 @@ watch_loop() {
       map({(.value.name): (.key + 1)}) | add // {}
     ')
 
-    # Move cursor to top and overwrite existing content
-    printf '\033[H\033[J'
-    render "$dashboard" "$global_index" "$now" "$prev_ranks"
+    # Capture output, then clear and print in one shot to reduce flicker
+    local output
+    output=$(render "$dashboard" "$global_index" "$now" "$prev_ranks")
+    printf '\033[2J\033[H%b\n' "$output"
 
     printf "  ${DIM}Last updated ${now} ${GRAY}${SYM_BULLET}${RST} ${DIM}refreshing every ${WATCH_INTERVAL}s ${GRAY}${SYM_BULLET}${RST} ${DIM}Ctrl+C to exit${RST}\n"
 
