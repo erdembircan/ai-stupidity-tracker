@@ -3,6 +3,10 @@
 setup() {
   DIR="$(cd "$(dirname "$BATS_TEST_FILENAME")/.." && pwd)"
   AST="$DIR/ast"
+  # Use mock curl (test/curl) so tests run offline against fixtures
+  if [[ -z "${AST_LIVE:-}" ]]; then
+    export PATH="$DIR/test:$PATH"
+  fi
 }
 
 # ── Arg Parsing ──────────────────────────────────────

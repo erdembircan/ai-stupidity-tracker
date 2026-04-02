@@ -1,0 +1,53 @@
+{
+  "success": true,
+  "data": {
+    "current": {
+      "timestamp": "2026-04-02T21:35:35.307Z",
+      "label": "Current",
+      "globalScore": 84,
+      "modelsCount": 132,
+      "hoursAgo": 0
+    },
+    "history": [
+      {
+        "timestamp": "2026-04-02T21:35:35.307Z",
+        "label": "Current",
+        "globalScore": 84,
+        "modelsCount": 132,
+        "hoursAgo": 0
+      },
+      {
+        "timestamp": "2026-04-02T15:35:35.307Z",
+        "label": "6h ago",
+        "globalScore": 87,
+        "modelsCount": 132,
+        "hoursAgo": 6
+      },
+      {
+        "timestamp": "2026-04-02T09:35:35.307Z",
+        "label": "12h ago",
+        "globalScore": 87,
+        "modelsCount": 132,
+        "hoursAgo": 12
+      },
+      {
+        "timestamp": "2026-04-02T03:35:35.307Z",
+        "label": "18h ago",
+        "globalScore": 81,
+        "modelsCount": 132,
+        "hoursAgo": 18
+      },
+      {
+        "timestamp": "2026-04-01T21:35:35.307Z",
+        "label": "24h ago",
+        "globalScore": 88,
+        "modelsCount": 132,
+        "hoursAgo": 24
+      }
+    ],
+    "trend": "declining",
+    "performingWell": 2,
+    "totalModels": 22,
+    "lastUpdated": "2026-04-02T21:35:38.721Z"
+  }
+}

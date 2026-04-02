@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 SCRIPTS := ast ast-hook
 
-.PHONY: check lint fmt fmt-fix test install uninstall
+.PHONY: check lint fmt fmt-fix test test-live install uninstall
 
 check: lint fmt test
 
@@ -16,6 +16,9 @@ fmt-fix:
 
 test:
 	bats test/
+
+test-live:
+	AST_LIVE=1 bats test/
 
 install:
 	ln -sf $(CURDIR)/ast /usr/local/bin/ast

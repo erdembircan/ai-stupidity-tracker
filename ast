@@ -16,6 +16,7 @@ elif TERM_WIDTH=$(tput cols 2>/dev/null); then
     NARROW_TERM=true
   fi
 fi
+readonly NARROW_TERM
 
 # ── Dependency Check ────────────────────────────────
 if ! command -v jq &>/dev/null; then
@@ -43,6 +44,7 @@ else
   GRAY=$'\033[90m'
   WHITE=$'\033[97m'
 fi
+readonly RST BOLD DIM RED GREEN YELLOW CYAN GRAY WHITE
 
 # ── Symbols ─────────────────────────────────────────
 readonly SYM_CHECK='✓'
@@ -402,7 +404,13 @@ render() {
       name_str=$(printf "%-${max_name_len}s" "$name")
       local score_str
       score_str=$(printf '%-3s' "$score")
-      box_row "${BOLD}${WHITE}${rank_str}${RST} ${change_col}${name_str} ${BOLD}${score_str}${RST} ${sc}${SYM_WARN} ${sl}${RST}"
+      local sym
+      case "$status" in
+      good | stable) sym="$SYM_CHECK" ;;
+      volatile | warning) sym="$SYM_WARN" ;;
+      *) sym="$SYM_CROSS" ;;
+      esac
+      box_row "${BOLD}${WHITE}${rank_str}${RST} ${change_col}${name_str} ${BOLD}${score_str}${RST} ${sc}${sym} ${sl}${RST}"
     done
   fi
   box_bottom
@@ -500,6 +508,20 @@ main() {
   local watch_interval=60
   while [[ $# -gt 0 ]]; do
     case "$1" in
+    -h | --help)
+      printf '%s\n' "  ${BOLD}${CYAN}${SYM_DIAMOND} AST${RST}  ${DIM}v${VERSION}${RST} — AI Stupidity Tracker"
+      printf '\n'
+      printf '%s\n' "  ${BOLD}Usage:${RST}  ast [options]"
+      printf '\n'
+      printf '%s\n' "  ${BOLD}Options:${RST}"
+      printf '%s\n' "    --json              Machine-readable JSON output"
+      printf '%s\n' "    --watch[=SECONDS]   Live dashboard, refreshes every N seconds (default: 60)"
+      printf '%s\n' "    -h, --help          Show this help message"
+      printf '\n'
+      printf '%s\n' "  ${BOLD}Environment:${RST}"
+      printf '%s\n' "    NO_COLOR=1          Disable colors and box-drawing right borders"
+      exit 0
+      ;;
     --json) json_mode=true ;;
     --watch=*)
       watch_mode=true
@@ -518,7 +540,12 @@ main() {
       ;;
     -*)
       printf "  ${RED}${SYM_CROSS} Unknown option: %s${RST}\n" "$1"
-      printf "  Usage: ast [--json] [--watch[=SECONDS]]\n"
+      printf "  Usage: ast [--json] [--watch[=SECONDS]] [--help]\n"
+      exit 1
+      ;;
+    *)
+      printf "  ${RED}${SYM_CROSS} Unexpected argument: %s${RST}\n" "$1"
+      printf "  Usage: ast [--json] [--watch[=SECONDS]] [--help]\n"
       exit 1
       ;;
     esac
@@ -591,11 +618,7 @@ watch_loop() {
 
     prev_ranks="$curr_ranks"
 
-    local i=0
-    while ((i < WATCH_INTERVAL)); do
-      sleep 1
-      ((i++))
-    done
+    sleep "$WATCH_INTERVAL"
   done
 }
 

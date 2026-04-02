@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Mock curl for tests — serves fixture data based on URL pattern
+FIXTURES="$(cd "$(dirname "$0")/fixtures" && pwd)"
+
+for arg in "$@"; do
+  case "$arg" in
+  *global-index*)
+    cat "$FIXTURES/global-index.json"
+    exit 0
+    ;;
+  *dashboard/cached*)
+    cat "$FIXTURES/dashboard.json"
+    exit 0
+    ;;
+  esac
+done
+
+exit 1

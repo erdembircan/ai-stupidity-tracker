@@ -1,0 +1,1907 @@
+{
+  "success": true,
+  "cached": true,
+  "data": {
+    "modelScores": [
+      {
+        "id": "230",
+        "name": "gpt-5.4",
+        "provider": "openai",
+        "vendor": "openai",
+        "currentScore": 69,
+        "score": 69,
+        "trend": "up",
+        "lastUpdated": "2026-04-02T20:00:00.029Z",
+        "status": "good",
+        "isNew": false,
+        "usesReasoningEffort": true,
+        "isStale": false,
+        "confidenceLower": 49.6,
+        "confidenceUpper": 86.4,
+        "standardError": 6.6
+      },
+      {
+        "id": "204",
+        "name": "gpt-5.2",
+        "provider": "openai",
+        "vendor": "openai",
+        "currentScore": 66,
+        "score": 66,
+        "trend": "up",
+        "lastUpdated": "2026-04-02T20:00:00.029Z",
+        "status": "good",
+        "isNew": false,
+        "usesReasoningEffort": false,
+        "isStale": false,
+        "confidenceLower": 75.7,
+        "confidenceUpper": 77.1,
+        "standardError": 0.2
+      },
+      {
+        "id": "40",
+        "name": "claude-sonnet-4-20250514",
+        "provider": "anthropic",
+        "vendor": "anthropic",
+        "currentScore": 64,
+        "score": 64,
+        "trend": "stable",
+        "lastUpdated": "2026-04-02T18:00:03.045Z",
+        "status": "warning",
+        "isNew": false,
+        "usesReasoningEffort": false,
+        "isStale": true,
+        "staleDuration": 4,
+        "confidenceLower": 36.2,
+        "confidenceUpper": 81,
+        "standardError": 8.1
+      },
+      {
+        "id": "188",
+        "name": "claude-opus-4-5-20251101",
+        "provider": "anthropic",
+        "vendor": "anthropic",
+        "currentScore": 64,
+        "score": 64,
+        "trend": "stable",
+        "lastUpdated": "2026-04-02T18:00:03.045Z",
+        "status": "warning",
+        "isNew": false,
+        "usesReasoningEffort": true,
+        "isStale": true,
+        "staleDuration": 4,
+        "confidenceLower": 33.9,
+        "confidenceUpper": 82.9,
+        "standardError": 8.8
+      },
+      {
+        "id": "221",
+        "name": "claude-sonnet-4-6",
+        "provider": "anthropic",
+        "vendor": "anthropic",
+        "currentScore": 64,
+        "score": 64,
+        "trend": "stable",
+        "lastUpdated": "2026-04-02T18:00:03.045Z",
+        "status": "warning",
+        "isNew": false,
+        "usesReasoningEffort": true,
+        "isStale": true,
+        "staleDuration": 4,
+        "confidenceLower": 38.4,
+        "confidenceUpper": 81.6,
+        "standardError": 7.8
+      },
+      {
+        "id": "226",
+        "name": "gpt-5.3-codex",
+        "provider": "openai",
+        "vendor": "openai",
+        "currentScore": 64,
+        "score": 64,
+        "trend": "stable",
+        "lastUpdated": "2026-04-02T20:00:00.029Z",
+        "status": "warning",
+        "isNew": false,
+        "usesReasoningEffort": true,
+        "isStale": false,
+        "confidenceLower": 67.4,
+        "confidenceUpper": 75.8,
+        "standardError": 1.5
+      },
+      {
+        "id": "160",
+        "name": "claude-sonnet-4-5-20250929",
+        "provider": "anthropic",
+        "vendor": "anthropic",
+        "currentScore": 63,
+        "score": 63,
+        "trend": "stable",
+        "lastUpdated": "2026-04-02T18:00:03.045Z",
+        "status": "warning",
+        "isNew": false,
+        "usesReasoningEffort": false,
+        "isStale": true,
+        "staleDuration": 4,
+        "confidenceLower": 35.8,
+        "confidenceUpper": 80.6,
+        "standardError": 8.1
+      },
+      {
+        "id": "166",
+        "name": "deepseek-reasoner",
+        "provider": "deepseek",
+        "vendor": "deepseek",
+        "currentScore": 62,
+        "score": 62,
+        "trend": "up",
+        "lastUpdated": "2026-04-02T18:00:03.045Z",
+        "status": "warning",
+        "isNew": false,
+        "usesReasoningEffort": true,
+        "isStale": true,
+        "staleDuration": 4,
+        "confidenceLower": 22.6,
+        "confidenceUpper": 71.8,
+        "standardError": 8.9
+      },
+      {
+        "id": "220",
+        "name": "claude-opus-4-6",
+        "provider": "anthropic",
+        "vendor": "anthropic",
+        "currentScore": 62,
+        "score": 62,
+        "trend": "up",
+        "lastUpdated": "2026-04-02T18:00:03.045Z",
+        "status": "warning",
+        "isNew": false,
+        "usesReasoningEffort": false,
+        "isStale": true,
+        "staleDuration": 4,
+        "confidenceLower": 33.5,
+        "confidenceUpper": 80.5,
+        "standardError": 8.5
+      },
+      {
+        "id": "171",
+        "name": "kimi-latest",
+        "provider": "kimi",
+        "vendor": "kimi",
+        "currentScore": 61,
+        "score": 61,
+        "trend": "up",
+        "lastUpdated": "2026-04-02T20:00:00.029Z",
+        "status": "warning",
+        "isNew": false,
+        "usesReasoningEffort": false,
+        "isStale": false,
+        "confidenceLower": 69.2,
+        "confidenceUpper": 80.8,
+        "standardError": 2.1
+      },
+      {
+        "id": "38",
+        "name": "claude-opus-4-1-20250805",
+        "provider": "anthropic",
+        "vendor": "anthropic",
+        "currentScore": 60,
+        "score": 60,
+        "trend": "stable",
+        "lastUpdated": "2026-04-02T18:00:03.045Z",
+        "status": "warning",
+        "isNew": false,
+        "usesReasoningEffort": false,
+        "isStale": true,
+        "staleDuration": 4,
+        "confidenceLower": 34,
+        "confidenceUpper": 78.8,
+        "standardError": 8.1
+      },
+      {
+        "id": "170",
+        "name": "kimi-thinking-preview",
+        "provider": "kimi",
+        "vendor": "kimi",
+        "currentScore": 60,
+        "score": 60,
+        "trend": "stable",
+        "lastUpdated": "2026-04-02T20:00:00.029Z",
+        "status": "warning",
+        "isNew": false,
+        "usesReasoningEffort": true,
+        "isStale": false,
+        "confidenceLower": 71.9,
+        "confidenceUpper": 83.7,
+        "standardError": 2.1
+      },
+      {
+        "id": "185",
+        "name": "gemini-3-pro-preview",
+        "provider": "google",
+        "vendor": "google",
+        "currentScore": 50,
+        "score": 50,
+        "trend": "down",
+        "lastUpdated": "2026-04-02T20:00:00.029Z",
+        "status": "warning",
+        "isNew": false,
+        "usesReasoningEffort": false,
+        "isStale": false,
+        "confidenceLower": 70.7,
+        "confidenceUpper": 79.3,
+        "standardError": 1.5
+      },
+      {
+        "id": "44",
+        "name": "gemini-2.5-flash",
+        "provider": "google",
+        "vendor": "google",
+        "currentScore": 49,
+        "score": 49,
+        "trend": "up",
+        "lastUpdated": "2026-04-02T20:00:00.029Z",
+        "status": "warning",
+        "isNew": false,
+        "usesReasoningEffort": false,
+        "isStale": false,
+        "confidenceLower": 49,
+        "confidenceUpper": 77.4,
+        "standardError": 5.1
+      },
+      {
+        "id": "42",
+        "name": "grok-code-fast-1",
+        "provider": "xai",
+        "vendor": "xai",
+        "currentScore": 48,
+        "score": 48,
+        "trend": "stable",
+        "lastUpdated": "2026-04-02T18:00:03.045Z",
+        "status": "warning",
+        "isNew": false,
+        "usesReasoningEffort": false,
+        "isStale": true,
+        "staleDuration": 4,
+        "confidenceLower": 10.1,
+        "confidenceUpper": 83.1,
+        "standardError": 13.2
+      },
+      {
+        "id": "41",
+        "name": "grok-4-latest",
+        "provider": "xai",
+        "vendor": "xai",
+        "currentScore": 46,
+        "score": 46,
+        "trend": "down",
+        "lastUpdated": "2026-04-02T18:00:03.045Z",
+        "status": "warning",
+        "isNew": false,
+        "usesReasoningEffort": false,
+        "isStale": true,
+        "staleDuration": 4,
+        "confidenceLower": 10.8,
+        "confidenceUpper": 78.8,
+        "standardError": 12.2
+      },
+      {
+        "id": "140",
+        "name": "grok-4-0709",
+        "provider": "xai",
+        "vendor": "xai",
+        "currentScore": 42,
+        "score": 42,
+        "trend": "up",
+        "lastUpdated": "2026-04-02T18:00:03.045Z",
+        "status": "warning",
+        "isNew": false,
+        "usesReasoningEffort": false,
+        "isStale": true,
+        "staleDuration": 4,
+        "confidenceLower": 10.9,
+        "confidenceUpper": 76.7,
+        "standardError": 11.8
+      },
+      {
+        "id": "172",
+        "name": "kimi-k2-turbo-preview",
+        "provider": "kimi",
+        "vendor": "kimi",
+        "currentScore": 40,
+        "score": 40,
+        "trend": "stable",
+        "lastUpdated": "2026-04-02T20:00:00.029Z",
+        "status": "warning",
+        "isNew": false,
+        "usesReasoningEffort": false,
+        "isStale": false,
+        "confidenceLower": 22.5,
+        "confidenceUpper": 42.7,
+        "standardError": 3.7
+      },
+      {
+        "id": "169",
+        "name": "kimi-k2-0905-preview",
+        "provider": "kimi",
+        "vendor": "kimi",
+        "currentScore": 38,
+        "score": 38,
+        "trend": "down",
+        "lastUpdated": "2026-04-02T20:00:00.029Z",
+        "status": "critical",
+        "isNew": false,
+        "usesReasoningEffort": false,
+        "isStale": false,
+        "confidenceLower": 13.1,
+        "confidenceUpper": 51.3,
+        "standardError": 6.9
+      },
+      {
+        "id": "165",
+        "name": "glm-4.6",
+        "provider": "glm",
+        "vendor": "glm",
+        "currentScore": 36,
+        "score": 36,
+        "trend": "stable",
+        "lastUpdated": "2026-04-02T18:00:03.045Z",
+        "status": "critical",
+        "isNew": false,
+        "usesReasoningEffort": true,
+        "isStale": true,
+        "staleDuration": 4,
+        "confidenceLower": 0,
+        "confidenceUpper": 79.7,
+        "standardError": 12.2
+      },
+      {
+        "id": "167",
+        "name": "deepseek-chat",
+        "provider": "deepseek",
+        "vendor": "deepseek",
+        "currentScore": 36,
+        "score": 36,
+        "trend": "down",
+        "lastUpdated": "2026-04-02T18:00:03.045Z",
+        "status": "critical",
+        "isNew": false,
+        "usesReasoningEffort": false,
+        "isStale": true,
+        "staleDuration": 4,
+        "confidenceLower": 23.9,
+        "confidenceUpper": 66.9,
+        "standardError": 7.7
+      },
+      {
+        "id": "217",
+        "name": "glm-4.7",
+        "provider": "glm",
+        "vendor": "glm",
+        "currentScore": 36,
+        "score": 36,
+        "trend": "stable",
+        "lastUpdated": "2026-04-02T18:00:03.045Z",
+        "status": "critical",
+        "isNew": false,
+        "usesReasoningEffort": true,
+        "isStale": true,
+        "staleDuration": 4,
+        "confidenceLower": 0,
+        "confidenceUpper": 84.9,
+        "standardError": 13
+      }
+    ],
+    "alerts": [],
+    "globalIndex": null,
+    "degradations": [
+      {
+        "modelId": 140,
+        "modelName": "grok-4-0709",
+        "provider": "xai",
+        "currentScore": 42,
+        "baselineScore": 65,
+        "dropPercentage": 35,
+        "zScore": "0.00",
+        "severity": "critical",
+        "detectedAt": "2026-04-02T21:35:34.837Z",
+        "message": "Critical performance: 42 points (well below acceptable threshold) • Expensive at $10.20/1M tokens",
+        "type": "critical_failure"
+      },
+      {
+        "modelId": 172,
+        "modelName": "kimi-k2-turbo-preview",
+        "provider": "kimi",
+        "currentScore": 40,
+        "baselineScore": 65,
+        "dropPercentage": 38,
+        "zScore": "0.00",
+        "severity": "critical",
+        "detectedAt": "2026-04-02T21:35:34.838Z",
+        "message": "Critical performance: 40 points (well below acceptable threshold)",
+        "type": "critical_failure"
+      },
+      {
+        "modelId": 169,
+        "modelName": "kimi-k2-0905-preview",
+        "provider": "kimi",
+        "currentScore": 38,
+        "baselineScore": 65,
+        "dropPercentage": 42,
+        "zScore": "0.00",
+        "severity": "critical",
+        "detectedAt": "2026-04-02T21:35:34.839Z",
+        "message": "Critical performance: 38 points (well below acceptable threshold)",
+        "type": "critical_failure"
+      },
+      {
+        "modelId": 165,
+        "modelName": "glm-4.6",
+        "provider": "glm",
+        "currentScore": 36,
+        "baselineScore": 65,
+        "dropPercentage": 45,
+        "zScore": "0.00",
+        "severity": "critical",
+        "detectedAt": "2026-04-02T21:35:34.840Z",
+        "message": "Critical performance: 36 points (well below acceptable threshold)",
+        "type": "critical_failure"
+      },
+      {
+        "modelId": 167,
+        "modelName": "deepseek-chat",
+        "provider": "deepseek",
+        "currentScore": 36,
+        "baselineScore": 65,
+        "dropPercentage": 45,
+        "zScore": "0.00",
+        "severity": "critical",
+        "detectedAt": "2026-04-02T21:35:34.840Z",
+        "message": "Critical performance: 36 points (well below acceptable threshold)",
+        "type": "critical_failure"
+      },
+      {
+        "modelId": 217,
+        "modelName": "glm-4.7",
+        "provider": "glm",
+        "currentScore": 36,
+        "baselineScore": 65,
+        "dropPercentage": 45,
+        "zScore": "0.00",
+        "severity": "critical",
+        "detectedAt": "2026-04-02T21:35:34.841Z",
+        "message": "Critical performance: 36 points (well below acceptable threshold)",
+        "type": "critical_failure"
+      },
+      {
+        "modelId": 185,
+        "modelName": "gemini-3-pro-preview",
+        "provider": "google",
+        "currentScore": 50,
+        "baselineScore": 65,
+        "dropPercentage": 23,
+        "zScore": "0.00",
+        "severity": "major",
+        "detectedAt": "2026-04-02T21:35:34.834Z",
+        "message": "Poor performance: 50 points (below 52 point threshold)",
+        "type": "poor_performance"
+      },
+      {
+        "modelId": 44,
+        "modelName": "gemini-2.5-flash",
+        "provider": "google",
+        "currentScore": 49,
+        "baselineScore": 65,
+        "dropPercentage": 25,
+        "zScore": "0.00",
+        "severity": "major",
+        "detectedAt": "2026-04-02T21:35:34.835Z",
+        "message": "Poor performance: 49 points (below 52 point threshold)",
+        "type": "poor_performance"
+      },
+      {
+        "modelId": 44,
+        "modelName": "gemini-2.5-flash",
+        "provider": "google",
+        "currentScore": 49,
+        "baselineScore": 60,
+        "dropPercentage": 0,
+        "zScore": "0.00",
+        "severity": "major",
+        "detectedAt": "2026-04-02T21:35:34.835Z",
+        "message": "⚠️ UNSTABLE PERFORMANCE: High variance (±27 point swings) with poor average (60 pts)",
+        "type": "unstable_performance"
+      },
+      {
+        "modelId": 42,
+        "modelName": "grok-code-fast-1",
+        "provider": "xai",
+        "currentScore": 48,
+        "baselineScore": 65,
+        "dropPercentage": 26,
+        "zScore": "0.00",
+        "severity": "major",
+        "detectedAt": "2026-04-02T21:35:34.836Z",
+        "message": "Poor performance: 48 points (below 52 point threshold)",
+        "type": "poor_performance"
+      },
+      {
+        "modelId": 41,
+        "modelName": "grok-4-latest",
+        "provider": "xai",
+        "currentScore": 46,
+        "baselineScore": 65,
+        "dropPercentage": 29,
+        "zScore": "0.00",
+        "severity": "major",
+        "detectedAt": "2026-04-02T21:35:34.837Z",
+        "message": "Poor performance: 46 points (below 52 point threshold) • Expensive at $10.20/1M tokens",
+        "type": "poor_performance"
+      },
+      {
+        "modelId": 172,
+        "modelName": "kimi-k2-turbo-preview",
+        "provider": "kimi",
+        "currentScore": 33,
+        "baselineScore": 62,
+        "dropPercentage": 47,
+        "zScore": "0.00",
+        "severity": "major",
+        "detectedAt": "2026-04-02T21:35:34.838Z",
+        "message": "⚠️ DECLINING TREND: Score dropped 47% over last 24h (62 → 33)",
+        "type": "declining_trend"
+      },
+      {
+        "modelId": 172,
+        "modelName": "kimi-k2-turbo-preview",
+        "provider": "kimi",
+        "currentScore": 40,
+        "baselineScore": 33,
+        "dropPercentage": 0,
+        "zScore": "0.00",
+        "severity": "major",
+        "detectedAt": "2026-04-02T21:35:34.838Z",
+        "message": "⚠️ UNSTABLE PERFORMANCE: High variance (±21 point swings) with poor average (33 pts)",
+        "type": "unstable_performance"
+      },
+      {
+        "modelId": 169,
+        "modelName": "kimi-k2-0905-preview",
+        "provider": "kimi",
+        "currentScore": 31,
+        "baselineScore": 61,
+        "dropPercentage": 49,
+        "zScore": "0.00",
+        "severity": "major",
+        "detectedAt": "2026-04-02T21:35:34.839Z",
+        "message": "⚠️ DECLINING TREND: Score dropped 49% over last 24h (61 → 31)",
+        "type": "declining_trend"
+      },
+      {
+        "modelId": 169,
+        "modelName": "kimi-k2-0905-preview",
+        "provider": "kimi",
+        "currentScore": 38,
+        "baselineScore": 31,
+        "dropPercentage": 0,
+        "zScore": "0.00",
+        "severity": "major",
+        "detectedAt": "2026-04-02T21:35:34.839Z",
+        "message": "⚠️ UNSTABLE PERFORMANCE: High variance (±20 point swings) with poor average (31 pts)",
+        "type": "unstable_performance"
+      },
+      {
+        "modelId": 167,
+        "modelName": "deepseek-chat",
+        "provider": "deepseek",
+        "currentScore": 36,
+        "baselineScore": 59,
+        "dropPercentage": 0,
+        "zScore": "0.00",
+        "severity": "major",
+        "detectedAt": "2026-04-02T21:35:34.840Z",
+        "message": "⚠️ UNSTABLE PERFORMANCE: High variance (±30 point swings) with poor average (59 pts)",
+        "type": "unstable_performance"
+      },
+      {
+        "modelId": 40,
+        "modelName": "claude-sonnet-4-20250514",
+        "provider": "anthropic",
+        "currentScore": 64,
+        "baselineScore": 58,
+        "dropPercentage": 0,
+        "zScore": "0.00",
+        "severity": "minor",
+        "detectedAt": "2026-04-02T21:35:34.824Z",
+        "message": "⚠️ UNSTABLE PERFORMANCE: High variance (±11 point swings) with poor average (58 pts)",
+        "type": "unstable_performance"
+      },
+      {
+        "modelId": 188,
+        "modelName": "claude-opus-4-5-20251101",
+        "provider": "anthropic",
+        "currentScore": 64,
+        "baselineScore": 92,
+        "dropPercentage": 0,
+        "zScore": "0.00",
+        "severity": "minor",
+        "detectedAt": "2026-04-02T21:35:34.825Z",
+        "message": "📊 PERFORMANCE VARIANCE: High variability (±21 point swings) but strong average (92 pts)",
+        "type": "performance_variance"
+      },
+      {
+        "modelId": 221,
+        "modelName": "claude-sonnet-4-6",
+        "provider": "anthropic",
+        "currentScore": 64,
+        "baselineScore": 58,
+        "dropPercentage": 0,
+        "zScore": "0.00",
+        "severity": "minor",
+        "detectedAt": "2026-04-02T21:35:34.826Z",
+        "message": "⚠️ UNSTABLE PERFORMANCE: High variance (±11 point swings) with poor average (58 pts)",
+        "type": "unstable_performance"
+      },
+      {
+        "modelId": 160,
+        "modelName": "claude-sonnet-4-5-20250929",
+        "provider": "anthropic",
+        "currentScore": 63,
+        "baselineScore": 75,
+        "dropPercentage": 0,
+        "zScore": "0.00",
+        "severity": "minor",
+        "detectedAt": "2026-04-02T21:35:34.828Z",
+        "message": "📊 PERFORMANCE VARIANCE: High variability (±23 point swings) but strong average (75 pts)",
+        "type": "performance_variance"
+      },
+      {
+        "modelId": 166,
+        "modelName": "deepseek-reasoner",
+        "provider": "deepseek",
+        "currentScore": 62,
+        "baselineScore": 74,
+        "dropPercentage": 0,
+        "zScore": "0.00",
+        "severity": "minor",
+        "detectedAt": "2026-04-02T21:35:34.829Z",
+        "message": "📊 PERFORMANCE VARIANCE: High variability (±26 point swings) but strong average (74 pts)",
+        "type": "performance_variance"
+      },
+      {
+        "modelId": 220,
+        "modelName": "claude-opus-4-6",
+        "provider": "anthropic",
+        "currentScore": 62,
+        "baselineScore": 75,
+        "dropPercentage": 0,
+        "zScore": "0.00",
+        "severity": "minor",
+        "detectedAt": "2026-04-02T21:35:34.830Z",
+        "message": "📊 PERFORMANCE VARIANCE: High variability (±24 point swings) but strong average (75 pts)",
+        "type": "performance_variance"
+      },
+      {
+        "modelId": 38,
+        "modelName": "claude-opus-4-1-20250805",
+        "provider": "anthropic",
+        "currentScore": 60,
+        "baselineScore": 58,
+        "dropPercentage": 0,
+        "zScore": "0.00",
+        "severity": "minor",
+        "detectedAt": "2026-04-02T21:35:34.832Z",
+        "message": "⚠️ UNSTABLE PERFORMANCE: High variance (±11 point swings) with poor average (58 pts)",
+        "type": "unstable_performance"
+      },
+      {
+        "modelId": 170,
+        "modelName": "kimi-thinking-preview",
+        "provider": "kimi",
+        "currentScore": 60,
+        "baselineScore": 79,
+        "dropPercentage": 0,
+        "zScore": "0.00",
+        "severity": "minor",
+        "detectedAt": "2026-04-02T21:35:34.833Z",
+        "message": "📊 PERFORMANCE VARIANCE: High variability (±41 point swings) but strong average (79 pts)",
+        "type": "performance_variance"
+      },
+      {
+        "modelId": 185,
+        "modelName": "gemini-3-pro-preview",
+        "provider": "google",
+        "currentScore": 50,
+        "baselineScore": 75,
+        "dropPercentage": 0,
+        "zScore": "0.00",
+        "severity": "minor",
+        "detectedAt": "2026-04-02T21:35:34.834Z",
+        "message": "📊 PERFORMANCE VARIANCE: High variability (±36 point swings) but strong average (75 pts)",
+        "type": "performance_variance"
+      }
+    ],
+    "recommendations": {
+      "bestForCode": {
+        "id": "230",
+        "name": "gpt-5.4",
+        "vendor": "openai",
+        "score": 69,
+        "lastUpdate": "2026-04-02T21:35:34.889Z",
+        "displayScore": 69,
+        "rank": 1,
+        "reason": "Ranked #1 in COMBINED performance • 69% stability over 7 days • Strong coding capabilities • 69% performance score",
+        "evidence": "Current top performer with proven consistency",
+        "correctness": 62,
+        "codeQuality": 59
+      },
+      "mostReliable": {
+        "id": "230",
+        "name": "gpt-5.4",
+        "vendor": "openai",
+        "score": 69,
+        "lastUpdate": "2026-04-02T21:35:34.889Z",
+        "displayScore": 69,
+        "rank": 1,
+        "stability": {
+          "stability": 69,
+          "avgScore": 72,
+          "dataPoints": 50
+        },
+        "reason": "69% consistency over 50 recent tests • Ranked #1",
+        "evidence": "Proven stability with top-tier performance",
+        "stabilityScore": 69
+      },
+      "fastestResponse": {
+        "id": "230",
+        "name": "gpt-5.4",
+        "vendor": "openai",
+        "score": 69,
+        "lastUpdate": "2026-04-02T21:35:34.889Z",
+        "displayScore": 69,
+        "rank": 1,
+        "reason": "1200ms average response time • Ranked #1 performance",
+        "evidence": "Good balance of speed and performance"
+      },
+      "avoidNow": []
+    },
+    "transparencyMetrics": {
+      "summary": {
+        "lastUpdate": "2026-04-02T20:00:00.029Z",
+        "totalTests": 132,
+        "passedTests": 132,
+        "coverage": 100,
+        "confidence": 60,
+        "dataPoints24h": 3370,
+        "nextTest": "2026-04-02T22:00:00.000Z",
+        "modelsFresh": 0,
+        "modelsStale": 17,
+        "modelsOffline": 115
+      },
+      "modelFreshness": [
+        {
+          "model": "claude-opus-4-1-20250805",
+          "lastUpdate": "2026-04-02T20:00:00.029Z",
+          "minutesAgo": 96,
+          "status": "stale"
+        },
+        {
+          "model": "claude-sonnet-4-20250514",
+          "lastUpdate": "2026-04-02T20:00:00.029Z",
+          "minutesAgo": 96,
+          "status": "stale"
+        },
+        {
+          "model": "gemini-2.5-flash",
+          "lastUpdate": "2026-04-02T20:00:00.029Z",
+          "minutesAgo": 96,
+          "status": "stale"
+        },
+        {
+          "model": "claude-sonnet-4-5-20250929",
+          "lastUpdate": "2026-04-02T20:00:00.029Z",
+          "minutesAgo": 96,
+          "status": "stale"
+        },
+        {
+          "model": "deepseek-reasoner",
+          "lastUpdate": "2026-04-02T20:00:00.029Z",
+          "minutesAgo": 96,
+          "status": "stale"
+        },
+        {
+          "model": "deepseek-chat",
+          "lastUpdate": "2026-04-02T20:00:00.029Z",
+          "minutesAgo": 96,
+          "status": "stale"
+        },
+        {
+          "model": "kimi-k2-0905-preview",
+          "lastUpdate": "2026-04-02T20:00:00.029Z",
+          "minutesAgo": 96,
+          "status": "stale"
+        },
+        {
+          "model": "kimi-thinking-preview",
+          "lastUpdate": "2026-04-02T20:00:00.029Z",
+          "minutesAgo": 96,
+          "status": "stale"
+        },
+        {
+          "model": "kimi-latest",
+          "lastUpdate": "2026-04-02T20:00:00.029Z",
+          "minutesAgo": 96,
+          "status": "stale"
+        },
+        {
+          "model": "kimi-k2-turbo-preview",
+          "lastUpdate": "2026-04-02T20:00:00.029Z",
+          "minutesAgo": 96,
+          "status": "stale"
+        },
+        {
+          "model": "gemini-3-pro-preview",
+          "lastUpdate": "2026-04-02T20:00:00.029Z",
+          "minutesAgo": 96,
+          "status": "stale"
+        },
+        {
+          "model": "claude-opus-4-5-20251101",
+          "lastUpdate": "2026-04-02T20:00:00.029Z",
+          "minutesAgo": 96,
+          "status": "stale"
+        },
+        {
+          "model": "gpt-5.2",
+          "lastUpdate": "2026-04-02T20:00:00.029Z",
+          "minutesAgo": 96,
+          "status": "stale"
+        },
+        {
+          "model": "claude-opus-4-6",
+          "lastUpdate": "2026-04-02T20:00:00.029Z",
+          "minutesAgo": 96,
+          "status": "stale"
+        },
+        {
+          "model": "claude-sonnet-4-6",
+          "lastUpdate": "2026-04-02T20:00:00.029Z",
+          "minutesAgo": 96,
+          "status": "stale"
+        },
+        {
+          "model": "gpt-5.3-codex",
+          "lastUpdate": "2026-04-02T20:00:00.029Z",
+          "minutesAgo": 96,
+          "status": "stale"
+        },
+        {
+          "model": "gpt-5.4",
+          "lastUpdate": "2026-04-02T20:00:00.029Z",
+          "minutesAgo": 96,
+          "status": "stale"
+        },
+        {
+          "model": "grok-4-latest",
+          "lastUpdate": "2026-04-02T18:00:03.045Z",
+          "minutesAgo": 216,
+          "status": "offline"
+        },
+        {
+          "model": "grok-code-fast-1",
+          "lastUpdate": "2026-04-02T18:00:03.045Z",
+          "minutesAgo": 216,
+          "status": "offline"
+        },
+        {
+          "model": "grok-4-0709",
+          "lastUpdate": "2026-04-02T18:00:03.045Z",
+          "minutesAgo": 216,
+          "status": "offline"
+        },
+        {
+          "model": "glm-4.6",
+          "lastUpdate": "2026-04-02T18:00:03.045Z",
+          "minutesAgo": 216,
+          "status": "offline"
+        },
+        {
+          "model": "glm-4.7",
+          "lastUpdate": "2026-04-02T18:00:03.045Z",
+          "minutesAgo": 216,
+          "status": "offline"
+        },
+        {
+          "model": "gpt-5.1",
+          "lastUpdate": "2026-03-07T06:00:00.039Z",
+          "minutesAgo": 38376,
+          "status": "offline"
+        },
+        {
+          "model": "gpt-5.1-codex",
+          "lastUpdate": "2026-03-07T06:00:00.039Z",
+          "minutesAgo": 38376,
+          "status": "offline"
+        },
+        {
+          "model": "claude-3-7-sonnet-20250219",
+          "lastUpdate": "2026-02-20T09:00:00.040Z",
+          "minutesAgo": 59796,
+          "status": "offline"
+        },
+        {
+          "model": "gemini-2.5-pro-preview-03-25",
+          "lastUpdate": "2026-01-28T07:00:04.820Z",
+          "minutesAgo": 93036,
+          "status": "offline"
+        },
+        {
+          "model": "gpt-5.2-codex",
+          "lastUpdate": "2026-01-06T03:19:13.095Z",
+          "minutesAgo": 124936,
+          "status": "offline"
+        },
+        {
+          "model": "gemini-2.5-flash-lite",
+          "lastUpdate": "2025-12-21T17:08:30.329Z",
+          "minutesAgo": 147147,
+          "status": "offline"
+        },
+        {
+          "model": "gpt-5-2025-08-07",
+          "lastUpdate": "2025-12-21T17:08:30.329Z",
+          "minutesAgo": 147147,
+          "status": "offline"
+        },
+        {
+          "model": "gpt-5-codex",
+          "lastUpdate": "2025-12-21T17:08:30.329Z",
+          "minutesAgo": 147147,
+          "status": "offline"
+        },
+        {
+          "model": "kimi-k2-0711-preview",
+          "lastUpdate": "2025-12-21T17:08:30.329Z",
+          "minutesAgo": 147147,
+          "status": "offline"
+        },
+        {
+          "model": "gpt-4o-2024-11-20",
+          "lastUpdate": "2025-12-21T17:00:00.027Z",
+          "minutesAgo": 147156,
+          "status": "offline"
+        },
+        {
+          "model": "gpt-5-mini",
+          "lastUpdate": "2025-11-24T07:05:43.563Z",
+          "minutesAgo": 186630,
+          "status": "offline"
+        },
+        {
+          "model": "gpt-5-nano",
+          "lastUpdate": "2025-11-24T07:05:43.563Z",
+          "minutesAgo": 186630,
+          "status": "offline"
+        },
+        {
+          "model": "o3",
+          "lastUpdate": "2025-11-24T07:05:43.563Z",
+          "minutesAgo": 186630,
+          "status": "offline"
+        },
+        {
+          "model": "claude-3-5-sonnet-20241022",
+          "lastUpdate": "2025-10-30T11:00:01.575Z",
+          "minutesAgo": 222396,
+          "status": "offline"
+        },
+        {
+          "model": "gpt-4o-mini",
+          "lastUpdate": "2025-10-10T11:40:53.975Z",
+          "minutesAgo": 251155,
+          "status": "offline"
+        },
+        {
+          "model": "gemini-2.5-flash-preview-05-20",
+          "lastUpdate": "2025-10-10T11:40:53.975Z",
+          "minutesAgo": 251155,
+          "status": "offline"
+        },
+        {
+          "model": "gemini-2.5-flash-lite-preview-06-17",
+          "lastUpdate": "2025-10-10T11:40:53.975Z",
+          "minutesAgo": 251155,
+          "status": "offline"
+        },
+        {
+          "model": "gemini-2.0-flash",
+          "lastUpdate": "2025-10-10T11:40:53.975Z",
+          "minutesAgo": 251155,
+          "status": "offline"
+        },
+        {
+          "model": "claude-opus-4-1",
+          "lastUpdate": "2025-10-10T11:40:53.975Z",
+          "minutesAgo": 251155,
+          "status": "offline"
+        },
+        {
+          "model": "grok-4-0709-eu",
+          "lastUpdate": "2025-10-10T11:40:53.975Z",
+          "minutesAgo": 251155,
+          "status": "offline"
+        },
+        {
+          "model": "claude-3-5-haiku-20241022",
+          "lastUpdate": "2025-10-10T11:11:44.639Z",
+          "minutesAgo": 251184,
+          "status": "offline"
+        },
+        {
+          "model": "deepseek-chat",
+          "lastUpdate": "2025-10-10T09:07:06.991Z",
+          "minutesAgo": 251308,
+          "status": "offline"
+        },
+        {
+          "model": "gemini-2.5-pro",
+          "lastUpdate": "2025-10-07T05:26:25.328Z",
+          "minutesAgo": 255849,
+          "status": "offline"
+        },
+        {
+          "model": "grok-4-fast-reasoning",
+          "lastUpdate": "2025-10-01T07:23:03.562Z",
+          "minutesAgo": 264373,
+          "status": "offline"
+        },
+        {
+          "model": "gemini-1.5-pro",
+          "lastUpdate": "2025-09-28T19:45:23.715Z",
+          "minutesAgo": 267950,
+          "status": "offline"
+        },
+        {
+          "model": "gpt-5",
+          "lastUpdate": "2025-09-28T14:05:47.175Z",
+          "minutesAgo": 268290,
+          "status": "offline"
+        },
+        {
+          "model": "gpt-4o",
+          "lastUpdate": "2025-09-28T10:46:27.252Z",
+          "minutesAgo": 268489,
+          "status": "offline"
+        },
+        {
+          "model": "grok-2-1212",
+          "lastUpdate": "2025-09-23T23:07:44.758Z",
+          "minutesAgo": 274948,
+          "status": "offline"
+        },
+        {
+          "model": "gpt-5-auto",
+          "lastUpdate": "2025-09-19T08:24:22.717Z",
+          "minutesAgo": 281591,
+          "status": "offline"
+        },
+        {
+          "model": "o4-mini",
+          "lastUpdate": "2025-09-17T12:51:10.080Z",
+          "minutesAgo": 284204,
+          "status": "offline"
+        },
+        {
+          "model": "o1-mini-2024-09-12",
+          "lastUpdate": "2025-09-17T10:00:00.963Z",
+          "minutesAgo": 284376,
+          "status": "offline"
+        },
+        {
+          "model": "gpt-4o-audio-preview-2024-10-01",
+          "lastUpdate": "2025-09-17T10:00:00.963Z",
+          "minutesAgo": 284376,
+          "status": "offline"
+        },
+        {
+          "model": "gpt-4o-audio-preview",
+          "lastUpdate": "2025-09-17T10:00:00.963Z",
+          "minutesAgo": 284376,
+          "status": "offline"
+        },
+        {
+          "model": "gpt-4o-realtime-preview",
+          "lastUpdate": "2025-09-17T10:00:00.963Z",
+          "minutesAgo": 284376,
+          "status": "offline"
+        },
+        {
+          "model": "o1-2024-12-17",
+          "lastUpdate": "2025-09-17T10:00:00.963Z",
+          "minutesAgo": 284376,
+          "status": "offline"
+        },
+        {
+          "model": "gpt-4o-mini-audio-preview",
+          "lastUpdate": "2025-09-17T10:00:00.963Z",
+          "minutesAgo": 284376,
+          "status": "offline"
+        },
+        {
+          "model": "gpt-4o-mini-search-preview-2025-03-11",
+          "lastUpdate": "2025-09-17T10:00:00.963Z",
+          "minutesAgo": 284376,
+          "status": "offline"
+        },
+        {
+          "model": "gpt-4o-mini-search-preview",
+          "lastUpdate": "2025-09-17T10:00:00.963Z",
+          "minutesAgo": 284376,
+          "status": "offline"
+        },
+        {
+          "model": "o4-mini-deep-research-2025-06-26",
+          "lastUpdate": "2025-09-17T10:00:00.963Z",
+          "minutesAgo": 284376,
+          "status": "offline"
+        },
+        {
+          "model": "gpt-5-mini-2025-08-07",
+          "lastUpdate": "2025-09-17T10:00:00.963Z",
+          "minutesAgo": 284376,
+          "status": "offline"
+        },
+        {
+          "model": "claude-3-5-sonnet-20240620",
+          "lastUpdate": "2025-09-17T10:00:00.963Z",
+          "minutesAgo": 284376,
+          "status": "offline"
+        },
+        {
+          "model": "embedding-gecko-001",
+          "lastUpdate": "2025-09-17T10:00:00.963Z",
+          "minutesAgo": 284376,
+          "status": "offline"
+        },
+        {
+          "model": "gemini-1.5-flash-002",
+          "lastUpdate": "2025-09-17T10:00:00.963Z",
+          "minutesAgo": 284376,
+          "status": "offline"
+        },
+        {
+          "model": "gemini-1.5-flash-8b",
+          "lastUpdate": "2025-09-17T10:00:00.963Z",
+          "minutesAgo": 284376,
+          "status": "offline"
+        },
+        {
+          "model": "gemini-1.5-flash-8b-001",
+          "lastUpdate": "2025-09-17T10:00:00.963Z",
+          "minutesAgo": 284376,
+          "status": "offline"
+        },
+        {
+          "model": "gemini-1.5-flash-8b-latest",
+          "lastUpdate": "2025-09-17T10:00:00.963Z",
+          "minutesAgo": 284376,
+          "status": "offline"
+        },
+        {
+          "model": "gemini-2.5-pro-preview-06-05",
+          "lastUpdate": "2025-09-17T10:00:00.963Z",
+          "minutesAgo": 284376,
+          "status": "offline"
+        },
+        {
+          "model": "gemini-2.0-flash-lite-001",
+          "lastUpdate": "2025-09-17T10:00:00.963Z",
+          "minutesAgo": 284376,
+          "status": "offline"
+        },
+        {
+          "model": "gemini-2.0-pro-exp",
+          "lastUpdate": "2025-09-17T10:00:00.963Z",
+          "minutesAgo": 284376,
+          "status": "offline"
+        },
+        {
+          "model": "gemini-2.0-pro-exp-02-05",
+          "lastUpdate": "2025-09-17T10:00:00.963Z",
+          "minutesAgo": 284376,
+          "status": "offline"
+        },
+        {
+          "model": "gemini-2.0-flash-thinking-exp-01-21",
+          "lastUpdate": "2025-09-17T10:00:00.963Z",
+          "minutesAgo": 284376,
+          "status": "offline"
+        },
+        {
+          "model": "gemini-2.5-pro-preview-tts",
+          "lastUpdate": "2025-09-17T10:00:00.963Z",
+          "minutesAgo": 284376,
+          "status": "offline"
+        },
+        {
+          "model": "gemma-3-4b-it",
+          "lastUpdate": "2025-09-17T10:00:00.963Z",
+          "minutesAgo": 284376,
+          "status": "offline"
+        },
+        {
+          "model": "gemma-3n-e4b-it",
+          "lastUpdate": "2025-09-17T10:00:00.963Z",
+          "minutesAgo": 284376,
+          "status": "offline"
+        },
+        {
+          "model": "gemini-2.5-flash-image-preview",
+          "lastUpdate": "2025-09-17T10:00:00.963Z",
+          "minutesAgo": 284376,
+          "status": "offline"
+        },
+        {
+          "model": "embedding-001",
+          "lastUpdate": "2025-09-17T10:00:00.963Z",
+          "minutesAgo": 284376,
+          "status": "offline"
+        },
+        {
+          "model": "text-embedding-004",
+          "lastUpdate": "2025-09-17T10:00:00.963Z",
+          "minutesAgo": 284376,
+          "status": "offline"
+        },
+        {
+          "model": "gemini-embedding-exp-03-07",
+          "lastUpdate": "2025-09-17T10:00:00.963Z",
+          "minutesAgo": 284376,
+          "status": "offline"
+        },
+        {
+          "model": "imagen-3.0-generate-002",
+          "lastUpdate": "2025-09-17T10:00:00.963Z",
+          "minutesAgo": 284376,
+          "status": "offline"
+        },
+        {
+          "model": "claude-3-5-sonnet",
+          "lastUpdate": "2025-09-17T10:00:00.963Z",
+          "minutesAgo": 284376,
+          "status": "offline"
+        },
+        {
+          "model": "claude-3-5-haiku",
+          "lastUpdate": "2025-09-17T10:00:00.963Z",
+          "minutesAgo": 284376,
+          "status": "offline"
+        },
+        {
+          "model": "claude-3-7-sonnet",
+          "lastUpdate": "2025-09-17T10:00:00.963Z",
+          "minutesAgo": 284376,
+          "status": "offline"
+        },
+        {
+          "model": "gemma-3n-e2b-it",
+          "lastUpdate": "2025-09-17T09:58:20.832Z",
+          "minutesAgo": 284377,
+          "status": "offline"
+        },
+        {
+          "model": "gemini-1.5-flash-latest",
+          "lastUpdate": "2025-09-17T09:50:38.447Z",
+          "minutesAgo": 284385,
+          "status": "offline"
+        },
+        {
+          "model": "gemini-exp-1206",
+          "lastUpdate": "2025-09-17T09:50:38.447Z",
+          "minutesAgo": 284385,
+          "status": "offline"
+        },
+        {
+          "model": "gemini-2.0-flash-thinking-exp",
+          "lastUpdate": "2025-09-17T09:50:38.447Z",
+          "minutesAgo": 284385,
+          "status": "offline"
+        },
+        {
+          "model": "gemini-2.0-flash-thinking-exp-1219",
+          "lastUpdate": "2025-09-17T09:50:38.447Z",
+          "minutesAgo": 284385,
+          "status": "offline"
+        },
+        {
+          "model": "gemini-2.5-flash-preview-tts",
+          "lastUpdate": "2025-09-17T09:50:38.447Z",
+          "minutesAgo": 284385,
+          "status": "offline"
+        },
+        {
+          "model": "learnlm-2.0-flash-experimental",
+          "lastUpdate": "2025-09-17T09:50:38.447Z",
+          "minutesAgo": 284385,
+          "status": "offline"
+        },
+        {
+          "model": "gemma-3-1b-it",
+          "lastUpdate": "2025-09-17T09:50:38.447Z",
+          "minutesAgo": 284385,
+          "status": "offline"
+        },
+        {
+          "model": "gemma-3-12b-it",
+          "lastUpdate": "2025-09-17T09:50:38.447Z",
+          "minutesAgo": 284385,
+          "status": "offline"
+        },
+        {
+          "model": "gemini-embedding-exp",
+          "lastUpdate": "2025-09-17T09:50:38.447Z",
+          "minutesAgo": 284385,
+          "status": "offline"
+        },
+        {
+          "model": "imagen-4.0-generate-preview-06-06",
+          "lastUpdate": "2025-09-17T09:50:38.447Z",
+          "minutesAgo": 284385,
+          "status": "offline"
+        },
+        {
+          "model": "imagen-4.0-ultra-generate-preview-06-06",
+          "lastUpdate": "2025-09-17T09:50:38.447Z",
+          "minutesAgo": 284385,
+          "status": "offline"
+        },
+        {
+          "model": "gpt-4o-realtime-preview-2024-10-01",
+          "lastUpdate": "2025-09-17T09:41:18.755Z",
+          "minutesAgo": 284394,
+          "status": "offline"
+        },
+        {
+          "model": "gpt-4o-search-preview",
+          "lastUpdate": "2025-09-17T09:41:18.755Z",
+          "minutesAgo": 284394,
+          "status": "offline"
+        },
+        {
+          "model": "gpt-4o-realtime-preview-2025-06-03",
+          "lastUpdate": "2025-09-17T09:15:22.562Z",
+          "minutesAgo": 284420,
+          "status": "offline"
+        },
+        {
+          "model": "gemini-1.5-flash",
+          "lastUpdate": "2025-09-17T08:32:33.299Z",
+          "minutesAgo": 284463,
+          "status": "offline"
+        },
+        {
+          "model": "claude-opus-4-20250514",
+          "lastUpdate": "2025-09-17T08:32:33.299Z",
+          "minutesAgo": 284463,
+          "status": "offline"
+        },
+        {
+          "model": "gpt-4o-mini-audio-preview-2024-12-17",
+          "lastUpdate": "2025-09-17T08:32:33.299Z",
+          "minutesAgo": 284463,
+          "status": "offline"
+        },
+        {
+          "model": "o3-mini-2025-01-31",
+          "lastUpdate": "2025-09-17T08:32:33.299Z",
+          "minutesAgo": 284463,
+          "status": "offline"
+        },
+        {
+          "model": "gpt-4o-search-preview-2025-03-11",
+          "lastUpdate": "2025-09-17T08:32:33.299Z",
+          "minutesAgo": 284463,
+          "status": "offline"
+        },
+        {
+          "model": "gpt-4o-mini-transcribe",
+          "lastUpdate": "2025-09-17T08:32:33.299Z",
+          "minutesAgo": 284463,
+          "status": "offline"
+        },
+        {
+          "model": "o1-pro-2025-03-19",
+          "lastUpdate": "2025-09-17T08:32:33.299Z",
+          "minutesAgo": 284463,
+          "status": "offline"
+        },
+        {
+          "model": "gpt-4o-mini-tts",
+          "lastUpdate": "2025-09-17T08:32:33.299Z",
+          "minutesAgo": 284463,
+          "status": "offline"
+        },
+        {
+          "model": "gemini-1.5-pro-latest",
+          "lastUpdate": "2025-09-17T08:32:33.299Z",
+          "minutesAgo": 284463,
+          "status": "offline"
+        },
+        {
+          "model": "gemini-2.0-flash-001",
+          "lastUpdate": "2025-09-17T08:32:33.299Z",
+          "minutesAgo": 284463,
+          "status": "offline"
+        },
+        {
+          "model": "gemini-2.0-flash-lite",
+          "lastUpdate": "2025-09-17T08:32:33.299Z",
+          "minutesAgo": 284463,
+          "status": "offline"
+        },
+        {
+          "model": "gemma-3-27b-it",
+          "lastUpdate": "2025-09-17T08:32:33.299Z",
+          "minutesAgo": 284463,
+          "status": "offline"
+        },
+        {
+          "model": "gpt-5-chat-latest",
+          "lastUpdate": "2025-09-15T12:56:45.849Z",
+          "minutesAgo": 287079,
+          "status": "offline"
+        },
+        {
+          "model": "gpt-4o-2024-05-13",
+          "lastUpdate": "2025-09-15T12:56:45.849Z",
+          "minutesAgo": 287079,
+          "status": "offline"
+        },
+        {
+          "model": "gpt-4o-mini-2024-07-18",
+          "lastUpdate": "2025-09-15T12:56:45.849Z",
+          "minutesAgo": 287079,
+          "status": "offline"
+        },
+        {
+          "model": "gpt-4o-2024-08-06",
+          "lastUpdate": "2025-09-15T12:56:45.849Z",
+          "minutesAgo": 287079,
+          "status": "offline"
+        },
+        {
+          "model": "o1-mini",
+          "lastUpdate": "2025-09-15T12:56:45.849Z",
+          "minutesAgo": 287079,
+          "status": "offline"
+        },
+        {
+          "model": "gpt-4o-realtime-preview-2024-12-17",
+          "lastUpdate": "2025-09-15T12:56:45.849Z",
+          "minutesAgo": 287079,
+          "status": "offline"
+        },
+        {
+          "model": "gpt-4o-audio-preview-2024-12-17",
+          "lastUpdate": "2025-09-15T12:56:45.849Z",
+          "minutesAgo": 287079,
+          "status": "offline"
+        },
+        {
+          "model": "gpt-4o-mini-realtime-preview-2024-12-17",
+          "lastUpdate": "2025-09-15T12:56:45.849Z",
+          "minutesAgo": 287079,
+          "status": "offline"
+        },
+        {
+          "model": "o1",
+          "lastUpdate": "2025-09-15T12:56:45.849Z",
+          "minutesAgo": 287079,
+          "status": "offline"
+        },
+        {
+          "model": "gpt-4o-mini-realtime-preview",
+          "lastUpdate": "2025-09-15T12:56:45.849Z",
+          "minutesAgo": 287079,
+          "status": "offline"
+        },
+        {
+          "model": "o3-mini",
+          "lastUpdate": "2025-09-15T12:56:45.849Z",
+          "minutesAgo": 287079,
+          "status": "offline"
+        },
+        {
+          "model": "gpt-4o-transcribe",
+          "lastUpdate": "2025-09-15T12:56:45.849Z",
+          "minutesAgo": 287079,
+          "status": "offline"
+        },
+        {
+          "model": "o1-pro",
+          "lastUpdate": "2025-09-15T12:56:45.849Z",
+          "minutesAgo": 287079,
+          "status": "offline"
+        },
+        {
+          "model": "o3-2025-04-16",
+          "lastUpdate": "2025-09-15T12:56:45.849Z",
+          "minutesAgo": 287079,
+          "status": "offline"
+        },
+        {
+          "model": "o4-mini-2025-04-16",
+          "lastUpdate": "2025-09-15T12:56:45.849Z",
+          "minutesAgo": 287079,
+          "status": "offline"
+        },
+        {
+          "model": "gpt-4o-audio-preview-2025-06-03",
+          "lastUpdate": "2025-09-15T12:56:45.849Z",
+          "minutesAgo": 287079,
+          "status": "offline"
+        },
+        {
+          "model": "o4-mini-deep-research",
+          "lastUpdate": "2025-09-15T12:56:45.849Z",
+          "minutesAgo": 287079,
+          "status": "offline"
+        },
+        {
+          "model": "gpt-5-nano-2025-08-07",
+          "lastUpdate": "2025-09-15T12:56:45.849Z",
+          "minutesAgo": 287079,
+          "status": "offline"
+        },
+        {
+          "model": "aqa",
+          "lastUpdate": "2025-09-15T12:56:45.849Z",
+          "minutesAgo": 287079,
+          "status": "offline"
+        },
+        {
+          "model": "gemini-2.0-flash-exp",
+          "lastUpdate": "2025-09-15T12:08:37.805Z",
+          "minutesAgo": 287127,
+          "status": "offline"
+        },
+        {
+          "model": "gemini-embedding-001",
+          "lastUpdate": "2025-09-15T12:08:37.805Z",
+          "minutesAgo": 287127,
+          "status": "offline"
+        }
+      ]
+    },
+    "providerReliability": [
+      {
+        "provider": "openai",
+        "trustScore": 86,
+        "totalIncidents": 0,
+        "incidentsPerMonth": 0,
+        "avgRecoveryHours": "1.2",
+        "lastIncident": null,
+        "trend": "reliable",
+        "activeModels": 0,
+        "topPerformers": 3,
+        "isAvailable": true
+      },
+      {
+        "provider": "xai",
+        "trustScore": 63,
+        "totalIncidents": 3,
+        "incidentsPerMonth": 3,
+        "avgRecoveryHours": "1.2",
+        "lastIncident": "2026-03-31T21:34:32.840Z",
+        "trend": "unreliable",
+        "activeModels": 0,
+        "topPerformers": 3,
+        "isAvailable": true
+      },
+      {
+        "provider": "google",
+        "trustScore": 55,
+        "totalIncidents": 5,
+        "incidentsPerMonth": 5,
+        "avgRecoveryHours": "1.2",
+        "lastIncident": "2026-03-31T21:34:32.802Z",
+        "trend": "unreliable",
+        "activeModels": 0,
+        "topPerformers": 2,
+        "isAvailable": true
+      },
+      {
+        "provider": "anthropic",
+        "trustScore": 45,
+        "totalIncidents": 41,
+        "incidentsPerMonth": 41,
+        "avgRecoveryHours": "1.2",
+        "lastIncident": "2026-03-31T21:34:32.755Z",
+        "trend": "unreliable",
+        "activeModels": 0,
+        "topPerformers": 6,
+        "isAvailable": true
+      }
+    ],
+    "driftIncidents": [
+      {
+        "id": 663,
+        "modelId": 38,
+        "modelName": "claude-opus-4-1-20250805",
+        "provider": "anthropic",
+        "incidentType": "provider_wide_degradation",
+        "severity": "critical",
+        "title": "PROVIDER INCIDENT: ANTHROPIC — 6/6 models affected",
+        "description": "Provider-level incident: 6/6 anthropic models affected. Monitor closely for resolution.",
+        "detectedAt": "2026-04-02T09:00:29.008Z",
+        "resolvedAt": null,
+        "metadata": {
+          "alertRate": 1,
+          "affectedModels": [
+            "claude-opus-4-1-20250805",
+            "claude-sonnet-4-20250514",
+            "claude-sonnet-4-5-20250929",
+            "claude-opus-4-5-20251101",
+            "claude-opus-4-6",
+            "claude-sonnet-4-6"
+          ],
+          "severity": "critical"
+        }
+      },
+      {
+        "id": 662,
+        "modelId": 38,
+        "modelName": "claude-opus-4-1-20250805",
+        "provider": "anthropic",
+        "incidentType": "performance_drift",
+        "severity": "critical",
+        "title": "PERFORMANCE DRIFT: claude-opus-4-1-20250805",
+        "description": "Performance dropped 100.0% in last 24h (21.7 → 0.0)",
+        "detectedAt": "2026-04-02T09:00:28.832Z",
+        "resolvedAt": null,
+        "metadata": {
+          "dropPercent": "100.0",
+          "previousAvg": "21.7",
+          "recentAvg": "0.0",
+          "dataPoints": 3,
+          "detectionMethod": "canary_drift"
+        }
+      },
+      {
+        "id": 661,
+        "modelId": 167,
+        "modelName": "deepseek-chat",
+        "provider": "deepseek",
+        "incidentType": "performance_drift",
+        "severity": "warning",
+        "title": "PERFORMANCE DRIFT: deepseek-chat",
+        "description": "Performance dropped 13.3% in last 24h (86.5 → 75.0)",
+        "detectedAt": "2026-04-02T02:00:26.619Z",
+        "resolvedAt": null,
+        "metadata": {
+          "dropPercent": "13.3",
+          "previousAvg": "86.5",
+          "recentAvg": "75.0",
+          "dataPoints": 4,
+          "detectionMethod": "canary_drift"
+        }
+      },
+      {
+        "id": 660,
+        "modelId": 166,
+        "modelName": "deepseek-reasoner",
+        "provider": "deepseek",
+        "incidentType": "performance_drift",
+        "severity": "critical",
+        "title": "PERFORMANCE DRIFT: deepseek-reasoner",
+        "description": "Performance dropped 46.7% in last 24h (62.6 → 33.3)",
+        "detectedAt": "2026-04-02T02:00:26.615Z",
+        "resolvedAt": null,
+        "metadata": {
+          "dropPercent": "46.7",
+          "previousAvg": "62.6",
+          "recentAvg": "33.3",
+          "dataPoints": 3,
+          "detectionMethod": "canary_drift"
+        }
+      },
+      {
+        "id": 659,
+        "modelId": 38,
+        "modelName": "claude-opus-4-1-20250805",
+        "provider": "anthropic",
+        "incidentType": "performance_drift",
+        "severity": "warning",
+        "title": "PERFORMANCE DRIFT: claude-opus-4-1-20250805",
+        "description": "Performance dropped 11.1% in last 24h (21.4 → 19.0)",
+        "detectedAt": "2026-03-31T19:00:19.828Z",
+        "resolvedAt": null,
+        "metadata": {
+          "dropPercent": "11.1",
+          "previousAvg": "21.4",
+          "recentAvg": "19.0",
+          "dataPoints": 21,
+          "detectionMethod": "canary_drift"
+        }
+      },
+      {
+        "id": 658,
+        "modelId": 167,
+        "modelName": "deepseek-chat",
+        "provider": "deepseek",
+        "incidentType": "performance_drift",
+        "severity": "warning",
+        "title": "PERFORMANCE DRIFT: deepseek-chat",
+        "description": "Performance dropped 12.1% in last 24h (91.7 → 80.6)",
+        "detectedAt": "2026-03-31T16:00:26.681Z",
+        "resolvedAt": null,
+        "metadata": {
+          "dropPercent": "12.1",
+          "previousAvg": "91.7",
+          "recentAvg": "80.6",
+          "dataPoints": 18,
+          "detectionMethod": "canary_drift"
+        }
+      },
+      {
+        "id": 657,
+        "modelId": 160,
+        "modelName": "claude-sonnet-4-5-20250929",
+        "provider": "anthropic",
+        "incidentType": "performance_drift",
+        "severity": "critical",
+        "title": "PERFORMANCE DRIFT: claude-sonnet-4-5-20250929",
+        "description": "Performance dropped 30.0% in last 24h (71.4 → 50.0)",
+        "detectedAt": "2026-03-30T23:00:41.298Z",
+        "resolvedAt": null,
+        "metadata": {
+          "dropPercent": "30.0",
+          "previousAvg": "71.4",
+          "recentAvg": "50.0",
+          "dataPoints": 3,
+          "detectionMethod": "canary_drift"
+        }
+      },
+      {
+        "id": 656,
+        "modelId": 38,
+        "modelName": "claude-opus-4-1-20250805",
+        "provider": "anthropic",
+        "incidentType": "performance_drift",
+        "severity": "critical",
+        "title": "PERFORMANCE DRIFT: claude-opus-4-1-20250805",
+        "description": "Performance dropped 21.9% in last 24h (26.7 → 20.8)",
+        "detectedAt": "2026-03-29T10:00:21.864Z",
+        "resolvedAt": null,
+        "metadata": {
+          "dropPercent": "21.9",
+          "previousAvg": "26.7",
+          "recentAvg": "20.8",
+          "dataPoints": 24,
+          "detectionMethod": "canary_drift"
+        }
+      },
+      {
+        "id": 655,
+        "modelId": 166,
+        "modelName": "deepseek-reasoner",
+        "provider": "deepseek",
+        "incidentType": "performance_drift",
+        "severity": "critical",
+        "title": "PERFORMANCE DRIFT: deepseek-reasoner",
+        "description": "Performance dropped 24.6% in last 24h (63.3 → 47.7)",
+        "detectedAt": "2026-03-29T04:00:25.091Z",
+        "resolvedAt": null,
+        "metadata": {
+          "dropPercent": "24.6",
+          "previousAvg": "63.3",
+          "recentAvg": "47.7",
+          "dataPoints": 22,
+          "detectionMethod": "canary_drift"
+        }
+      },
+      {
+        "id": 654,
+        "modelId": 220,
+        "modelName": "claude-opus-4-6",
+        "provider": "anthropic",
+        "incidentType": "performance_drift",
+        "severity": "warning",
+        "title": "PERFORMANCE DRIFT: claude-opus-4-6",
+        "description": "Performance dropped 12.5% in last 24h (100.0 → 87.5)",
+        "detectedAt": "2026-03-28T13:00:24.299Z",
+        "resolvedAt": null,
+        "metadata": {
+          "dropPercent": "12.5",
+          "previousAvg": "100.0",
+          "recentAvg": "87.5",
+          "dataPoints": 24,
+          "detectionMethod": "canary_drift"
+        }
+      },
+      {
+        "id": 653,
+        "modelId": 167,
+        "modelName": "deepseek-chat",
+        "provider": "deepseek",
+        "incidentType": "performance_drift",
+        "severity": "warning",
+        "title": "PERFORMANCE DRIFT: deepseek-chat",
+        "description": "Performance dropped 12.3% in last 24h (91.7 → 80.4)",
+        "detectedAt": "2026-03-28T11:00:21.338Z",
+        "resolvedAt": null,
+        "metadata": {
+          "dropPercent": "12.3",
+          "previousAvg": "91.7",
+          "recentAvg": "80.4",
+          "dataPoints": 23,
+          "detectionMethod": "canary_drift"
+        }
+      },
+      {
+        "id": 652,
+        "modelId": 188,
+        "modelName": "claude-opus-4-5-20251101",
+        "provider": "anthropic",
+        "incidentType": "performance_drift",
+        "severity": "warning",
+        "title": "PERFORMANCE DRIFT: claude-opus-4-5-20251101",
+        "description": "Performance dropped 10.4% in last 24h (100.0 → 89.6)",
+        "detectedAt": "2026-03-28T09:00:23.506Z",
+        "resolvedAt": null,
+        "metadata": {
+          "dropPercent": "10.4",
+          "previousAvg": "100.0",
+          "recentAvg": "89.6",
+          "dataPoints": 24,
+          "detectionMethod": "canary_drift"
+        }
+      },
+      {
+        "id": 651,
+        "modelId": 38,
+        "modelName": "claude-opus-4-1-20250805",
+        "provider": "anthropic",
+        "incidentType": "performance_drift",
+        "severity": "critical",
+        "title": "PERFORMANCE DRIFT: claude-opus-4-1-20250805",
+        "description": "Performance dropped 43.8% in last 24h (33.3 → 18.8)",
+        "detectedAt": "2026-03-28T09:00:23.467Z",
+        "resolvedAt": null,
+        "metadata": {
+          "dropPercent": "43.8",
+          "previousAvg": "33.3",
+          "recentAvg": "18.8",
+          "dataPoints": 24,
+          "detectionMethod": "canary_drift"
+        }
+      },
+      {
+        "id": 650,
+        "modelId": 166,
+        "modelName": "deepseek-reasoner",
+        "provider": "deepseek",
+        "incidentType": "performance_drift",
+        "severity": "warning",
+        "title": "PERFORMANCE DRIFT: deepseek-reasoner",
+        "description": "Performance dropped 16.5% in last 24h (62.5 → 52.2)",
+        "detectedAt": "2026-03-28T04:00:23.371Z",
+        "resolvedAt": null,
+        "metadata": {
+          "dropPercent": "16.5",
+          "previousAvg": "62.5",
+          "recentAvg": "52.2",
+          "dataPoints": 23,
+          "detectionMethod": "canary_drift"
+        }
+      }
+    ]
+  },
+  "meta": {
+    "period": "latest",
+    "sortBy": "combined",
+    "analyticsPeriod": "latest",
+    "cachedAt": "2026-04-02T21:35:34.898Z",
+    "cached": true,
+    "analyticsRealTime": true
+  }
+}

@@ -38,7 +38,18 @@ ast              # Claude status report
 ast --watch      # Live dashboard, refreshes every 60s
 ast --watch 300  # Live dashboard, custom interval (300s)
 ast --json       # Machine-readable JSON output
+ast --help       # Show usage info
 NO_COLOR=1 ast   # Disable colors
+```
+
+## Development
+
+```bash
+make check      # Run lint + format check + tests
+make test       # Run tests offline (mock API fixtures)
+make test-live  # Run tests against the live API
+make lint       # ShellCheck
+make fmt        # shfmt format check
 ```
 
 ## Data source
