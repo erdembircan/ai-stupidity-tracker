@@ -8,9 +8,9 @@ model=$(echo "$input" | jq -r '.model // empty')
 rankings=$(ast --json 2>/dev/null) || exit 0
 
 # Strip context suffix like [1m]
-base_model=$(echo "$model" | sed 's/\[.*$//')
-current_rank=$(echo "$rankings" | jq -r --arg m "$base_model" '[.claudeRankings[] | select(.name | test($m))][0].rank // empty')
-current_score=$(echo "$rankings" | jq -r --arg m "$base_model" '[.claudeRankings[] | select(.name | test($m))][0].score // empty')
+base_model="${model%%\[*}"
+current_rank=$(echo "$rankings" | jq -r --arg m "$base_model" '[.claudeRankings[] | select(.name | contains($m))][0].rank // empty')
+current_score=$(echo "$rankings" | jq -r --arg m "$base_model" '[.claudeRankings[] | select(.name | contains($m))][0].score // empty')
 
 best_name=$(echo "$rankings" | jq -r '.claudeRankings[0].name')
 best_rank=$(echo "$rankings" | jq -r '.claudeRankings[0].rank')
@@ -21,6 +21,6 @@ if [[ -z "$current_rank" ]]; then
     '{"systemMessage": "⚠ AI Stupidity Index: Top Claude model is \($b) (rank #\($br), score \($bs)). Your model was not found in rankings."}'
 elif [[ "$current_rank" -gt "$best_rank" ]]; then
   jq -n --arg m "$base_model" --arg cr "$current_rank" --arg cs "$current_score" \
-       --arg b "$best_name" --arg br "$best_rank" --arg bs "$best_score" \
+    --arg b "$best_name" --arg br "$best_rank" --arg bs "$best_score" \
     '{"systemMessage": "⚠ AI Stupidity Index: \($b) is ranked #\($br) (score \($bs)) vs your \($m) at #\($cr) (score \($cs)). Consider /model to switch."}'
 fi

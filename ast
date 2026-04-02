@@ -7,6 +7,15 @@ readonly BASE_URL="https://aistupidlevel.info"
 readonly DASHBOARD_URL="${BASE_URL}/dashboard/cached?period=latest&sortBy=combined&analyticsPeriod=latest"
 readonly GLOBAL_INDEX_URL="${BASE_URL}/dashboard/global-index"
 readonly BOX_WIDTH=54
+readonly MIN_TERM_WIDTH=$((BOX_WIDTH + 2))
+NARROW_TERM=false
+if [[ ! -t 1 ]] || [[ -n "${NO_COLOR:-}" ]]; then
+  NARROW_TERM=true
+elif TERM_WIDTH=$(tput cols 2>/dev/null); then
+  if ((TERM_WIDTH < MIN_TERM_WIDTH)); then
+    NARROW_TERM=true
+  fi
+fi
 
 # ── Dependency Check ────────────────────────────────
 if ! command -v jq &>/dev/null; then
@@ -24,15 +33,15 @@ fi
 if [[ -n "${NO_COLOR:-}" ]]; then
   RST="" BOLD="" DIM="" RED="" GREEN="" YELLOW="" CYAN="" GRAY="" WHITE=""
 else
-  RST='\033[0m'
-  BOLD='\033[1m'
-  DIM='\033[2m'
-  RED='\033[31m'
-  GREEN='\033[32m'
-  YELLOW='\033[33m'
-  CYAN='\033[36m'
-  GRAY='\033[90m'
-  WHITE='\033[97m'
+  RST=$'\033[0m'
+  BOLD=$'\033[1m'
+  DIM=$'\033[2m'
+  RED=$'\033[31m'
+  GREEN=$'\033[32m'
+  YELLOW=$'\033[33m'
+  CYAN=$'\033[36m'
+  GRAY=$'\033[90m'
+  WHITE=$'\033[97m'
 fi
 
 # ── Symbols ─────────────────────────────────────────
@@ -55,19 +64,31 @@ box_top() {
   # ╭── (3) + space (1) + title + space (1) + dashes + ╮ (1) = BOX_WIDTH
   local dashes=$((BOX_WIDTH - title_len - 6))
   if ((dashes < 1)); then dashes=1; fi
-  printf "  ${DIM}╭──${RST} ${BOLD}%s${RST} ${DIM}%s╮${RST}\n" "$title" "$(printf '%*s' "$dashes" '' | tr ' ' '─')"
+  if [[ "$NARROW_TERM" == true ]]; then
+    printf "  ${DIM}╭──${RST} ${BOLD}%s${RST} ${DIM}%s${RST}\n" "$title" "$(printf '%*s' "$dashes" '' | tr ' ' '─')"
+  else
+    printf "  ${DIM}╭──${RST} ${BOLD}%s${RST} ${DIM}%s╮${RST}\n" "$title" "$(printf '%*s' "$dashes" '' | tr ' ' '─')"
+  fi
 }
 
 box_row() {
   local content="$1"
-  # Use cursor positioning to place right border at fixed column
-  # This avoids all Unicode display-width issues
-  printf "  ${DIM}│${RST} %b${RST}\033[${RIGHT_COL}G${DIM}│${RST}\n" "$content"
+  if [[ "$NARROW_TERM" == true ]]; then
+    printf "  ${DIM}│${RST} %s${RST}\n" "$content"
+  else
+    # Use cursor positioning to place right border at fixed column
+    # This avoids all Unicode display-width issues
+    printf "  ${DIM}│${RST} %s${RST}\033[${RIGHT_COL}G${DIM}│${RST}\n" "$content"
+  fi
 }
 
 box_bottom() {
   # ╰ (1) + dashes + ╯ (1) = BOX_WIDTH
-  printf "  ${DIM}╰%s╯${RST}\n" "$(printf '%*s' $((BOX_WIDTH - 2)) '' | tr ' ' '─')"
+  if [[ "$NARROW_TERM" == true ]]; then
+    printf "  ${DIM}╰%s${RST}\n" "$(printf '%*s' $((BOX_WIDTH - 2)) '' | tr ' ' '─')"
+  else
+    printf "  ${DIM}╰%s╯${RST}\n" "$(printf '%*s' $((BOX_WIDTH - 2)) '' | tr ' ' '─')"
+  fi
 }
 
 box_empty() {
@@ -78,9 +99,9 @@ box_empty() {
 dot_row() {
   local label="$1" value="$2"
   local label_stripped
-  label_stripped=$(printf '%b' "$label" | sed $'s/\033\\[[0-9;]*m//g')
+  label_stripped=$(printf '%s' "$label" | sed $'s/\033\\[[0-9;]*m//g')
   local value_stripped
-  value_stripped=$(printf '%b' "$value" | sed $'s/\033\\[[0-9;]*m//g')
+  value_stripped=$(printf '%s' "$value" | sed $'s/\033\\[[0-9;]*m//g')
   local total_content=$((${#label_stripped} + ${#value_stripped}))
   # 1 (│) + 1 (space) + label + dots + value + 1 (space) + 1 (│) = BOX_WIDTH
   local dots=$((BOX_WIDTH - total_content - 5))
@@ -94,22 +115,22 @@ dot_row() {
 status_color() {
   local status="$1"
   case "$status" in
-    stable|good)      printf '%b' "${GREEN}" ;;
-    volatile|warning|minor) printf '%b' "${YELLOW}" ;;
-    degraded|critical|unreliable|major) printf '%b' "${RED}" ;;
-    recovering)       printf '%b' "${CYAN}" ;;
-    *)               printf '%b' "${RST}" ;;
+  stable | good) printf '%s' "${GREEN}" ;;
+  volatile | warning | minor) printf '%s' "${YELLOW}" ;;
+  degraded | critical | unreliable | major) printf '%s' "${RED}" ;;
+  recovering) printf '%s' "${CYAN}" ;;
+  *) printf '%s' "${RST}" ;;
   esac
 }
 
 status_label() {
   local status="$1"
   case "$status" in
-    stable|good)     echo "STABLE" ;;
-    volatile|warning) echo "VOLATILE" ;;
-    degraded|critical) echo "DEGRADED" ;;
-    recovering)      echo "RECOVERING" ;;
-    *)               echo "$status" | tr '[:lower:]' '[:upper:]' ;;
+  stable | good) echo "STABLE" ;;
+  volatile | warning) echo "VOLATILE" ;;
+  degraded | critical) echo "DEGRADED" ;;
+  recovering) echo "RECOVERING" ;;
+  *) echo "$status" | tr '[:lower:]' '[:upper:]' ;;
   esac
 }
 
@@ -122,8 +143,8 @@ spinner_start() {
   (
     local i=0
     while true; do
-      printf "\r  ${DIM}${frames[$i]} ${msg}${RST}" >&2
-      i=$(( (i + 1) % ${#frames[@]} ))
+      printf '\r%s' "  ${DIM}${frames[$i]} ${msg}${RST}" >&2
+      i=$(((i + 1) % ${#frames[@]}))
       sleep 0.08
     done
   ) &
@@ -135,7 +156,12 @@ spinner_stop() {
     kill "$SPINNER_PID" 2>/dev/null || true
     wait "$SPINNER_PID" 2>/dev/null || true
     SPINNER_PID=""
-    printf "\r\033[2K" >&2
+    if [[ "$NARROW_TERM" == true ]]; then
+      printf '\r%s' "$(printf '%*s' 40 '')" >&2
+      printf '\r' >&2
+    else
+      printf "\r\033[2K" >&2
+    fi
   fi
 }
 
@@ -148,10 +174,10 @@ fetch_data() {
   response=$(curl -sf --max-time 10 "$url" 2>/dev/null)
   if [[ -z "$response" ]]; then
     spinner_stop
-    printf "  ${RED}${SYM_CROSS} Failed to fetch data from API${RST}\n"
+    printf '%s\n' "  ${RED}${SYM_CROSS} Failed to fetch data from API${RST}"
     exit 1
   fi
-  echo "$response"
+  printf '%s\n' "$response"
 }
 
 # ── JSON Output ─────────────────────────────────────
@@ -269,30 +295,69 @@ render() {
   local dashboard="$1" global_index="$2" last_updated="$3"
   local prev_ranks="${4:-}"
 
+  # ── Extract all global index data in one call ───
+  local g_score g_trend g_performing g_total
+  read -r g_score g_trend g_performing g_total < <(
+    printf '%s\n' "$global_index" | jq -r '[.data.current.globalScore, .data.trend, .data.performingWell, .data.totalModels] | @tsv'
+  )
+
+  # ── Extract all dashboard data in one call ──────
+  local d
+  d=$(printf '%s\n' "$dashboard" | jq '
+    (.data.modelScores | to_entries | [.[] | select(.value.provider == "anthropic")]) as $claude |
+    (.data.recommendations) as $reco |
+    {
+      goodModels: ([.data.modelScores[] | select(.status == "good") | .name] | join(", ")),
+      claudeModels: [$claude[] | {rank: (.key + 1), name: .value.name, score: .value.currentScore, status: .value.status}],
+      claudeCount: ($claude | length),
+      maxNameLen: ([$claude[].value.name | length] | max // 0),
+      bestFor: [
+        (if $reco.bestForCode.vendor == "anthropic"
+         then {label: "BEST FOR CODE", pad: 6, name: $reco.bestForCode.name, score: $reco.bestForCode.score} else empty end),
+        (if $reco.mostReliable.vendor == "anthropic"
+         then {label: "MOST RELIABLE", pad: 5, name: $reco.mostReliable.name, score: $reco.mostReliable.score} else empty end),
+        (if $reco.fastestResponse.vendor == "anthropic"
+         then {label: "FASTEST RESPONSE", pad: 2, name: $reco.fastestResponse.name, score: $reco.fastestResponse.score} else empty end),
+        (if ($reco.bestValue // {}).vendor == "anthropic"
+         then {label: "BEST VALUE", pad: 8, name: $reco.bestValue.name, score: $reco.bestValue.score} else empty end)
+      ],
+      avoidNow: [($reco.avoidNow // [])[] | select(.vendor == "anthropic" or .provider == "anthropic") | .name],
+      degradations: [.data.degradations[] | select(.provider == "anthropic") | {name: .modelName, severity, type, message}],
+      providerTrust: (
+        [.data.providerReliability[] | select(.provider == "anthropic")] |
+        if length > 0 then .[0] | {score: .trustScore, trend, incidents: .incidentsPerMonth}
+        else null end
+      ),
+      driftIncidents: [
+        (.data.driftIncidents // []) |
+        [.[] | select(.provider == "anthropic" or (.modelName | test("claude"; "i")))] |
+        group_by(.modelName)[] |
+        {name: .[0].modelName, severity: (.[0].severity // "unknown"), count: length}
+      ]
+    }
+  ')
+
+  # ── Read all scalar fields from extracted data ──
+  local claude_count max_name_len best_count avoid_count deg_count drift_count
+  read -r claude_count max_name_len best_count avoid_count deg_count drift_count < <(
+    printf '%s\n' "$d" | jq -r '[.claudeCount, .maxNameLen, (.bestFor | length), (.avoidNow | length), (.degradations | length), (.driftIncidents | length)] | @tsv'
+  )
+  local good_models
+  good_models=$(printf '%s\n' "$d" | jq -r '.goodModels')
+
   # ── Header ──────────────────────────────────────
   printf "\n"
-  printf "  ${BOLD}${CYAN}${SYM_DIAMOND} AST${RST}  ${DIM}v${VERSION} ${GRAY}${SYM_BULLET} ${last_updated}${RST}\n"
+  printf '%s\n' "  ${BOLD}${CYAN}${SYM_DIAMOND} AST${RST}  ${DIM}v${VERSION} ${GRAY}${SYM_BULLET} ${last_updated}${RST}"
   printf "\n"
 
   # ── Global Index ────────────────────────────────
-  local g_score g_trend g_performing g_total
-  g_score=$(echo "$global_index" | jq -r '.data.current.globalScore')
-  g_trend=$(echo "$global_index" | jq -r '.data.trend')
-  g_performing=$(echo "$global_index" | jq -r '.data.performingWell')
-  g_total=$(echo "$global_index" | jq -r '.data.totalModels')
-
   local trend_color
   trend_color=$(status_color "$g_trend")
-
-  # Get names of well-performing models
-  local good_models
-  good_models=$(echo "$dashboard" | jq -r '[.data.modelScores[] | select(.status == "good") | .name] | join(", ")')
 
   box_top "Global AI Index"
   dot_row "Score" "${BOLD}${trend_color}${g_score}${RST}/100 ${trend_color}$(status_label "$g_trend")${RST}"
   dot_row "Performing well" "${BOLD}${g_performing}${RST}/${g_total}"
   if [[ -n "$good_models" ]]; then
-    # Truncate if too long for box (max ~46 visible chars for indented line)
     local max_len=44
     if ((${#good_models} > max_len)); then
       good_models="${good_models:0:$((max_len - 3))}..."
@@ -303,24 +368,11 @@ render() {
   printf "\n"
 
   # ── Claude Rankings ─────────────────────────────
-  local claude_models
-  claude_models=$(echo "$dashboard" | jq -r '
-    [.data.modelScores | to_entries[] |
-     select(.value.provider == "anthropic") |
-     {rank: (.key + 1), name: .value.name, score: .value.currentScore, status: .value.status, trend: .value.trend}]
-  ')
-
-  local claude_count
-  claude_count=$(echo "$claude_models" | jq 'length')
-
-  local max_name_len
-  max_name_len=$(echo "$claude_models" | jq -r '[.[].name | length] | max // 0')
-
   box_top "Claude Rankings"
   if ((claude_count == 0)); then
     box_empty "No Claude models found in rankings"
   else
-    echo "$claude_models" | jq -r '.[] | "\(.rank)|\(.name)|\(.score)|\(.status)"' | while IFS='|' read -r rank name score status; do
+    printf '%s\n' "$d" | jq -r '.claudeModels[] | "\(.rank)|\(.name)|\(.score)|\(.status)"' | while IFS='|' read -r rank name score status; do
       local sc
       sc=$(status_color "$status")
       local sl
@@ -329,7 +381,7 @@ render() {
       local change_col="    "
       if [[ -n "$prev_ranks" ]]; then
         local prev_rank
-        prev_rank=$(echo "$prev_ranks" | jq -r --arg n "$name" '.[$n] // empty')
+        prev_rank=$(printf '%s\n' "$prev_ranks" | jq -r --arg n "$name" '.[$n] // empty')
         if [[ -n "$prev_rank" ]] && ((prev_rank != rank)); then
           local arrow_text
           if ((rank < prev_rank)); then
@@ -357,96 +409,35 @@ render() {
   printf "\n"
 
   # ── Best For Categories ─────────────────────────
-  local reco
-  reco=$(echo "$dashboard" | jq '.data.recommendations')
-
-  local best_code_vendor best_reliable_vendor best_fast_vendor best_value_vendor
-  best_code_vendor=$(echo "$reco" | jq -r '.bestForCode.vendor // empty')
-  best_reliable_vendor=$(echo "$reco" | jq -r '.mostReliable.vendor // empty')
-  best_fast_vendor=$(echo "$reco" | jq -r '.fastestResponse.vendor // empty')
-  # bestValue may be nested differently
-  best_value_vendor=$(echo "$reco" | jq -r '.bestValue.vendor // empty')
-
-  local has_best=false
-  local best_lines=()
-
-  if [[ "$best_code_vendor" == "anthropic" ]]; then
-    has_best=true
-    local name score
-    name=$(echo "$reco" | jq -r '.bestForCode.name')
-    score=$(echo "$reco" | jq -r '.bestForCode.score')
-    best_lines+=("${GREEN}${SYM_CHECK} BEST FOR CODE${RST}      ${name} (${BOLD}${score}${RST})")
-  fi
-
-  if [[ "$best_reliable_vendor" == "anthropic" ]]; then
-    has_best=true
-    local name score
-    name=$(echo "$reco" | jq -r '.mostReliable.name')
-    score=$(echo "$reco" | jq -r '.mostReliable.score')
-    best_lines+=("${GREEN}${SYM_CHECK} MOST RELIABLE${RST}     ${name} (${BOLD}${score}${RST})")
-  fi
-
-  if [[ "$best_fast_vendor" == "anthropic" ]]; then
-    has_best=true
-    local name score
-    name=$(echo "$reco" | jq -r '.fastestResponse.name')
-    score=$(echo "$reco" | jq -r '.fastestResponse.score')
-    best_lines+=("${GREEN}${SYM_CHECK} FASTEST RESPONSE${RST}  ${name} (${BOLD}${score}${RST})")
-  fi
-
-  if [[ "$best_value_vendor" == "anthropic" ]]; then
-    has_best=true
-    local name score
-    name=$(echo "$reco" | jq -r '.bestValue.name')
-    score=$(echo "$reco" | jq -r '.bestValue.score')
-    best_lines+=("${GREEN}${SYM_CHECK} BEST VALUE${RST}        ${name} (${BOLD}${score}${RST})")
-  fi
-
   box_top "Best For Categories"
-  if [[ "$has_best" == false ]]; then
+  if ((best_count == 0)); then
     box_empty "No Claude model in any best-for category"
   else
-    for line in "${best_lines[@]}"; do
-      box_row "$line"
+    printf '%s\n' "$d" | jq -r '.bestFor[] | "\(.label)|\(.pad)|\(.name)|\(.score)"' | while IFS='|' read -r label pad_len name score; do
+      local pad
+      pad=$(printf '%*s' "$pad_len" '')
+      box_row "${GREEN}${SYM_CHECK} ${label}${RST}${pad}${name} (${BOLD}${score}${RST})"
     done
   fi
   box_bottom
   printf "\n"
 
   # ── Alerts (Unreliable + Degradations) ──────────
-  # Check degradations for Claude models
-  local claude_degradations
-  claude_degradations=$(echo "$dashboard" | jq '[.data.degradations[] | select(.provider == "anthropic")]')
-  local deg_count
-  deg_count=$(echo "$claude_degradations" | jq 'length')
-
-  # Check avoidNow for Claude models
-  local avoid_models
-  avoid_models=$(echo "$reco" | jq -r '[(.avoidNow // [])[] | select(.vendor == "anthropic" or .provider == "anthropic")] | .[].name' 2>/dev/null)
-
-  local has_alerts=false
-  if [[ -n "$avoid_models" ]] || ((deg_count > 0)); then
-    has_alerts=true
-  fi
-
   box_top "Alerts"
-  if [[ "$has_alerts" == false ]]; then
+  if ((avoid_count == 0)) && ((deg_count == 0)); then
     box_row "${GREEN}${SYM_CHECK} No active alerts for Claude models${RST}"
   else
-    # Show models to avoid
-    if [[ -n "$avoid_models" ]]; then
-      echo "$avoid_models" | while read -r name; do
+    if ((avoid_count > 0)); then
+      printf '%s\n' "$d" | jq -r '.avoidNow[]' | while read -r name; do
         box_row "${RED}${SYM_CROSS} AVOID${RST}  ${name}"
       done
     fi
 
-    # Show degradations grouped by severity
     if ((deg_count > 0)); then
-      echo "$claude_degradations" | jq -r '.[] | "\(.modelName)|\(.severity)|\(.type)|\(.message)"' | while IFS='|' read -r name severity dtype message; do
+      printf '%s\n' "$d" | jq -r '.degradations[] | "\(.name)|\(.severity)|\(.type)|\(.message)"' | while IFS='|' read -r name severity dtype message; do
         # Clean message: strip emoji, leading label, and truncate
         local clean_msg
         clean_msg=$(printf '%s' "$message" | LC_ALL=C tr -cd '\11\12\40-\176' | sed 's/^ *//; s/^[A-Z_ ]*: //')
-        # Truncate to fit box
         if ((${#clean_msg} > BOX_WIDTH - 6)); then
           clean_msg="${clean_msg:0:$((BOX_WIDTH - 9))}..."
         fi
@@ -454,11 +445,11 @@ render() {
         sc=$(status_color "$severity")
         local label
         case "$dtype" in
-          unstable_performance) label="UNSTABLE" ;;
-          critical_failure)     label="CRITICAL" ;;
-          performance_variance) label="VARIANCE" ;;
-          poor_performance)     label="POOR" ;;
-          *)                    label=$(echo "$severity" | tr '[:lower:]' '[:upper:]') ;;
+        unstable_performance) label="UNSTABLE" ;;
+        critical_failure) label="CRITICAL" ;;
+        performance_variance) label="VARIANCE" ;;
+        poor_performance) label="POOR" ;;
+        *) label=$(printf '%s' "$severity" | tr '[:lower:]' '[:upper:]') ;;
         esac
         box_row "${sc}${SYM_WARN} ${label}${RST}  ${name}"
         box_row "  ${DIM}${clean_msg}${RST}"
@@ -469,15 +460,11 @@ render() {
   printf "\n"
 
   # ── Anthropic Provider Trust ────────────────────
-  local provider_data
-  provider_data=$(echo "$dashboard" | jq '.data.providerReliability[] | select(.provider == "anthropic")')
-
-  if [[ -n "$provider_data" ]]; then
+  local trust_tsv
+  trust_tsv=$(printf '%s\n' "$d" | jq -r 'if .providerTrust then [.providerTrust.score, .providerTrust.trend, .providerTrust.incidents] | @tsv else empty end')
+  if [[ -n "$trust_tsv" ]]; then
     local trust_score trust_trend incidents
-    trust_score=$(echo "$provider_data" | jq -r '.trustScore')
-    trust_trend=$(echo "$provider_data" | jq -r '.trend')
-    incidents=$(echo "$provider_data" | jq -r '.incidentsPerMonth')
-
+    read -r trust_score trust_trend incidents <<<"$trust_tsv"
     local tc
     tc=$(status_color "$trust_trend")
 
@@ -490,19 +477,9 @@ render() {
   fi
 
   # ── Drift Incidents ─────────────────────────────
-  local claude_drift
-  claude_drift=$(echo "$dashboard" | jq '
-    [.data.driftIncidents // [] | .[] |
-     select(.provider == "anthropic" or (.modelName | test("claude"; "i")))] |
-    group_by(.modelName) |
-    map({name: .[0].modelName, severity: (.[0].severity // "unknown"), count: length})
-  ')
-  local drift_count
-  drift_count=$(echo "$claude_drift" | jq 'length')
-
   if ((drift_count > 0)); then
     box_top "Drift Incidents"
-    echo "$claude_drift" | jq -r '.[] | "\(.name)|\(.severity)|\(.count)"' | while IFS='|' read -r name severity count; do
+    printf '%s\n' "$d" | jq -r '.driftIncidents[] | "\(.name)|\(.severity)|\(.count)"' | while IFS='|' read -r name severity count; do
       local sc
       sc=$(status_color "$severity")
       local count_str=""
@@ -523,14 +500,27 @@ main() {
   local watch_interval=60
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      --json)  json_mode=true ;;
-      --watch=*) watch_mode=true; watch_interval="${1#--watch=}" ;;
-      --watch)
-        watch_mode=true
-        if [[ -n "${2:-}" && "$2" =~ ^[0-9]+$ ]]; then
-          watch_interval="$2"; shift
-        fi
-        ;;
+    --json) json_mode=true ;;
+    --watch=*)
+      watch_mode=true
+      watch_interval="${1#--watch=}"
+      if ! [[ "$watch_interval" =~ ^[0-9]+$ ]]; then
+        printf "  ${RED}${SYM_CROSS} Invalid watch interval: %s (must be a number)${RST}\n" "$watch_interval"
+        exit 1
+      fi
+      ;;
+    --watch)
+      watch_mode=true
+      if [[ -n "${2:-}" && "$2" =~ ^[0-9]+$ ]]; then
+        watch_interval="$2"
+        shift
+      fi
+      ;;
+    -*)
+      printf "  ${RED}${SYM_CROSS} Unknown option: %s${RST}\n" "$1"
+      printf "  Usage: ast [--json] [--watch[=SECONDS]]\n"
+      exit 1
+      ;;
     esac
     shift
   done
@@ -595,9 +585,9 @@ watch_loop() {
     # Capture output, then clear and print in one shot to reduce flicker
     local output
     output=$(render "$dashboard" "$global_index" "$now" "$prev_ranks")
-    printf '\033[2J\033[H%b\n' "$output"
+    printf '\033[2J\033[H%s\n' "$output"
 
-    printf "  ${DIM}Last updated ${now} ${GRAY}${SYM_BULLET}${RST} ${DIM}refreshing every ${WATCH_INTERVAL}s ${GRAY}${SYM_BULLET}${RST} ${DIM}Ctrl+C to exit${RST}\n"
+    printf '%s\n' "  ${DIM}Last updated ${now} ${GRAY}${SYM_BULLET}${RST} ${DIM}refreshing every ${WATCH_INTERVAL}s ${GRAY}${SYM_BULLET}${RST} ${DIM}Ctrl+C to exit${RST}"
 
     prev_ranks="$curr_ranks"
 
