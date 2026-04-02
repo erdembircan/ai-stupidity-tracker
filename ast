@@ -42,6 +42,8 @@ readonly SYM_WARN='⚠'
 readonly SYM_DIAMOND='◆'
 readonly SYM_ARROW='→'
 readonly SYM_BULLET='•'
+readonly SYM_UP='↑'
+readonly SYM_DOWN='↓'
 
 # ── Box Drawing Helpers ─────────────────────────────
 # Right border column (2 indent + BOX_WIDTH)
@@ -265,6 +267,7 @@ output_json() {
 # ── Render ─────────────────────────────────────────
 render() {
   local dashboard="$1" global_index="$2" last_updated="$3"
+  local prev_ranks="${4:-}"
 
   # ── Header ──────────────────────────────────────
   printf "\n"
@@ -310,6 +313,9 @@ render() {
   local claude_count
   claude_count=$(echo "$claude_models" | jq 'length')
 
+  local max_name_len
+  max_name_len=$(echo "$claude_models" | jq -r '[.[].name | length] | max // 0')
+
   box_top "Claude Rankings"
   if ((claude_count == 0)); then
     box_empty "No Claude models found in rankings"
@@ -319,14 +325,32 @@ render() {
       sc=$(status_color "$status")
       local sl
       sl=$(status_label "$status")
+      # Rank change indicator — fixed 4-char column (watch mode only)
+      local change_col="    "
+      if [[ -n "$prev_ranks" ]]; then
+        local prev_rank
+        prev_rank=$(echo "$prev_ranks" | jq -r --arg n "$name" '.[$n] // empty')
+        if [[ -n "$prev_rank" ]] && ((prev_rank != rank)); then
+          local arrow_text
+          if ((rank < prev_rank)); then
+            arrow_text="${GREEN}${SYM_UP}${prev_rank}${RST}"
+          else
+            arrow_text="${RED}${SYM_DOWN}${prev_rank}${RST}"
+          fi
+          # Pad visible chars to 4: arrow(1) + digits + trailing spaces
+          local visible_len=$((1 + ${#prev_rank}))
+          local pad=$((4 - visible_len))
+          change_col="${arrow_text}$(printf '%*s' "$pad" '')"
+        fi
+      fi
       # Pad rank, name, score for alignment
       local rank_str
       rank_str=$(printf '#%-2s' "$rank")
       local name_str
-      name_str=$(printf '%-28s' "$name")
+      name_str=$(printf "%-${max_name_len}s" "$name")
       local score_str
       score_str=$(printf '%-3s' "$score")
-      box_row "${BOLD}${WHITE}${rank_str}${RST}  ${name_str} ${BOLD}${score_str}${RST} ${sc}${SYM_WARN} ${sl}${RST}"
+      box_row "${BOLD}${WHITE}${rank_str}${RST} ${change_col}${name_str} ${BOLD}${score_str}${RST} ${sc}${SYM_WARN} ${sl}${RST}"
     done
   fi
   box_bottom
@@ -530,6 +554,7 @@ main() {
 watch_loop() {
   local WATCH_INTERVAL=60
   local first_run=true
+  local prev_ranks="{}"
 
   trap 'exit 0' INT TERM
 
@@ -551,11 +576,21 @@ watch_loop() {
     local now
     now=$(date +"%Y-%m-%d %H:%M")
 
+    # Extract current Claude rankings as {name: rank} map
+    local curr_ranks
+    curr_ranks=$(echo "$dashboard" | jq '
+      [.data.modelScores | to_entries[] |
+       select(.value.provider == "anthropic")] |
+      map({(.value.name): (.key + 1)}) | add // {}
+    ')
+
     # Move cursor to top and overwrite existing content
     printf '\033[H\033[J'
-    render "$dashboard" "$global_index" "$now"
+    render "$dashboard" "$global_index" "$now" "$prev_ranks"
 
     printf "  ${DIM}Last updated ${now} ${GRAY}${SYM_BULLET}${RST} ${DIM}refreshing every ${WATCH_INTERVAL}s ${GRAY}${SYM_BULLET}${RST} ${DIM}Ctrl+C to exit${RST}\n"
+
+    prev_ranks="$curr_ranks"
 
     local i=0
     while ((i < WATCH_INTERVAL)); do
