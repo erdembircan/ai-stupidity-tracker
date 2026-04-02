@@ -4,6 +4,8 @@
 
 A CLI tool that checks how Claude/Anthropic models are performing on [aistupidlevel.info](https://aistupidlevel.info/) — right from your terminal.
 
+![AST screenshot](assets/screenshot.png)
+
 ## What it shows
 
 - **Global Index** — overall AI health score and trend
