@@ -34,6 +34,7 @@ ln -s "$(pwd)/ast" /usr/local/bin/ast
 ```bash
 ast              # Claude status report
 ast --watch      # Live dashboard, refreshes every 60s
+ast --watch 300  # Live dashboard, custom interval (300s)
 ast --json       # Machine-readable JSON output
 NO_COLOR=1 ast   # Disable colors
 ```

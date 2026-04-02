@@ -520,11 +520,19 @@ render() {
 main() {
   local json_mode=false
   local watch_mode=false
-  for arg in "$@"; do
-    case "$arg" in
+  local watch_interval=60
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
       --json)  json_mode=true ;;
-      --watch) watch_mode=true ;;
+      --watch=*) watch_mode=true; watch_interval="${1#--watch=}" ;;
+      --watch)
+        watch_mode=true
+        if [[ -n "${2:-}" && "$2" =~ ^[0-9]+$ ]]; then
+          watch_interval="$2"; shift
+        fi
+        ;;
     esac
+    shift
   done
 
   if [[ "$json_mode" == true ]]; then
@@ -533,7 +541,7 @@ main() {
   fi
 
   if [[ "$watch_mode" == true ]]; then
-    watch_loop
+    watch_loop "$watch_interval"
     return
   fi
 
@@ -552,7 +560,7 @@ main() {
 
 # ── Watch Loop ─────────────────────────────────────
 watch_loop() {
-  local WATCH_INTERVAL=60
+  local WATCH_INTERVAL="${1:-60}"
   local first_run=true
   local prev_ranks="{}"
 
