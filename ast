@@ -152,8 +152,132 @@ fetch_data() {
   echo "$response"
 }
 
+# ── JSON Output ─────────────────────────────────────
+output_json() {
+  local dashboard global_index
+  dashboard=$(fetch_data "$DASHBOARD_URL")
+  global_index=$(fetch_data "$GLOBAL_INDEX_URL")
+
+  local now
+  now=$(date +"%Y-%m-%d %H:%M")
+
+  local reco
+  reco=$(echo "$dashboard" | jq '.data.recommendations')
+
+  # Build the entire JSON in a single jq call
+  jq -n \
+    --arg version "$VERSION" \
+    --arg timestamp "$now" \
+    --argjson global_index "$global_index" \
+    --argjson dashboard "$dashboard" \
+    --argjson reco "$reco" \
+    '
+    # Global index
+    {
+      version: $version,
+      timestamp: $timestamp,
+      globalIndex: {
+        score: $global_index.data.current.globalScore,
+        trend: $global_index.data.trend,
+        performingWell: $global_index.data.performingWell,
+        totalModels: $global_index.data.totalModels
+      },
+
+      # Claude rankings
+      claudeRankings: [
+        $dashboard.data.modelScores | to_entries[] |
+        select(.value.provider == "anthropic") |
+        {
+          rank: (.key + 1),
+          name: .value.name,
+          score: .value.currentScore,
+          status: (
+            if .value.status == "good" then "stable"
+            elif .value.status == "warning" then "volatile"
+            else .value.status
+            end
+          )
+        }
+      ],
+
+      # Best for categories
+      bestFor: {
+        code: (if $reco.bestForCode.vendor == "anthropic"
+          then {name: $reco.bestForCode.name, score: $reco.bestForCode.score}
+          else null end),
+        reliable: (if $reco.mostReliable.vendor == "anthropic"
+          then {name: $reco.mostReliable.name, score: $reco.mostReliable.score}
+          else null end),
+        fastest: (if $reco.fastestResponse.vendor == "anthropic"
+          then {name: $reco.fastestResponse.name, score: $reco.fastestResponse.score}
+          else null end),
+        value: (if ($reco.bestValue // {}).vendor == "anthropic"
+          then {name: $reco.bestValue.name, score: $reco.bestValue.score}
+          else null end)
+      },
+
+      # Alerts
+      alerts: {
+        avoid: [
+          ($reco.avoidNow // [])[] |
+          select(.vendor == "anthropic" or .provider == "anthropic") |
+          .name
+        ],
+        degradations: [
+          $dashboard.data.degradations[] |
+          select(.provider == "anthropic") |
+          {
+            model: .modelName,
+            severity: .severity,
+            type: .type,
+            message: .message
+          }
+        ]
+      },
+
+      # Provider trust
+      providerTrust: (
+        [$dashboard.data.providerReliability[] | select(.provider == "anthropic")] |
+        if length > 0 then
+          .[0] | {
+            score: .trustScore,
+            trend: .trend,
+            incidentsPerMonth: .incidentsPerMonth
+          }
+        else null end
+      ),
+
+      # Drift incidents
+      driftIncidents: [
+        ($dashboard.data.driftIncidents // []) |
+        [.[] | select(.provider == "anthropic" or (.modelName | test("claude"; "i")))] |
+        group_by(.modelName)[] |
+        {
+          model: .[0].modelName,
+          severity: .[0].severity,
+          count: length
+        }
+      ]
+    }
+    '
+}
+
 # ── Main ────────────────────────────────────────────
 main() {
+  # Check for --json flag
+  local json_mode=false
+  for arg in "$@"; do
+    if [[ "$arg" == "--json" ]]; then
+      json_mode=true
+      break
+    fi
+  done
+
+  if [[ "$json_mode" == true ]]; then
+    output_json
+    return
+  fi
+
   # Fetch both endpoints
   spinner_start "Fetching Claude status"
   local dashboard global_index
