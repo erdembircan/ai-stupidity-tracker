@@ -22,4 +22,7 @@ elif [[ -n "$best_coder" && "$base_model" != *"$best_coder"* && "$best_coder" !=
   jq -n --arg m "$base_model" --arg cs "$current_score" \
     --arg bc "$best_coder" --arg bcs "$best_coder_score" \
     '{"systemMessage": "⚠ AI Stupidity Index: Best coder is \($bc) (score \($bcs)) vs your \($m) (score \($cs)). Consider /model to switch."}'
+else
+  jq -n --arg m "$base_model" --arg cs "$current_score" \
+    '{"systemMessage": "✓ AI Stupidity Index: You are using the best coding model \($m) (score \($cs))."}'
 fi
