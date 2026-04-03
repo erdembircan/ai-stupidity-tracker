@@ -10,7 +10,8 @@ A CLI tool that tracks AI model performance on [aistupidlevel.info](https://aist
 
 - **Global Index** — overall AI health score and trend
 - **Model Rankings** — where all tracked models rank on the leaderboard
-- **Best For Categories** — whether the provider is best for code, most reliable, fastest, or best value
+- **Recommendations (7d)** — 7-day rolling picks: best for code, most reliable, fastest, best value
+- **Best Coder** — provider's top model for coding, calculated from 9-axis benchmark data
 - **Alerts** — active degradations, instability warnings, and models to avoid
 - **Provider Trust** — trust score, trend, and incident count
 - **Drift Incidents** — detected performance drift for tracked models
@@ -41,22 +42,27 @@ ln -s "$(pwd)/ast" /usr/local/bin/ast
 ## Usage
 
 ```bash
-ast              # Claude status report (default)
-ast --openai     # OpenAI status report
-ast --claude     # Claude status report (explicit)
-ast --watch      # Live dashboard, refreshes every 60s
-ast --watch 300  # Live dashboard, custom interval (300s)
-ast --json       # Machine-readable JSON output
-ast --version    # Show version number
-ast --help       # Show usage info
-NO_COLOR=1 ast   # Disable colors
+ast                              # Claude status report (default)
+ast --openai                     # OpenAI status report
+ast --claude                     # Claude status report (explicit)
+ast --watch                      # Live dashboard, refreshes every 60s
+ast --watch 300                  # Live dashboard, custom interval (300s)
+ast --json                       # Machine-readable JSON output
+ast --section=coder              # Show only Best Coder section
+ast --section=rankings,alerts    # Show specific sections in order
+ast --version                    # Show version number
+ast --help                       # Show usage info
+NO_COLOR=1 ast                   # Disable colors
 ```
 
-Provider flags can be combined with any other option:
+Valid sections: `global`, `rankings`, `recommendations`, `coder`, `alerts`, `trust`, `drift`
+
+Provider and section flags can be combined with any other option:
 
 ```bash
-ast --openai --json       # OpenAI data as JSON
-ast --openai --watch      # Live OpenAI dashboard
+ast --openai --json            # OpenAI data as JSON
+ast --openai --watch           # Live OpenAI dashboard
+ast --openai --section=coder   # OpenAI best coder only
 ```
 
 ## Development
@@ -72,3 +78,7 @@ make fmt        # shfmt format check
 ## Data source
 
 All data is fetched from the [aistupidlevel.info](https://aistupidlevel.info/) REST API. No scraping, no headless browser — just clean JSON endpoints.
+
+## License
+
+[Apache-2.0](LICENSE)
