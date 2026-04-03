@@ -9,12 +9,12 @@ rankings=$(ast --json 2>/dev/null) || exit 0
 
 # Strip context suffix like [1m]
 base_model="${model%%\[*}"
-current_rank=$(echo "$rankings" | jq -r --arg m "$base_model" '[.claudeRankings[] | select(.name | contains($m))][0].rank // empty')
-current_score=$(echo "$rankings" | jq -r --arg m "$base_model" '[.claudeRankings[] | select(.name | contains($m))][0].score // empty')
+current_rank=$(echo "$rankings" | jq -r --arg m "$base_model" '[.rankings[] | select(.name | contains($m))][0].rank // empty')
+current_score=$(echo "$rankings" | jq -r --arg m "$base_model" '[.rankings[] | select(.name | contains($m))][0].score // empty')
 
-best_name=$(echo "$rankings" | jq -r '.claudeRankings[0].name')
-best_rank=$(echo "$rankings" | jq -r '.claudeRankings[0].rank')
-best_score=$(echo "$rankings" | jq -r '.claudeRankings[0].score')
+best_name=$(echo "$rankings" | jq -r '.rankings[0].name')
+best_rank=$(echo "$rankings" | jq -r '.rankings[0].rank')
+best_score=$(echo "$rankings" | jq -r '.rankings[0].score')
 
 if [[ -z "$current_rank" ]]; then
   jq -n --arg b "$best_name" --arg br "$best_rank" --arg bs "$best_score" \
