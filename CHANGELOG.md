@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.4] - 2026-04-03
+
+### Added
+
+- "Best Coder" section showing the provider's top model for coding
+- Per-model coding score calculation using aistupidmeter's 9-axis formula
+- `bestCoder` field in `--json` output with score, correctness, complexity, and code quality
+
+### Changed
+
+- `ast-hook` now recommends switching based on coding score instead of overall rank
+
 ## [1.0.3] - 2026-04-03
 
 ### Added
@@ -57,6 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI workflow with ShellCheck, shfmt, and bats
 - Offline test fixtures for deterministic testing
 
+[1.0.4]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.0.0...v1.0.1
