@@ -1,0 +1,30 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.0.0] - 2026-04-03
+
+### Added
+
+- Multi-provider support with `--claude` (default) and `--openai` flags
+- Global AI Index section with score, trend, and performing models
+- Model rankings with score and status indicators
+- Best-for categories (code, reliable, fastest, value)
+- Alerts section with degradation and avoid-now warnings
+- Provider trust score, trend, and incident count
+- Drift incident tracking per model
+- `--json` flag for machine-readable output
+- `--watch` flag for live dashboard with configurable interval
+- Rank change arrows in watch mode
+- Next update countdown in watch mode status line
+- `ast-hook` for Claude Code model ranking notifications
+- Braille loading spinner during data fetch
+- `NO_COLOR` environment variable support
+- Homebrew installation via `brew install erdembircan/tap/ast`
+- CI workflow with ShellCheck, shfmt, and bats
+- Offline test fixtures for deterministic testing
+
+[1.0.0]: https://github.com/erdembircan/ai-stupidity-tracker/releases/tag/v1.0.0
