@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.7] - 2026-04-03
+
+### Added
+
+- `--section=LIST` flag for filtering and ordering sections (comma-separated)
+- Valid sections: global, rankings, recommendations, coder, alerts, trust, drift
+
+### Changed
+
+- Refactored render into per-section functions with dispatch loop
+- Buffered render output to eliminate flicker
+
 ## [1.0.6] - 2026-04-03
 
 ### Changed
@@ -81,6 +93,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI workflow with ShellCheck, shfmt, and bats
 - Offline test fixtures for deterministic testing
 
+[1.0.7]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.0.6...v1.0.7
 [1.0.6]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.0.5...v1.0.6
 [1.0.5]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.0.4...v1.0.5
 [1.0.4]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.0.3...v1.0.4
