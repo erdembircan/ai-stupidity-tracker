@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/erdembircan/ai-stupidity-tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/erdembircan/ai-stupidity-tracker/actions/workflows/ci.yml)
 
-A CLI tool that checks how Claude/Anthropic and OpenAI models are performing on [aistupidlevel.info](https://aistupidlevel.info/) — right from your terminal.
+A CLI tool that tracks AI model performance on [aistupidlevel.info](https://aistupidlevel.info/) — supports Claude/Anthropic and OpenAI, right from your terminal.
 
 ![AST screenshot](assets/screenshot.png)
 
@@ -23,12 +23,18 @@ A CLI tool that checks how Claude/Anthropic and OpenAI models are performing on 
 
 ## Installation
 
+### Homebrew
+
 ```bash
-# Clone the repo
+brew tap erdembircan/tap
+brew install ast
+```
+
+### Manual
+
+```bash
 git clone git@github.com:erdembircan/ai-stupidity-tracker.git
 cd ai-stupidity-tracker
-
-# Make it executable and add to PATH
 chmod +x ast
 ln -s "$(pwd)/ast" /usr/local/bin/ast
 ```
