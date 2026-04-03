@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.8] - 2026-04-04
+
+### Added
+
+- `ast-hook` now shows a confirmation message when already using the best coding model
+
+### Changed
+
+- GitHub Pages deployment moved to dedicated `gh-pages` branch
+
 ## [1.0.7] - 2026-04-03
 
 ### Added
@@ -93,6 +103,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI workflow with ShellCheck, shfmt, and bats
 - Offline test fixtures for deterministic testing
 
+[1.0.8]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.0.7...v1.0.8
 [1.0.7]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.0.6...v1.0.7
 [1.0.6]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.0.5...v1.0.6
 [1.0.5]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.0.4...v1.0.5
