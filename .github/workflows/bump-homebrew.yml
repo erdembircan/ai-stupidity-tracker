@@ -13,8 +13,6 @@ jobs:
     name: Bump Homebrew formula
     needs: checks
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
       - uses: mislav/bump-homebrew-formula-action@v4
         with:
@@ -23,3 +21,21 @@ jobs:
           homebrew-tap: erdembircan/homebrew-tap
         env:
           COMMITTER_TOKEN: ${{ secrets.COMMITTER_TOKEN }}
+
+  docs:
+    name: Update docs version
+    needs: checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: master
+
+      - name: Update version in docs
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          sed -i -E "s|<!-- auto-updated by CI --> <td>[0-9]+\.[0-9]+\.[0-9]+</td>|<!-- auto-updated by CI --> <td>${VERSION}</td>|" docs/index.html
+
+      - uses: EndBug/add-and-commit@v9
+        with:
+          message: "docs: update version to ${{ github.ref_name }}"
