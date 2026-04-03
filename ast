@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # ── Constants ───────────────────────────────────────
-readonly VERSION="1.0.5"
+readonly VERSION="1.0.6-dev"
 readonly BASE_URL="https://aistupidlevel.info"
 readonly DASHBOARD_URL="${BASE_URL}/dashboard/cached?period=latest&sortBy=combined&analyticsPeriod=latest"
 readonly GLOBAL_INDEX_URL="${BASE_URL}/dashboard/global-index"
@@ -517,10 +517,10 @@ render() {
   box_bottom
   printf "\n"
 
-  # ── Best For Categories ─────────────────────────
-  box_top "Best For Categories"
+  # ── Recommendations (7d) ────────────────────────
+  box_top "Recommendations (7d)"
   if ((best_count == 0)); then
-    box_empty "No ${PROVIDER_LABEL} model in any best-for category"
+    box_empty "No ${PROVIDER_LABEL} model in recommendations"
   else
     printf '%s\n' "$d" | jq -r '.bestFor[] | "\(.label)|\(.pad)|\(.name)|\(.score)"' | while IFS='|' read -r label pad_len name score; do
       local pad
