@@ -2,10 +2,11 @@
 set -euo pipefail
 
 # ── Constants ───────────────────────────────────────
-readonly VERSION="1.0.3"
+readonly VERSION="1.0.4-dev"
 readonly BASE_URL="https://aistupidlevel.info"
 readonly DASHBOARD_URL="${BASE_URL}/dashboard/cached?period=latest&sortBy=combined&analyticsPeriod=latest"
 readonly GLOBAL_INDEX_URL="${BASE_URL}/dashboard/global-index"
+readonly HISTORY_URL="${BASE_URL}/dashboard/history"
 readonly BOX_WIDTH=54
 readonly MIN_TERM_WIDTH=$((BOX_WIDTH + 2))
 NARROW_TERM=false
@@ -169,6 +170,88 @@ spinner_stop() {
 
 trap spinner_stop EXIT
 
+# ── Coding Score Calculation ───────────────────────
+# Uses the full scoring formula from aistupidmeter-web:
+# 1. Each axis raised to power 1.6
+# 2. Weighted sum (correctness 40%, complexity 20%, codeQuality 15%,
+#    efficiency 5%, stability 10%, edgeCases 3%, debugging 3%, format 2%, safety 2%)
+# 3. Professor curve: (base/100)^1.3 * 100
+# 4. Quality gate penalties
+calc_coding_score() {
+  local corr="$1" cmplx="$2" cq="$3" eff="$4" stab="$5" edge="$6" dbg="$7" fmt="$8" safe="$9"
+  awk -v corr="$corr" -v cmplx="$cmplx" -v cq="$cq" -v eff="$eff" \
+    -v stab="$stab" -v edge="$edge" -v dbg="$dbg" -v fmt="$fmt" -v safe="$safe" '
+    function pw(base, ex) {
+      if (base <= 0) return 0
+      if (base == 1) return 1
+      return exp(log(base) * ex)
+    }
+    BEGIN {
+      w = pw(corr,1.6)*0.40 + pw(cmplx,1.6)*0.20 + pw(cq,1.6)*0.15 + \
+          pw(eff,1.6)*0.05 + pw(stab,1.6)*0.10 + pw(edge,1.6)*0.03 + \
+          pw(dbg,1.6)*0.03 + pw(fmt,1.6)*0.02 + pw(safe,1.6)*0.02
+      base = w * 100
+      curved = pw(base/100, 1.3) * 100
+      pen = 0
+      if (corr < 0.90) pen -= 8
+      if (corr < 0.70) pen -= 10
+      if (corr < 0.50) pen -= 15
+      if (cq < 0.60) pen -= 8
+      if (cq < 0.40) pen -= 15
+      if (cmplx < 0.30) pen -= 12
+      printf "%.1f", curved + pen
+    }'
+}
+
+fetch_coding_scores() {
+  local dashboard="$1"
+  local tmpdir
+  tmpdir=$(mktemp -d)
+
+  # Get model IDs for the provider
+  local model_ids
+  model_ids=$(printf '%s\n' "$dashboard" | jq -r \
+    --arg provider "$PROVIDER" \
+    '[.data.modelScores[] | select(.provider == $provider) | .id] | .[]')
+
+  # Fetch history for each model in parallel
+  local pids=()
+  for id in $model_ids; do
+    curl -sf --max-time 10 "${HISTORY_URL}/${id}?period=latest&sortBy=combined" \
+      >"${tmpdir}/${id}.json" 2>/dev/null &
+    pids+=($!)
+  done
+  for pid in "${pids[@]}"; do
+    wait "$pid" 2>/dev/null || true
+  done
+
+  # Calculate coding score for each model
+  local results=()
+  for id in $model_ids; do
+    local file="${tmpdir}/${id}.json"
+    [[ -s "$file" ]] || continue
+
+    local name axes
+    name=$(printf '%s\n' "$dashboard" | jq -r \
+      --arg id "$id" '.data.modelScores[] | select(.id == $id) | .name')
+    axes=$(jq -r '.data[0].axes | [.correctness, .complexity, .codeQuality, .efficiency, .stability, .edgeCases, .debugging, .format, .safety] | @tsv' "$file" 2>/dev/null) || continue
+    [[ -z "$axes" ]] && continue
+
+    local corr cmplx cq eff stab edge dbg fmt safe
+    read -r corr cmplx cq eff stab edge dbg fmt safe <<<"$axes"
+
+    local score
+    score=$(calc_coding_score "$corr" "$cmplx" "$cq" "$eff" "$stab" "$edge" "$dbg" "$fmt" "$safe")
+
+    results+=("${score}|${name}|${corr}|${cmplx}|${cq}")
+  done
+
+  rm -rf "$tmpdir"
+
+  # Sort by score descending
+  printf '%s\n' "${results[@]}" | sort -t'|' -k1 -rn
+}
+
 # ── Fetch Data ──────────────────────────────────────
 fetch_data() {
   local url="$1"
@@ -194,6 +277,24 @@ output_json() {
   local reco
   reco=$(echo "$dashboard" | jq '.data.recommendations')
 
+  # Calculate best coder
+  local coding_scores
+  coding_scores=$(fetch_coding_scores "$dashboard")
+  local best_coder_json='null'
+  if [[ -n "$coding_scores" ]]; then
+    local top_line
+    top_line=$(head -1 <<<"$coding_scores")
+    local cscore cname corr cmplx cq
+    IFS='|' read -r cscore cname corr cmplx cq <<<"$top_line"
+    best_coder_json=$(jq -n \
+      --arg name "$cname" \
+      --argjson score "$cscore" \
+      --argjson correctness "$(awk -v v="$corr" 'BEGIN { printf "%.0f", v * 100 }')" \
+      --argjson complexity "$(awk -v v="$cmplx" 'BEGIN { printf "%.0f", v * 100 }')" \
+      --argjson codeQuality "$(awk -v v="$cq" 'BEGIN { printf "%.0f", v * 100 }')" \
+      '{name: $name, score: $score, correctness: $correctness, complexity: $complexity, codeQuality: $codeQuality}')
+  fi
+
   # Build the entire JSON in a single jq call
   jq -n \
     --arg version "$VERSION" \
@@ -203,6 +304,7 @@ output_json() {
     --argjson global_index "$global_index" \
     --argjson dashboard "$dashboard" \
     --argjson reco "$reco" \
+    --argjson best_coder "$best_coder_json" \
     '
     {
       version: $version,
@@ -230,6 +332,8 @@ output_json() {
           )
         }
       ],
+
+      bestCoder: $best_coder,
 
       bestFor: {
         code: (if $reco.bestForCode.vendor == $provider
@@ -423,6 +527,27 @@ render() {
       pad=$(printf '%*s' "$pad_len" '')
       box_row "${GREEN}${SYM_CHECK} ${label}${RST}${pad}${name} (${BOLD}${score}${RST})"
     done
+  fi
+  box_bottom
+  printf "\n"
+
+  # ── Best Coder (provider) ────────────────────────
+  box_top "Best Coder (${PROVIDER_LABEL})"
+  local coding_scores
+  coding_scores=$(fetch_coding_scores "$dashboard")
+  if [[ -z "$coding_scores" ]]; then
+    box_empty "Could not calculate coding scores"
+  else
+    local top_line
+    top_line=$(head -1 <<<"$coding_scores")
+    local cscore name corr cmplx cq
+    IFS='|' read -r cscore name corr cmplx cq <<<"$top_line"
+    local corr_pct cmplx_pct cq_pct
+    corr_pct=$(awk -v v="$corr" 'BEGIN { printf "%d", v * 100 }')
+    cmplx_pct=$(awk -v v="$cmplx" 'BEGIN { printf "%d", v * 100 }')
+    cq_pct=$(awk -v v="$cq" 'BEGIN { printf "%d", v * 100 }')
+    box_row "${GREEN}${SYM_CHECK}${RST} ${name} ${BOLD}${cscore}${RST}"
+    box_row "  ${DIM}Correctness ${corr_pct}%  Complexity ${cmplx_pct}%  Quality ${cq_pct}%${RST}"
   fi
   box_bottom
   printf "\n"

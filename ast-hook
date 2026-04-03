@@ -12,15 +12,14 @@ base_model="${model%%\[*}"
 current_rank=$(echo "$rankings" | jq -r --arg m "$base_model" '[.rankings[] | select(.name | contains($m))][0].rank // empty')
 current_score=$(echo "$rankings" | jq -r --arg m "$base_model" '[.rankings[] | select(.name | contains($m))][0].score // empty')
 
-best_name=$(echo "$rankings" | jq -r '.rankings[0].name')
-best_rank=$(echo "$rankings" | jq -r '.rankings[0].rank')
-best_score=$(echo "$rankings" | jq -r '.rankings[0].score')
+best_coder=$(echo "$rankings" | jq -r '.bestCoder.name // empty')
+best_coder_score=$(echo "$rankings" | jq -r '.bestCoder.score // empty')
 
 if [[ -z "$current_rank" ]]; then
-  jq -n --arg b "$best_name" --arg br "$best_rank" --arg bs "$best_score" \
-    '{"systemMessage": "⚠ AI Stupidity Index: Top Claude model is \($b) (rank #\($br), score \($bs)). Your model was not found in rankings."}'
-elif [[ "$current_rank" -gt "$best_rank" ]]; then
-  jq -n --arg m "$base_model" --arg cr "$current_rank" --arg cs "$current_score" \
-    --arg b "$best_name" --arg br "$best_rank" --arg bs "$best_score" \
-    '{"systemMessage": "⚠ AI Stupidity Index: \($b) is ranked #\($br) (score \($bs)) vs your \($m) at #\($cr) (score \($cs)). Consider /model to switch."}'
+  jq -n --arg bc "$best_coder" --arg bcs "$best_coder_score" \
+    '{"systemMessage": "⚠ AI Stupidity Index: Best coder is \($bc) (score \($bcs)). Your model was not found in rankings."}'
+elif [[ -n "$best_coder" && "$base_model" != *"$best_coder"* && "$best_coder" != *"$base_model"* ]]; then
+  jq -n --arg m "$base_model" --arg cs "$current_score" \
+    --arg bc "$best_coder" --arg bcs "$best_coder_score" \
+    '{"systemMessage": "⚠ AI Stupidity Index: Best coder is \($bc) (score \($bcs)) vs your \($m) (score \($cs)). Consider /model to switch."}'
 fi

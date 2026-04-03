@@ -12,6 +12,10 @@ for arg in "$@"; do
     cat "$FIXTURES/dashboard.json"
     exit 0
     ;;
+  *dashboard/history/*)
+    cat "$FIXTURES/history.json"
+    exit 0
+    ;;
   esac
 done
 
