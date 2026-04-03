@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ast — erdembircan/tap Formulae</title>
+  <style>
+    :root {
+      --bg: #2e2418;
+      --text: #d4c5a9;
+      --heading: #f5e6c8;
+      --link: #d4953a;
+      --link-hover: #e8b05c;
+      --code-bg: #3a2f22;
+      --code-border: #4a3d2d;
+      --table-bg: #362b1e;
+      --table-border: #4a3d2d;
+      --muted: #9a8b70;
+      --hr: #4a3d2d;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a {
+      color: var(--link);
+      text-decoration: none;
+    }
+
+    a:hover {
+      color: var(--link-hover);
+      text-decoration: underline;
+    }
+
+    /* ── Header ───────────────────────────────── */
+    .header {
+      text-align: center;
+      padding: 40px 20px 24px;
+    }
+
+    .header-logo {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 16px;
+    }
+
+    .header h1 {
+      font-size: 48px;
+      font-weight: 700;
+      color: var(--heading);
+      letter-spacing: -0.02em;
+      margin-bottom: 4px;
+    }
+
+    .header h1 a {
+      color: var(--heading);
+      text-decoration: none;
+    }
+
+    .header h1 a:hover {
+      text-decoration: none;
+      color: var(--link);
+    }
+
+    /* ── Main ─────────────────────────────────── */
+    .main {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 20px 24px 80px;
+    }
+
+    .separator {
+      border: none;
+      border-top: 1px solid var(--hr);
+      margin: 20px 0;
+    }
+
+    /* ── Formula ──────────────────────────────── */
+    .formula-name {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--heading);
+      margin-bottom: 8px;
+    }
+
+    /* ── Install ──────────────────────────────── */
+    .install-line {
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .install-label {
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .install-cmd {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: 4px;
+      padding: 4px 10px;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 14px;
+      color: var(--text);
+    }
+
+    .install-cmd .dollar {
+      color: var(--muted);
+      user-select: none;
+    }
+
+    .copy-btn {
+      background: none;
+      border: 1px solid var(--code-border);
+      border-radius: 3px;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 4px 6px;
+      display: inline-flex;
+      align-items: center;
+      transition: color 0.15s;
+    }
+
+    .copy-btn:hover {
+      color: var(--text);
+      border-color: var(--muted);
+    }
+
+    .copy-btn.copied {
+      color: var(--link);
+      border-color: var(--link);
+    }
+
+    .copy-btn svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* ── Description ──────────────────────────── */
+    .formula-desc {
+      margin-bottom: 12px;
+      font-size: 15px;
+    }
+
+    /* ── Meta lines ───────────────────────────── */
+    .meta-line {
+      margin-bottom: 4px;
+      font-size: 15px;
+    }
+
+    .meta-line strong {
+      color: var(--text);
+    }
+
+    .meta-line code {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 13px;
+      background: var(--code-bg);
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+
+    /* ── Versions table ───────────────────────── */
+    .section-label {
+      font-size: 15px;
+      font-weight: 400;
+      color: var(--text);
+      margin-top: 16px;
+      margin-bottom: 8px;
+    }
+
+    .versions-table {
+      border-collapse: collapse;
+      border: 1px solid var(--table-border);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .versions-table td {
+      background: var(--table-bg);
+      padding: 6px 14px;
+      font-size: 14px;
+      border: 1px solid var(--table-border);
+    }
+
+    .versions-table td:first-child {
+      font-weight: 700;
+      color: var(--heading);
+    }
+
+    .versions-table .check {
+      font-size: 14px;
+    }
+
+    .versions-table .bolt {
+      font-size: 14px;
+    }
+
+    /* ── Dependencies table ───────────────────── */
+    .deps-table {
+      border-collapse: collapse;
+      border: 1px solid var(--table-border);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .deps-table td {
+      background: var(--table-bg);
+      padding: 6px 14px;
+      font-size: 14px;
+      border: 1px solid var(--table-border);
+    }
+
+    .deps-table td a {
+      font-weight: 500;
+    }
+
+    /* ── Binaries ─────────────────────────────── */
+    .binaries-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .bin-tag {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 13px;
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      padding: 2px 8px;
+      border-radius: 3px;
+    }
+
+    /* ── Footer ───────────────────────────────── */
+    .footer {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 20px 24px 40px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .footer a {
+      color: var(--link);
+    }
+
+    /* ── GitHub ribbon ────────────────────────── */
+    .github-ribbon {
+      position: fixed;
+      top: 0;
+      right: 0;
+      z-index: 10;
+    }
+
+    .github-ribbon a {
+      display: block;
+      width: 150px;
+      height: 150px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .github-ribbon a span {
+      position: absolute;
+      display: block;
+      width: 225px;
+      padding: 6px 0;
+      background: #6d6d6d;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+      text-decoration: none;
+      transform: rotate(45deg);
+      top: 40px;
+      right: -55px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    }
+
+    .github-ribbon a:hover span {
+      background: #888;
+    }
+
+    /* ── Responsive ───────────────────────────── */
+    @media (max-width: 600px) {
+      .header h1 { font-size: 32px; }
+      .formula-name { font-size: 22px; }
+      .install-cmd { font-size: 12px; }
+      .github-ribbon { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- GitHub Ribbon -->
+  <div class="github-ribbon">
+    <a href="https://github.com/erdembircan/homebrew-tap">
+      <span>Fork me on GitHub</span>
+    </a>
+  </div>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-logo">
+      <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+        <!-- Beer mug body -->
+        <rect x="15" y="25" width="35" height="40" rx="4" fill="none" stroke="#d4953a" stroke-width="3"/>
+        <!-- Handle -->
+        <path d="M50 32 h8 a6 6 0 0 1 0 12 h-8" fill="none" stroke="#d4953a" stroke-width="3" stroke-linecap="round"/>
+        <!-- Beer level -->
+        <rect x="18" y="30" width="29" height="32" rx="2" fill="#d4953a" opacity="0.3"/>
+        <!-- Foam -->
+        <ellipse cx="22" cy="26" rx="6" ry="5" fill="#f5e6c8"/>
+        <ellipse cx="32" cy="24" rx="7" ry="6" fill="#f5e6c8"/>
+        <ellipse cx="42" cy="26" rx="6" ry="5" fill="#f5e6c8"/>
+        <!-- Bubbles -->
+        <circle cx="25" cy="50" r="2" fill="#f5e6c8" opacity="0.4"/>
+        <circle cx="35" cy="42" r="1.5" fill="#f5e6c8" opacity="0.3"/>
+        <circle cx="30" cy="55" r="1" fill="#f5e6c8" opacity="0.35"/>
+      </svg>
+    </div>
+    <h1><a href="/">erdembircan/tap Formulae</a></h1>
+  </header>
+
+  <!-- Main -->
+  <main class="main">
+    <hr class="separator">
+
+    <h2 class="formula-name">ast</h2>
+
+    <!-- Install -->
+    <div class="install-line">
+      <span class="install-label">Install command:</span>
+      <code class="install-cmd"><span class="dollar">$</span> brew install erdembircan/tap/ast</code>
+      <button class="copy-btn" onclick="copyInstall(this)" aria-label="Copy install command" title="Copy to clipboard">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Description -->
+    <p class="formula-desc">CLI tool that tracks AI model performance (Claude, OpenAI)</p>
+
+    <!-- Homepage -->
+    <p class="meta-line"><a href="https://github.com/erdembircan/ai-stupidity-tracker">https://github.com/erdembircan/ai-stupidity-tracker</a></p>
+
+    <!-- Meta -->
+    <p class="meta-line"><strong>License:</strong> Apache-2.0</p>
+    <p class="meta-line"><strong>Formula code:</strong> <a href="https://github.com/erdembircan/homebrew-tap/blob/main/Formula/ast.rb"><code>ast.rb</code></a> on GitHub</p>
+
+    <!-- Versions -->
+    <p class="section-label">Current versions:</p>
+    <table class="versions-table">
+      <tr>
+        <td>stable</td>
+        <td class="check">✅</td>
+        <td>1.0.2</td>
+      </tr>
+      <tr>
+        <td>head</td>
+        <td class="bolt">⚡️</td>
+        <td>HEAD</td>
+      </tr>
+    </table>
+
+    <!-- Dependencies -->
+    <p class="section-label">Depends on:</p>
+    <table class="deps-table">
+      <tr>
+        <td><a href="https://formulae.brew.sh/formula/jq">jq</a></td>
+        <td>Lightweight and flexible command-line JSON processor</td>
+      </tr>
+    </table>
+
+    <!-- Installed binaries -->
+    <p class="section-label">Installed binaries:</p>
+    <div class="binaries-list">
+      <span class="bin-tag">ast</span>
+      <span class="bin-tag">ast-hook</span>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <hr class="separator">
+    <p>Formula maintained by <a href="https://github.com/erdembircan">erdembircan</a></p>
+    <p>Powered by <a href="https://brew.sh">Homebrew</a></p>
+  </footer>
+
+  <script>
+    function copyInstall(btn) {
+      navigator.clipboard.writeText('brew install erdembircan/tap/ast').then(function() {
+        btn.classList.add('copied');
+        setTimeout(function() {
+          btn.classList.remove('copied');
+        }, 2000);
+      });
+    }
+  </script>
+
+</body>
+</html>
