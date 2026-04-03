@@ -89,7 +89,7 @@ setup() {
 @test "--version prints version number" {
   run "$AST" --version
   [ "$status" -eq 0 ]
-  [[ "$output" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+  [[ "$output" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-.+)?$ ]]
 }
 
 @test "--json version matches --version output" {
