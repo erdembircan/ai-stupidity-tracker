@@ -26,8 +26,7 @@ A CLI tool that tracks AI model performance on [aistupidlevel.info](https://aist
 ### Homebrew
 
 ```bash
-brew tap erdembircan/tap
-brew install ast
+brew install erdembircan/tap/ast
 ```
 
 ### Manual
