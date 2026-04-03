@@ -247,3 +247,56 @@ setup() {
   [ "$status" -eq 0 ]
   echo "$output" | jq -e '.rankings' >/dev/null
 }
+
+# ── --section Flag ─────────────────────────────────
+
+@test "--section=rankings shows only rankings" {
+  run "$AST" --section=rankings
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Rankings"* ]]
+  [[ "$output" != *"Global AI Index"* ]]
+  [[ "$output" != *"Alerts"* ]]
+}
+
+@test "--section=coder shows only best coder" {
+  run "$AST" --section=coder
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Best Coder"* ]]
+  [[ "$output" != *"Rankings"* ]]
+  [[ "$output" != *"Alerts"* ]]
+}
+
+@test "--section=rankings,alerts shows both" {
+  run "$AST" --section=rankings,alerts
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Rankings"* ]]
+  [[ "$output" == *"Alerts"* ]]
+  [[ "$output" != *"Global AI Index"* ]]
+}
+
+@test "--section with invalid name exits with error" {
+  run "$AST" --section=bogus
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"Unknown section: bogus"* ]]
+}
+
+@test "--section without value exits with error" {
+  run "$AST" --section
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"--section requires a value"* ]]
+}
+
+@test "--section=global shows only global index" {
+  run "$AST" --section=global
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Global AI Index"* ]]
+  [[ "$output" != *"Rankings"* ]]
+}
+
+@test "default output shows all sections" {
+  run "$AST"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Global AI Index"* ]]
+  [[ "$output" == *"Rankings"* ]]
+  [[ "$output" == *"Alerts"* ]]
+}
