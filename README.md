@@ -47,6 +47,7 @@ ast --claude     # Claude status report (explicit)
 ast --watch      # Live dashboard, refreshes every 60s
 ast --watch 300  # Live dashboard, custom interval (300s)
 ast --json       # Machine-readable JSON output
+ast --version    # Show version number
 ast --help       # Show usage info
 NO_COLOR=1 ast   # Disable colors
 ```

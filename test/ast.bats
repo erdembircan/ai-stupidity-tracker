@@ -86,11 +86,18 @@ setup() {
   echo "$output" | jq -e '.globalIndex.trend' >/dev/null
 }
 
-@test "--json version matches script VERSION" {
+@test "--version prints version number" {
+  run "$AST" --version
+  [ "$status" -eq 0 ]
+  [[ "$output" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+}
+
+@test "--json version matches --version output" {
   run "$AST" --json
   [ "$status" -eq 0 ]
-  version=$(echo "$output" | jq -r '.version')
-  [ "$version" = "1.0.2" ]
+  json_version=$(echo "$output" | jq -r '.version')
+  script_version=$("$AST" --version)
+  [ "$json_version" = "$script_version" ]
 }
 
 # ── NO_COLOR ─────────────────────────────────────────

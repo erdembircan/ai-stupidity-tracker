@@ -506,7 +506,11 @@ main() {
   local provider_mode=claude
   while [[ $# -gt 0 ]]; do
     case "$1" in
-    -h | --help)
+    --version)
+      printf '%s\n' "${VERSION}"
+      exit 0
+      ;;
+    --help)
       printf '%s\n' "  ${BOLD}${CYAN}${SYM_DIAMOND} AST${RST}  ${DIM}v${VERSION}${RST} — AI Stupidity Tracker"
       printf '\n'
       printf '%s\n' "  ${BOLD}Usage:${RST}  ast [--claude|--openai] [options]"
@@ -518,7 +522,8 @@ main() {
       printf '%s\n' "  ${BOLD}Options:${RST}"
       printf '%s\n' "    --json              Machine-readable JSON output"
       printf '%s\n' "    --watch[=SECONDS]   Live dashboard, refreshes every N seconds (default: 60)"
-      printf '%s\n' "    -h, --help          Show this help message"
+      printf '%s\n' "    --version           Show version number
+    --help              Show this help message"
       printf '\n'
       printf '%s\n' "  ${BOLD}Environment:${RST}"
       printf '%s\n' "    NO_COLOR=1          Disable colors and box-drawing right borders"
