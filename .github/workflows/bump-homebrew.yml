@@ -1,0 +1,25 @@
+name: Bump Homebrew Formula
+
+on:
+  push:
+    tags: 'v*'
+
+jobs:
+  checks:
+    if: ${{ !contains(github.ref, '-') }}
+    uses: ./.github/workflows/checks.yml
+
+  homebrew:
+    name: Bump Homebrew formula
+    needs: checks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: mislav/bump-homebrew-formula-action@v4
+        with:
+          formula-name: ast
+          formula-path: Formula/ast.rb
+          homebrew-tap: erdembircan/homebrew-tap
+        env:
+          COMMITTER_TOKEN: ${{ secrets.COMMITTER_TOKEN }}
