@@ -1,0 +1,12 @@
+# Exclude non-essential files from GitHub archive tarballs (used by Homebrew)
+.github/        export-ignore
+assets/         export-ignore
+docs/           export-ignore
+test/           export-ignore
+.editorconfig   export-ignore
+.gitignore      export-ignore
+.shellcheckrc   export-ignore
+CHANGELOG.md    export-ignore
+CLAUDE.md       export-ignore
+Makefile        export-ignore
+README.md       export-ignore
