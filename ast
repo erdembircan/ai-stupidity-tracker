@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # ── Constants ───────────────────────────────────────
-readonly VERSION="1.0.8"
+readonly VERSION="1.0.9"
 readonly BASE_URL="https://aistupidlevel.info"
 readonly DASHBOARD_URL="${BASE_URL}/dashboard/cached?period=latest&sortBy=combined&analyticsPeriod=latest"
 readonly GLOBAL_INDEX_URL="${BASE_URL}/dashboard/global-index"
