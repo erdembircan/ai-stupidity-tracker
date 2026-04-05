@@ -620,8 +620,8 @@ render_graph() {
   # Build chart rows (top to bottom)
   local row
   for ((row = chart_height - 1; row >= 0; row--)); do
-    local threshold_low=$(( min + (range * row / chart_height) ))
-    local threshold_high=$(( min + (range * (row + 1) / chart_height) ))
+    local threshold_low=$((min + (range * row / chart_height)))
+    local threshold_high=$((min + (range * (row + 1) / chart_height)))
     local label
     if ((row == chart_height - 1)); then
       label=$(printf '%3d' "$max")
@@ -634,7 +634,7 @@ render_graph() {
     local col
     for ((col = 0; col < chart_width; col++)); do
       # Map column to data index
-      local idx=$(( col * (count - 1) / (chart_width - 1) ))
+      local idx=$((col * (count - 1) / (chart_width - 1)))
       local val=${scores[$idx]}
       if ((val >= threshold_high)); then
         line+="█"
@@ -818,13 +818,13 @@ main() {
     --graph=*)
       GRAPH_MODEL="${1#--graph=}"
       if [[ -z "$GRAPH_MODEL" ]]; then
-        printf "  ${RED}${SYM_CROSS} --graph requires a model name${RST}\n"
+        printf '%s\n' "  ${RED}${SYM_CROSS} --graph requires a model name${RST}"
         exit 1
       fi
       ;;
     --graph)
       if [[ -z "${2:-}" || "$2" == -* ]]; then
-        printf "  ${RED}${SYM_CROSS} --graph requires a model name${RST}\n"
+        printf '%s\n' "  ${RED}${SYM_CROSS} --graph requires a model name${RST}"
         exit 1
       fi
       GRAPH_MODEL="$2"
@@ -960,7 +960,7 @@ watch_loop() {
         # Model name not found — warn once
         if [[ -z "$GRAPH_DATA" ]]; then
           printf "  ${RED}${SYM_CROSS} Model '%s' not found in %s rankings${RST}\n" "$GRAPH_MODEL" "$PROVIDER_LABEL" >&2
-          printf "  ${DIM}Available models:${RST}\n" >&2
+          printf '%s\n' "  ${DIM}Available models:${RST}" >&2
           printf '%s\n' "$dashboard" | jq -r --arg provider "$PROVIDER" \
             '.data.modelScores[] | select(.provider == $provider) | "    " + .name' >&2
           exit 1
