@@ -596,44 +596,44 @@ run_demo() {
       "modelScores": [
         {"id":"1","name":"gpt-5.4","provider":"openai","currentScore":69,"score":69,"status":"good"},
         {"id":"2","name":"gemini-2.5-pro","provider":"google","currentScore":67,"score":67,"status":"good"},
-        {"id":"3","name":"claude-sonnet-4","provider":"anthropic","currentScore":64,"score":64,"status":"warning"},
-        {"id":"4","name":"claude-opus-4-5","provider":"anthropic","currentScore":64,"score":64,"status":"good"},
+        {"id":"3","name":"claude-sonnet-4-20250514","provider":"anthropic","currentScore":64,"score":64,"status":"warning"},
+        {"id":"4","name":"claude-opus-4-5-20251101","provider":"anthropic","currentScore":64,"score":64,"status":"good"},
         {"id":"5","name":"gpt-4.5","provider":"openai","currentScore":62,"score":62,"status":"good"},
-        {"id":"6","name":"claude-haiku-4-5","provider":"anthropic","currentScore":58,"score":58,"status":"warning"},
-        {"id":"7","name":"claude-sonnet-4-5","provider":"anthropic","currentScore":55,"score":55,"status":"good"}
+        {"id":"6","name":"claude-haiku-4-5-20251001","provider":"anthropic","currentScore":58,"score":58,"status":"warning"},
+        {"id":"7","name":"claude-sonnet-4-5-20250620","provider":"anthropic","currentScore":55,"score":55,"status":"good"}
       ],
       "recommendations": {
-        "bestForCode": {"name":"claude-sonnet-4","vendor":"anthropic","score":64},
-        "mostReliable": {"name":"claude-opus-4-5","vendor":"anthropic","score":64},
-        "fastestResponse": {"name":"claude-haiku-4-5","vendor":"anthropic","score":58},
-        "bestValue": {"name":"claude-sonnet-4-5","vendor":"anthropic","score":55},
+        "bestForCode": {"name":"claude-sonnet-4-20250514","vendor":"anthropic","score":64},
+        "mostReliable": {"name":"claude-opus-4-5-20251101","vendor":"anthropic","score":64},
+        "fastestResponse": {"name":"claude-haiku-4-5-20251001","vendor":"anthropic","score":58},
+        "bestValue": {"name":"claude-sonnet-4-5-20250620","vendor":"anthropic","score":55},
         "avoidNow": [
-          {"name":"claude-haiku-4-5","vendor":"anthropic"}
+          {"name":"claude-haiku-4-5-20251001","vendor":"anthropic"}
         ]
       },
       "degradations": [
-        {"modelName":"claude-sonnet-4","provider":"anthropic","severity":"warning","type":"unstable_performance","message":"Score variance ±12pts over 48h, averaging 61pts"}
+        {"modelName":"claude-sonnet-4-20250514","provider":"anthropic","severity":"warning","type":"unstable_performance","message":"Score variance ±12pts over 48h, averaging 61pts"}
       ],
       "providerReliability": [
         {"provider":"anthropic","trustScore":82,"trend":"stable","incidentsPerMonth":1.2},
         {"provider":"openai","trustScore":88,"trend":"stable","incidentsPerMonth":0.8}
       ],
       "driftIncidents": [
-        {"modelName":"claude-sonnet-4","provider":"anthropic","severity":"minor"}
+        {"modelName":"claude-sonnet-4-20250514","provider":"anthropic","severity":"minor"}
       ]
     }
   }'
 
   # Override fetch_coding_scores for demo — return hardcoded data
   fetch_coding_scores() {
-    printf '%s\n' "78.4|claude-sonnet-4|0.95|0.72|0.81"
-    printf '%s\n' "71.2|claude-opus-4-5|0.90|0.68|0.75"
-    printf '%s\n' "65.0|claude-haiku-4-5|0.85|0.55|0.70"
-    printf '%s\n' "62.1|claude-sonnet-4-5|0.82|0.50|0.68"
+    printf '%s\n' "78.4|claude-sonnet-4-20250514|0.95|0.72|0.81"
+    printf '%s\n' "71.2|claude-opus-4-5-20251101|0.90|0.68|0.75"
+    printf '%s\n' "65.0|claude-haiku-4-5-20251001|0.85|0.55|0.70"
+    printf '%s\n' "62.1|claude-sonnet-4-5-20250620|0.82|0.50|0.68"
   }
 
   # Fake previous ranks to show rank change arrows
-  local prev_ranks='{"claude-sonnet-4":5,"claude-opus-4-5":3,"claude-haiku-4-5":6,"claude-sonnet-4-5":8}'
+  local prev_ranks='{"claude-sonnet-4-20250514":5,"claude-opus-4-5-20251101":3,"claude-haiku-4-5-20251001":6,"claude-sonnet-4-5-20250620":8}'
 
   local output
   output=$(render "$dashboard" "$global_index" "$now" "$prev_ranks")
