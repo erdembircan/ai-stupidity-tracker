@@ -632,8 +632,11 @@ run_demo() {
     printf '%s\n' "62.1|claude-sonnet-4-5|0.82|0.50|0.68"
   }
 
+  # Fake previous ranks to show rank change arrows
+  local prev_ranks='{"claude-sonnet-4":5,"claude-opus-4-5":3,"claude-haiku-4-5":6,"claude-sonnet-4-5":8}'
+
   local output
-  output=$(render "$dashboard" "$global_index" "$now")
+  output=$(render "$dashboard" "$global_index" "$now" "$prev_ranks")
   printf '%s\n' "$output"
 }
 
