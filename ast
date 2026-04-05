@@ -957,7 +957,8 @@ watch_loop() {
           GRAPH_DATA="${GRAPH_DATA} ${tick_time}@${graph_score}"
           # Cap to max visible samples (chart_width = BOX_WIDTH - 10)
           local max_samples=$((BOX_WIDTH - 10))
-          local -a _gd=($GRAPH_DATA)
+          local -a _gd
+          read -ra _gd <<< "$GRAPH_DATA"
           if (( ${#_gd[@]} > max_samples )); then
             GRAPH_DATA="${_gd[*]:(-${max_samples})}"
           fi
