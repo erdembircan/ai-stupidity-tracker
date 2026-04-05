@@ -633,8 +633,8 @@ render_graph() {
     local line=""
     local col
     for ((col = 0; col < chart_width; col++)); do
-      # Map column to data index
-      local idx=$((col * (count - 1) / (chart_width - 1)))
+      # Map column to data index (equal-width segments)
+      local idx=$((col * count / chart_width))
       local val=${scores[$idx]}
       if ((val >= threshold_high)); then
         line+="█"
@@ -955,6 +955,12 @@ watch_loop() {
           GRAPH_DATA="${tick_time}@${graph_score}"
         else
           GRAPH_DATA="${GRAPH_DATA} ${tick_time}@${graph_score}"
+          # Cap to max visible samples (chart_width = BOX_WIDTH - 10)
+          local max_samples=$((BOX_WIDTH - 10))
+          local -a _gd=($GRAPH_DATA)
+          if (( ${#_gd[@]} > max_samples )); then
+            GRAPH_DATA="${_gd[*]:(-${max_samples})}"
+          fi
         fi
       elif [[ "$first_run" != true ]]; then
         # Model name not found — warn once
