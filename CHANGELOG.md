@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-04-05
+
+### Added
+
+- `--graph` flag to display a real-time score graph for individual models
+- Graph section renders inline Braille-character sparkline charts
+
+### Fixed
+
+- Equal-width graph segments and cap samples to chart width
+- ShellCheck and shfmt lint compliance for graph feature
+
 ## [1.0.9] - 2026-04-04
 
 ### Changed
@@ -110,6 +122,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI workflow with ShellCheck, shfmt, and bats
 - Offline test fixtures for deterministic testing
 
+[1.1.0]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.0.9...v1.1.0
 [1.0.9]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.0.8...v1.0.9
 [1.0.8]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.0.7...v1.0.8
 [1.0.7]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.0.6...v1.0.7
