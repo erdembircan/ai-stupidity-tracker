@@ -253,16 +253,43 @@ fetch_coding_scores() {
 }
 
 # ── Fetch Data ──────────────────────────────────────
+readonly MAX_RETRIES="${AST_MAX_RETRIES:-10}"
+readonly RETRY_INTERVAL="${AST_RETRY_INTERVAL:-30}"
+
 fetch_data() {
   local url="$1"
   local response
-  response=$(curl -sf --max-time 10 "$url" 2>/dev/null)
-  if [[ -z "$response" ]]; then
-    spinner_stop
-    printf '%s\n' "  ${RED}${SYM_CROSS} Failed to fetch data from API${RST}"
-    exit 1
-  fi
-  printf '%s\n' "$response"
+  local attempt=0
+
+  while true; do
+    if response=$(curl -sf --max-time 10 "$url" 2>/dev/null) && [[ -n "$response" ]]; then
+      # Clear retry line if we had been retrying
+      if ((attempt > 0)); then
+        printf '\r\033[2K' >&2
+      fi
+      printf '%s\n' "$response"
+      return 0
+    fi
+
+    # First failure — stop spinner if running
+    if ((attempt == 0)); then
+      spinner_stop
+    fi
+
+    attempt=$((attempt + 1))
+
+    if ((attempt > MAX_RETRIES)); then
+      printf '\r\033[2K' >&2
+      printf '%s\n' "  ${RED}${SYM_CROSS} API unreachable after ${MAX_RETRIES} retries (5m). Giving up.${RST}" >&2
+      return 1
+    fi
+
+    local countdown
+    for ((countdown = RETRY_INTERVAL; countdown > 0; countdown--)); do
+      printf '\r\033[2K  %s' "${YELLOW}${SYM_WARN} API unreachable — retry ${attempt}/${MAX_RETRIES} (${countdown}s)${RST}" >&2
+      sleep 1
+    done
+  done
 }
 
 # ── JSON Output ─────────────────────────────────────

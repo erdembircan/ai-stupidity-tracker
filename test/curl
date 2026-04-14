@@ -2,6 +2,22 @@
 # Mock curl for tests — serves fixture data based on URL pattern
 FIXTURES="$(cd "$(dirname "$0")/fixtures" && pwd)"
 
+# Simulate total API failure
+if [[ "${AST_CURL_FAIL:-}" == "1" ]]; then
+  exit 1
+fi
+
+# Simulate flaky API (fail first N calls, then succeed)
+if [[ -n "${AST_CURL_FAIL_COUNT:-}" ]] && [[ -n "${AST_CURL_FAIL_FILE:-}" ]]; then
+  count=0
+  [[ -f "$AST_CURL_FAIL_FILE" ]] && count=$(cat "$AST_CURL_FAIL_FILE")
+  count=$((count + 1))
+  printf '%d' "$count" >"$AST_CURL_FAIL_FILE"
+  if ((count <= AST_CURL_FAIL_COUNT)); then
+    exit 1
+  fi
+fi
+
 for arg in "$@"; do
   case "$arg" in
   *global-index*)

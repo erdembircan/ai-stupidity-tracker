@@ -300,3 +300,45 @@ setup() {
   [[ "$output" == *"Rankings"* ]]
   [[ "$output" == *"Alerts"* ]]
 }
+
+# ── API Retry ───────────────────────────────────────
+
+@test "retry gives up after max retries with error message" {
+  export AST_CURL_FAIL=1 AST_RETRY_INTERVAL=1 AST_MAX_RETRIES=2
+  run bash -c '"$0" 2>&1' "$AST"
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"API unreachable after 2 retries"* ]]
+  [[ "$output" == *"Giving up"* ]]
+}
+
+@test "retry message shows attempt count" {
+  export AST_CURL_FAIL=1 AST_RETRY_INTERVAL=1 AST_MAX_RETRIES=2
+  run bash -c '"$0" 2>&1' "$AST"
+  [[ "$output" == *"retry 1/2"* ]]
+  [[ "$output" == *"retry 2/2"* ]]
+}
+
+@test "retry message shows countdown seconds" {
+  export AST_CURL_FAIL=1 AST_RETRY_INTERVAL=1 AST_MAX_RETRIES=1
+  run bash -c '"$0" 2>&1' "$AST"
+  [[ "$output" == *"(1s)"* ]]
+}
+
+@test "retry recovers after transient API failure" {
+  local fail_file
+  fail_file=$(mktemp "${BATS_TMPDIR}/curl_fail.XXXXXX")
+  printf '0' >"$fail_file"
+  export AST_CURL_FAIL_COUNT=2 AST_CURL_FAIL_FILE="$fail_file"
+  export AST_RETRY_INTERVAL=1 AST_MAX_RETRIES=5
+  run bash -c '"$0" --section=global 2>&1' "$AST"
+  rm -f "$fail_file"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Global AI Index"* ]]
+}
+
+@test "retry works with --json mode" {
+  export AST_CURL_FAIL=1 AST_RETRY_INTERVAL=1 AST_MAX_RETRIES=2
+  run bash -c '"$0" --json 2>&1' "$AST"
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"API unreachable"* ]]
+}
