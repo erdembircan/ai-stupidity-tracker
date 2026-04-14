@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2026-04-14
+
+### Fixed
+
+- Retry on API failure instead of exiting silently — retries every 30s with live countdown, up to 10 attempts (5 minutes)
+
 ## [1.1.0] - 2026-04-05
 
 ### Added
@@ -122,6 +128,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI workflow with ShellCheck, shfmt, and bats
 - Offline test fixtures for deterministic testing
 
+[1.1.1]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.0.9...v1.1.0
 [1.0.9]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.0.8...v1.0.9
 [1.0.8]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.0.7...v1.0.8
