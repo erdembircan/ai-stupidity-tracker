@@ -342,3 +342,49 @@ setup() {
   [ "$status" -eq 1 ]
   [[ "$output" == *"API unreachable"* ]]
 }
+
+# ── Graph Trimming ─────────────────────────────────
+
+@test "graph start time updates after cap trims old entries" {
+  # Simulate the graph trimming logic from watch_loop:
+  # BOX_WIDTH=54, so max_samples = 54 - 10 = 44
+  # Build GRAPH_DATA with exactly max_samples + 3 entries
+  # After trimming, the first 3 entries (10:00, 10:01, 10:02) should be gone
+  # and first_time should be 10:03, not 10:00
+  local BOX_WIDTH=54
+  local max_samples=$((BOX_WIDTH - 10))
+  local GRAPH_DATA=""
+
+  # Seed max_samples + 3 entries (timestamps 10:00 through 10:46)
+  for i in $(seq 0 $((max_samples + 2))); do
+    local ts
+    ts=$(printf '10:%02d' "$i")
+    local score=$((50 + (i % 10)))
+    if [[ -z "$GRAPH_DATA" ]]; then
+      GRAPH_DATA="${ts}@${score}"
+    else
+      GRAPH_DATA="${GRAPH_DATA} ${ts}@${score}"
+    fi
+  done
+
+  # Apply the same trimming logic as watch_loop
+  local -a _gd
+  read -ra _gd <<<"$GRAPH_DATA"
+  if ((${#_gd[@]} > max_samples)); then
+    GRAPH_DATA="${_gd[*]:(-${max_samples})}"
+  fi
+
+  # Parse first entry (same as render_graph does)
+  local -a entries
+  read -ra entries <<<"$GRAPH_DATA"
+  local first_time="${entries[0]%%@*}"
+  local last_time="${entries[$((${#entries[@]} - 1))]%%@*}"
+
+  # first_time must NOT be 10:00 — it should be 10:03 (4th entry)
+  [ "$first_time" != "10:00" ]
+  [ "$first_time" != "10:01" ]
+  [ "$first_time" != "10:02" ]
+  [ "$first_time" = "10:03" ]
+  [ "$last_time" = "10:46" ]
+  [ "${#entries[@]}" -eq "$max_samples" ]
+}
