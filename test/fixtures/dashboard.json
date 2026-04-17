@@ -389,6 +389,23 @@
         "confidenceLower": 0,
         "confidenceUpper": 84.9,
         "standardError": 13
+      },
+      {
+        "id": "999",
+        "name": "claude-opus-4-7",
+        "provider": "anthropic",
+        "vendor": "anthropic",
+        "currentScore": "unavailable",
+        "score": "unavailable",
+        "trend": "unavailable",
+        "lastUpdated": "2026-04-02T20:00:00.029Z",
+        "status": "unavailable",
+        "isNew": true,
+        "usesReasoningEffort": false,
+        "isStale": true,
+        "confidenceLower": 0,
+        "confidenceUpper": 0,
+        "standardError": 0
       }
     ],
     "alerts": [],

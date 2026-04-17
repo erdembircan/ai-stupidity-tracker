@@ -7,7 +7,7 @@ readonly BASE_URL="https://aistupidlevel.info"
 readonly DASHBOARD_URL="${BASE_URL}/dashboard/cached?period=latest&sortBy=combined&analyticsPeriod=latest"
 readonly GLOBAL_INDEX_URL="${BASE_URL}/dashboard/global-index"
 readonly HISTORY_URL="${BASE_URL}/dashboard/history"
-readonly BOX_WIDTH=54
+readonly BOX_WIDTH=55
 readonly MIN_TERM_WIDTH=$((BOX_WIDTH + 2))
 NARROW_TERM=false
 if [[ ! -t 1 ]] || [[ -n "${NO_COLOR:-}" ]]; then
@@ -448,6 +448,16 @@ render_rankings() {
     box_empty "No ${PROVIDER_LABEL} models found in rankings"
   else
     printf '%s\n' "$R_DATA" | jq -r '.models[] | "\(.rank)|\(.name)|\(.score)|\(.status)"' | while IFS='|' read -r rank name score status; do
+      local rank_str
+      rank_str=$(printf '#%-2s' "$rank")
+      local name_str
+      name_str=$(printf "%-${R_MAX_NAME_LEN}s" "$name")
+
+      if [[ "$status" == "unavailable" ]]; then
+        box_row "${BOLD}${WHITE}${rank_str}${RST}     ${DIM}${name_str}${RST} ${GRAY}${SYM_CROSS}   ${SYM_CROSS} UNAVAILABLE${RST}"
+        continue
+      fi
+
       local sc
       sc=$(status_color "$status")
       local sl
@@ -468,10 +478,6 @@ render_rankings() {
           change_col="${arrow_text}$(printf '%*s' "$pad" '')"
         fi
       fi
-      local rank_str
-      rank_str=$(printf '#%-2s' "$rank")
-      local name_str
-      name_str=$(printf "%-${R_MAX_NAME_LEN}s" "$name")
       local score_str
       score_str=$(printf '%-3s' "$score")
       local sym
