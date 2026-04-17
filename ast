@@ -721,8 +721,15 @@ render() {
   R_PREV_RANKS="${4:-}"
 
   # ── Extract all global index data in one call ───
-  read -r R_G_SCORE R_G_TREND R_G_PERFORMING R_G_TOTAL < <(
-    printf '%s\n' "$global_index" | jq -r '[.data.current.globalScore, .data.trend, .data.performingWell, .data.totalModels] | @tsv'
+  # current.globalScore is occasionally null while a new period is being computed;
+  # fall back to the most recent non-null history entry so the row stays populated.
+  IFS=$'\t' read -r R_G_SCORE R_G_TREND R_G_PERFORMING R_G_TOTAL < <(
+    printf '%s\n' "$global_index" | jq -r '[
+      (.data.current.globalScore // ([.data.history[]? | select(.globalScore != null)][0].globalScore // "—")),
+      .data.trend,
+      .data.performingWell,
+      .data.totalModels
+    ] | @tsv'
   )
 
   # ── Extract all dashboard data in one call ──────
