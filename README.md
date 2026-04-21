@@ -48,6 +48,7 @@ ast --claude                     # Claude status report (explicit)
 ast --watch                      # Live dashboard, refreshes every 60s
 ast --watch 300                  # Live dashboard, custom interval (300s)
 ast --graph=claude-opus-4-6      # Live score graph for a model (implies --watch)
+ast --track=claude-opus-4-6      # Highlight a model name in the output
 ast --json                       # Machine-readable JSON output
 ast --section=coder              # Show only Best Coder section
 ast --section=rankings,alerts    # Show specific sections in order

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # ── Constants ───────────────────────────────────────
-readonly VERSION="1.1.2"
+readonly VERSION="1.2.0-dev"
 readonly BASE_URL="https://aistupidlevel.info"
 readonly DASHBOARD_URL="${BASE_URL}/dashboard/cached?period=latest&sortBy=combined&analyticsPeriod=latest"
 readonly GLOBAL_INDEX_URL="${BASE_URL}/dashboard/global-index"
@@ -33,7 +33,7 @@ fi
 
 # ── Colors ──────────────────────────────────────────
 if [[ -n "${NO_COLOR:-}" ]]; then
-  RST="" BOLD="" DIM="" RED="" GREEN="" YELLOW="" CYAN="" GRAY="" WHITE=""
+  RST="" BOLD="" DIM="" RED="" GREEN="" YELLOW="" CYAN="" GRAY="" WHITE="" TRACK_HL=""
 else
   RST=$'\033[0m'
   BOLD=$'\033[1m'
@@ -44,8 +44,9 @@ else
   CYAN=$'\033[36m'
   GRAY=$'\033[90m'
   WHITE=$'\033[97m'
+  TRACK_HL=$'\033[1;97;45m'
 fi
-readonly RST BOLD DIM RED GREEN YELLOW CYAN GRAY WHITE
+readonly RST BOLD DIM RED GREEN YELLOW CYAN GRAY WHITE TRACK_HL
 
 # ── Symbols ─────────────────────────────────────────
 readonly SYM_CHECK='✓'
@@ -135,6 +136,18 @@ status_label() {
   recovering) echo "RECOVERING" ;;
   *) echo "$status" | tr '[:lower:]' '[:upper:]' ;;
   esac
+}
+
+# ── Track Highlight Helper ─────────────────────────
+TRACK_MODEL=""
+
+highlight_model() {
+  local name="$1"
+  if [[ -n "$TRACK_MODEL" && "$name" == *"$TRACK_MODEL"* ]]; then
+    printf '%s' "${TRACK_HL}${name}${RST}"
+  else
+    printf '%s' "$name"
+  fi
 }
 
 # ── Spinner ─────────────────────────────────────────
@@ -450,11 +463,16 @@ render_rankings() {
     printf '%s\n' "$R_DATA" | jq -r '.models[] | "\(.rank)|\(.name)|\(.score)|\(.status)"' | while IFS='|' read -r rank name score status; do
       local rank_str
       rank_str=$(printf '#%-2s' "$rank")
+      local name_display
+      name_display=$(highlight_model "$name")
       local name_str
       name_str=$(printf "%-${R_MAX_NAME_LEN}s" "$name")
 
       if [[ "$status" == "unavailable" ]]; then
-        box_row "${BOLD}${WHITE}${rank_str}${RST}     ${DIM}${name_str}${RST} ${GRAY}${SYM_CROSS}   ${SYM_CROSS} UNAVAILABLE${RST}"
+        local pad_len=$((R_MAX_NAME_LEN - ${#name}))
+        local pad_str
+        pad_str=$(printf '%*s' "$pad_len" '')
+        box_row "${BOLD}${WHITE}${rank_str}${RST}     ${name_display}${pad_str} ${GRAY}${SYM_CROSS}   ${SYM_CROSS} UNAVAILABLE${RST}"
         continue
       fi
 
@@ -486,7 +504,10 @@ render_rankings() {
       volatile | warning) sym="$SYM_WARN" ;;
       *) sym="$SYM_CROSS" ;;
       esac
-      box_row "${BOLD}${WHITE}${rank_str}${RST} ${change_col}${name_str} ${BOLD}${score_str}${RST} ${sc}${sym} ${sl}${RST}"
+      local pad_len=$((R_MAX_NAME_LEN - ${#name}))
+      local pad_str
+      pad_str=$(printf '%*s' "$pad_len" '')
+      box_row "${BOLD}${WHITE}${rank_str}${RST} ${change_col}${name_display}${pad_str} ${BOLD}${score_str}${RST} ${sc}${sym} ${sl}${RST}"
     done
   fi
   box_bottom
@@ -501,7 +522,9 @@ render_recommendations() {
     printf '%s\n' "$R_DATA" | jq -r '.bestFor[] | "\(.label)|\(.pad)|\(.name)|\(.score)"' | while IFS='|' read -r label pad_len name score; do
       local pad
       pad=$(printf '%*s' "$pad_len" '')
-      box_row "${GREEN}${SYM_CHECK} ${label}${RST}${pad}${name} (${BOLD}${score}${RST})"
+      local name_display
+      name_display=$(highlight_model "$name")
+      box_row "${GREEN}${SYM_CHECK} ${label}${RST}${pad}${name_display} (${BOLD}${score}${RST})"
     done
   fi
   box_bottom
@@ -523,7 +546,9 @@ render_coder() {
     corr_pct=$(awk -v v="$corr" 'BEGIN { printf "%d", v * 100 }')
     cmplx_pct=$(awk -v v="$cmplx" 'BEGIN { printf "%d", v * 100 }')
     cq_pct=$(awk -v v="$cq" 'BEGIN { printf "%d", v * 100 }')
-    box_row "${GREEN}${SYM_CHECK}${RST} ${name} ${BOLD}${cscore}${RST}"
+    local name_display
+    name_display=$(highlight_model "$name")
+    box_row "${GREEN}${SYM_CHECK}${RST} ${name_display} ${BOLD}${cscore}${RST}"
     box_row "  ${DIM}Correctness ${corr_pct}%  Complexity ${cmplx_pct}%  Quality ${cq_pct}%${RST}"
   fi
   box_bottom
@@ -537,7 +562,9 @@ render_alerts() {
   else
     if ((R_AVOID_COUNT > 0)); then
       printf '%s\n' "$R_DATA" | jq -r '.avoidNow[]' | while read -r name; do
-        box_row "${RED}${SYM_CROSS} AVOID${RST}  ${name}"
+        local name_display
+        name_display=$(highlight_model "$name")
+        box_row "${RED}${SYM_CROSS} AVOID${RST}  ${name_display}"
       done
     fi
 
@@ -558,7 +585,9 @@ render_alerts() {
         poor_performance) label="POOR" ;;
         *) label=$(printf '%s' "$severity" | tr '[:lower:]' '[:upper:]') ;;
         esac
-        box_row "${sc}${SYM_WARN} ${label}${RST}  ${name}"
+        local name_display
+        name_display=$(highlight_model "$name")
+        box_row "${sc}${SYM_WARN} ${label}${RST}  ${name_display}"
         box_row "  ${DIM}${clean_msg}${RST}"
       done
     fi
@@ -595,7 +624,9 @@ render_drift() {
       if ((count > 1)); then
         count_str=" ${DIM}(${count}x)${RST}"
       fi
-      box_row "${sc}${SYM_WARN}${RST} ${name}${count_str}"
+      local name_display
+      name_display=$(highlight_model "$name")
+      box_row "${sc}${SYM_WARN}${RST} ${name_display}${count_str}"
     done
     box_bottom
     printf "\n"
@@ -815,6 +846,7 @@ main() {
       printf '%s\n' "    --json              Machine-readable JSON output"
       printf '%s\n' "    --watch[=SECONDS]   Live dashboard, refreshes every N seconds (default: 60)"
       printf '%s\n' "    --graph=MODEL       Real-time score graph for a model (implies --watch)"
+      printf '%s\n' "    --track=MODEL       Highlight a model name in the output"
       printf '%s\n' "    --section=LIST      Show only specific sections (comma-separated)"
       printf '%s\n' "                        Sections: global,rankings,recommendations,coder,alerts,trust,drift,graph"
       printf '%s\n' "    --version           Show version number"
@@ -853,6 +885,21 @@ main() {
           exit 1
         fi
       done
+      shift
+      ;;
+    --track=*)
+      TRACK_MODEL="${1#--track=}"
+      if [[ -z "$TRACK_MODEL" ]]; then
+        printf '%s\n' "  ${RED}${SYM_CROSS} --track requires a model name${RST}"
+        exit 1
+      fi
+      ;;
+    --track)
+      if [[ -z "${2:-}" || "$2" == -* ]]; then
+        printf '%s\n' "  ${RED}${SYM_CROSS} --track requires a model name${RST}"
+        exit 1
+      fi
+      TRACK_MODEL="$2"
       shift
       ;;
     --graph=*)
