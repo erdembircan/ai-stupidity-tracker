@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # ── Constants ───────────────────────────────────────
-readonly VERSION="1.2.0"
+readonly VERSION="1.3.0-dev"
 readonly BASE_URL="https://aistupidlevel.info"
 readonly DASHBOARD_URL="${BASE_URL}/dashboard/cached?period=latest&sortBy=combined&analyticsPeriod=latest"
 readonly GLOBAL_INDEX_URL="${BASE_URL}/dashboard/global-index"
@@ -823,7 +823,7 @@ readonly VALID_SECTIONS="global,rankings,recommendations,coder,alerts,trust,drif
 main() {
   local json_mode=false
   local watch_mode=false
-  local watch_interval=60
+  local watch_interval=1800
   local provider_mode=claude
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -842,7 +842,7 @@ main() {
       printf '\n'
       printf '%s\n' "  ${BOLD}Options:${RST}"
       printf '%s\n' "    --json              Machine-readable JSON output"
-      printf '%s\n' "    --watch[=SECONDS]   Live dashboard, refreshes every N seconds (default: 60)"
+      printf '%s\n' "    --watch[=SECONDS]   Live dashboard, refreshes every N seconds (default: 1800; Ctrl+R to refresh)"
       printf '%s\n' "    --graph=MODEL       Real-time score graph for a model (implies --watch)"
       printf '%s\n' "    --track=MODEL       Highlight a model name in the output"
       printf '%s\n' "    --section=LIST      Show only specific sections (comma-separated)"
@@ -998,10 +998,19 @@ watch_loop() {
   local WATCH_INTERVAL="${1:-60}"
   local first_run=true
   local prev_ranks="{}"
+  local watch_cycles=0
+  local max_cycles="${AST_WATCH_MAX_CYCLES:-0}"
 
   trap 'exit 0' INT TERM
 
   while true; do
+    if ((max_cycles > 0 && watch_cycles >= max_cycles)); then
+      break
+    fi
+    ((watch_cycles++)) || true
+    # Flush any buffered stdin so stacked Ctrl+R presses during fetch are discarded
+    while IFS= read -rsn1 -t 0 _ 2>/dev/null; do :; done
+
     if [[ "$first_run" == true ]]; then
       # First run: show spinner since there's nothing on screen yet
       spinner_start "Fetching ${PROVIDER_LABEL} status"
@@ -1011,8 +1020,8 @@ watch_loop() {
     dashboard=$(fetch_data "$DASHBOARD_URL")
     global_index=$(fetch_data "$GLOBAL_INDEX_URL")
 
+    spinner_stop
     if [[ "$first_run" == true ]]; then
-      spinner_stop
       first_run=false
     fi
 
@@ -1067,11 +1076,16 @@ watch_loop() {
 
     local next_update
     next_update=$(date -d "+${WATCH_INTERVAL} seconds" +"%Y-%m-%d %H:%M" 2>/dev/null || date -v+"${WATCH_INTERVAL}S" +"%Y-%m-%d %H:%M")
-    printf '%s\n' "  ${DIM}Next update ${next_update} ${GRAY}${SYM_BULLET}${RST} ${DIM}Ctrl+C to exit${RST}"
+    printf '%s\n' "  ${DIM}Next update ${next_update} ${GRAY}${SYM_BULLET}${RST} ${DIM}Ctrl+R refresh ${GRAY}${SYM_BULLET}${RST} ${DIM}Ctrl+C to exit${RST}"
 
     prev_ranks="$curr_ranks"
 
-    sleep "$WATCH_INTERVAL"
+    local key=""
+    IFS= read -rsn1 -t "$WATCH_INTERVAL" key 2>/dev/null || true
+    if [[ "$key" == $'\x12' ]]; then
+      spinner_start "Refreshing"
+      continue
+    fi
   done
 }
 
