@@ -13,10 +13,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Braille spinner feedback during forced refresh
 - Stdin flush to prevent stacked refresh requests
 
-### Changed
-
-- Default watch interval raised from 60s to 1800s (30 min) now that manual refresh is available
-
 ## [1.2.0] - 2026-04-21
 
 ### Added
