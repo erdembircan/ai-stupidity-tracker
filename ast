@@ -1000,6 +1000,8 @@ watch_loop() {
   local prev_ranks="{}"
   local watch_cycles=0
   local max_cycles="${AST_WATCH_MAX_CYCLES:-0}"
+  local silent_flag=""
+  [[ -t 0 ]] && silent_flag="-s"
 
   trap 'exit 0' INT TERM
 
@@ -1009,7 +1011,8 @@ watch_loop() {
     fi
     ((watch_cycles++)) || true
     # Flush any buffered stdin so stacked Ctrl+R presses during fetch are discarded
-    while IFS= read -rsn1 -t 0 _ 2>/dev/null; do :; done
+    # shellcheck disable=SC2086,SC2229
+    while IFS= read -rn1 $silent_flag -t 0 _ 2>/dev/null; do :; done
 
     if [[ "$first_run" == true ]]; then
       # First run: show spinner since there's nothing on screen yet
@@ -1085,7 +1088,8 @@ watch_loop() {
     fi
 
     local key=""
-    IFS= read -rsn1 -t "$WATCH_INTERVAL" key 2>/dev/null || true
+    # shellcheck disable=SC2086,SC2229
+    IFS= read -rn1 $silent_flag -t "$WATCH_INTERVAL" key 2>/dev/null || true
     if [[ "$key" == $'\x12' ]]; then
       spinner_start "Refreshing"
       continue
