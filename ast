@@ -1080,6 +1080,10 @@ watch_loop() {
 
     prev_ranks="$curr_ranks"
 
+    if ((max_cycles > 0 && watch_cycles >= max_cycles)); then
+      continue
+    fi
+
     local key=""
     IFS= read -rsn1 -t "$WATCH_INTERVAL" key 2>/dev/null || true
     if [[ "$key" == $'\x12' ]]; then
