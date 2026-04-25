@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-04-25
+
+### Added
+
+- `Ctrl+R` keybind in watch mode to trigger an immediate forced refresh
+- Braille spinner feedback during forced refresh
+- Stdin flush to prevent stacked refresh requests
+
+### Changed
+
+- Default watch interval raised from 60s to 1800s (30 min) now that manual refresh is available
+
 ## [1.2.0] - 2026-04-21
 
 ### Added
@@ -141,6 +153,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI workflow with ShellCheck, shfmt, and bats
 - Offline test fixtures for deterministic testing
 
+[1.3.0]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.1.2...v1.2.0
 [1.1.2]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.1.0...v1.1.1
