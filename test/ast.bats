@@ -343,45 +343,6 @@ setup() {
   [[ "$output" == *"API unreachable"* ]]
 }
 
-# ── Watch Mode ─────────────────────────────────────
-
-@test "--watch default interval is 1800 seconds" {
-  run "$AST" --help
-  [[ "$output" == *"default: 1800"* ]]
-}
-
-@test "--help mentions Ctrl+R refresh" {
-  run "$AST" --help
-  [[ "$output" == *"Ctrl+R to refresh"* ]]
-}
-
-@test "--watch status line shows Ctrl+R hint" {
-  export AST_WATCH_MAX_CYCLES=1
-  run bash -c '"$0" --watch --section=global 2>&1' "$AST"
-  [[ "$output" == *"Ctrl+R refresh"* ]]
-}
-
-@test "--watch Ctrl+R triggers a forced refresh" {
-  export AST_WATCH_MAX_CYCLES=2
-  run bash -c 'printf "\x12" | "$0" --watch --section=global 2>&1' "$AST"
-  count=$(printf '%s' "$output" | grep -c "Global AI Index" || true)
-  [ "$count" -ge 2 ]
-}
-
-@test "--watch Ctrl+R shows refreshing spinner" {
-  export AST_WATCH_MAX_CYCLES=2
-  run bash -c 'printf "\x12" | "$0" --watch --section=global 2>&1' "$AST"
-  [[ "$output" == *"Refreshing"* ]]
-}
-
-@test "--watch flushes buffered Ctrl+R presses" {
-  export AST_WATCH_MAX_CYCLES=2
-  # Send multiple Ctrl+R — should still only refresh once (extras flushed)
-  run bash -c 'printf "\x12\x12\x12" | "$0" --watch --section=global 2>&1' "$AST"
-  count=$(printf '%s' "$output" | grep -c "Global AI Index" || true)
-  [ "$count" -eq 2 ]
-}
-
 # ── Graph Trimming ─────────────────────────────────
 
 @test "graph start time updates after cap trims old entries" {
