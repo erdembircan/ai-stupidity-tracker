@@ -343,6 +343,26 @@ setup() {
   [[ "$output" == *"API unreachable"* ]]
 }
 
+@test "retry delay ramps up linearly instead of staying flat" {
+  export AST_CURL_FAIL=1 AST_RETRY_INTERVAL=3 AST_MAX_RETRIES=3
+  run bash -c '"$0" 2>&1' "$AST"
+  [ "$status" -eq 1 ]
+  # ceil(3*N/3) => 1s, 2s, 3s
+  [[ "$output" == *"retry 1/3 (1s)"* ]]
+  [[ "$output" == *"retry 2/3 (2s)"* ]]
+  [[ "$output" == *"retry 3/3 (3s)"* ]]
+  # A flat interval would have started the first retry at the full 3s
+  [[ "$output" != *"retry 1/3 (3s)"* ]]
+}
+
+@test "give-up message reports actual time waited" {
+  export AST_CURL_FAIL=1 AST_RETRY_INTERVAL=2 AST_MAX_RETRIES=2
+  run bash -c '"$0" 2>&1' "$AST"
+  [ "$status" -eq 1 ]
+  # ceil(2*1/2)=1 plus ceil(2*2/2)=2 => 3s total
+  [[ "$output" == *"API unreachable after 2 retries (3s)"* ]]
+}
+
 # ── Graph Trimming ─────────────────────────────────
 
 @test "graph start time updates after cap trims old entries" {
