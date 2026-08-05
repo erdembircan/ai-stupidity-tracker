@@ -267,12 +267,41 @@ fetch_coding_scores() {
 
 # ── Fetch Data ──────────────────────────────────────
 readonly MAX_RETRIES="${AST_MAX_RETRIES:-10}"
+# Longest wait between retries. Delays ramp linearly up to this value, so early
+# retries fire fast and shrug off transient startup/connection failures.
 readonly RETRY_INTERVAL="${AST_RETRY_INTERVAL:-30}"
+
+# Linear ramp: attempt N waits ceil(RETRY_INTERVAL * N / MAX_RETRIES) seconds,
+# so the final attempt waits exactly RETRY_INTERVAL. Never less than 1s.
+retry_delay() {
+  local attempt="$1"
+  local delay
+  delay=$(((RETRY_INTERVAL * attempt + MAX_RETRIES - 1) / MAX_RETRIES))
+  if ((delay < 1)); then
+    delay=1
+  fi
+  printf '%d' "$delay"
+}
+
+# Render whole seconds as a compact duration: 45s, 2m, 2m45s.
+format_duration() {
+  local total="$1"
+  local mins=$((total / 60))
+  local secs=$((total % 60))
+  if ((mins == 0)); then
+    printf '%ds' "$secs"
+  elif ((secs == 0)); then
+    printf '%dm' "$mins"
+  else
+    printf '%dm%ds' "$mins" "$secs"
+  fi
+}
 
 fetch_data() {
   local url="$1"
   local response
   local attempt=0
+  local waited=0
 
   while true; do
     if response=$(curl -sf --max-time 10 "$url" 2>/dev/null) && [[ -n "$response" ]]; then
@@ -293,12 +322,16 @@ fetch_data() {
 
     if ((attempt > MAX_RETRIES)); then
       printf '\r\033[2K' >&2
-      printf '%s\n' "  ${RED}${SYM_CROSS} API unreachable after ${MAX_RETRIES} retries (5m). Giving up.${RST}" >&2
+      printf '%s\n' "  ${RED}${SYM_CROSS} API unreachable after ${MAX_RETRIES} retries ($(format_duration "$waited")). Giving up.${RST}" >&2
       return 1
     fi
 
+    local delay
+    delay=$(retry_delay "$attempt")
+    waited=$((waited + delay))
+
     local countdown
-    for ((countdown = RETRY_INTERVAL; countdown > 0; countdown--)); do
+    for ((countdown = delay; countdown > 0; countdown--)); do
       printf '\r\033[2K  %s' "${YELLOW}${SYM_WARN} API unreachable — retry ${attempt}/${MAX_RETRIES} (${countdown}s)${RST}" >&2
       sleep 1
     done
