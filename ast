@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # ── Constants ───────────────────────────────────────
-readonly VERSION="1.3.1"
+readonly VERSION="1.3.2"
 readonly BASE_URL="https://aistupidlevel.info"
 readonly DASHBOARD_URL="${BASE_URL}/dashboard/cached?period=latest&sortBy=combined&analyticsPeriod=latest"
 readonly GLOBAL_INDEX_URL="${BASE_URL}/dashboard/global-index"
@@ -33,7 +33,7 @@ fi
 
 # ── Colors ──────────────────────────────────────────
 if [[ -n "${NO_COLOR:-}" ]]; then
-  RST="" BOLD="" DIM="" RED="" GREEN="" YELLOW="" CYAN="" GRAY="" WHITE="" TRACK_HL=""
+  RST="" BOLD="" DIM="" RED="" GREEN="" YELLOW="" GOLD="" CYAN="" GRAY="" WHITE="" TRACK_HL=""
 else
   RST=$'\033[0m'
   BOLD=$'\033[1m'
@@ -41,17 +41,19 @@ else
   RED=$'\033[31m'
   GREEN=$'\033[32m'
   YELLOW=$'\033[33m'
+  GOLD=$'\033[38;5;220m'
   CYAN=$'\033[36m'
   GRAY=$'\033[90m'
   WHITE=$'\033[97m'
   TRACK_HL=$'\033[1;97;45m'
 fi
-readonly RST BOLD DIM RED GREEN YELLOW CYAN GRAY WHITE TRACK_HL
+readonly RST BOLD DIM RED GREEN YELLOW GOLD CYAN GRAY WHITE TRACK_HL
 
 # ── Symbols ─────────────────────────────────────────
 readonly SYM_CHECK='✓'
 readonly SYM_CROSS='✗'
 readonly SYM_WARN='⚠'
+readonly SYM_STAR='★'
 readonly SYM_DIAMOND='◆'
 readonly SYM_ARROW='→'
 readonly SYM_BULLET='•'
@@ -119,6 +121,7 @@ dot_row() {
 status_color() {
   local status="$1"
   case "$status" in
+  excellent) printf '%s' "${GOLD}" ;;
   stable | good) printf '%s' "${GREEN}" ;;
   volatile | warning | minor) printf '%s' "${YELLOW}" ;;
   degraded | critical | unreliable | major) printf '%s' "${RED}" ;;
@@ -130,6 +133,7 @@ status_color() {
 status_label() {
   local status="$1"
   case "$status" in
+  excellent) echo "EXCELLENT" ;;
   stable | good) echo "STABLE" ;;
   volatile | warning) echo "VOLATILE" ;;
   degraded | critical) echo "DEGRADED" ;;
@@ -531,6 +535,7 @@ render_rankings() {
       score_str=$(printf '%-3s' "$score")
       local sym
       case "$status" in
+      excellent) sym="$SYM_STAR" ;;
       good | stable) sym="$SYM_CHECK" ;;
       volatile | warning) sym="$SYM_WARN" ;;
       *) sym="$SYM_CROSS" ;;

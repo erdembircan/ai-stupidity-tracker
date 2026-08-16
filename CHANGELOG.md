@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.2] - 2026-08-16
+
+### Fixed
+
+- Models in the `EXCELLENT` tier no longer render with a cross. The status never had a case of its own, so it fell through to the same fallback that marks failures — the top model on the board was wearing the symbol reserved for the worst, and the whole row read as an alert. `EXCELLENT` now gets a gold `★`, one clear step above the green `✓` on a stable model
+
 ## [1.3.1] - 2026-08-05
 
 ### Changed
@@ -156,6 +162,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI workflow with ShellCheck, shfmt, and bats
 - Offline test fixtures for deterministic testing
 
+[1.3.2]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.3.1...v1.3.2
 [1.3.1]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.1.2...v1.2.0

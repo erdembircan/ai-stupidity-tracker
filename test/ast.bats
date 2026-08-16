@@ -408,3 +408,39 @@ setup() {
   [ "$last_time" = "10:46" ]
   [ "${#entries[@]}" -eq "$max_samples" ]
 }
+
+# ── Status Symbols ───────────────────────────────────
+
+@test "EXCELLENT status renders a star, not a cross" {
+  run "$AST" --section=rankings
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"★ EXCELLENT"* ]]
+  [[ "$output" != *"✗ EXCELLENT"* ]]
+}
+
+@test "EXCELLENT status renders in gold" {
+  run "$AST" --section=rankings
+  [ "$status" -eq 0 ]
+  [[ "$output" == *$'\033[38;5;220m★ EXCELLENT'* ]]
+}
+
+@test "NO_COLOR drops the gold from EXCELLENT but keeps the star" {
+  export NO_COLOR=1
+  run "$AST" --section=rankings
+  unset NO_COLOR
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"★ EXCELLENT"* ]]
+  [[ "$output" != *$'\033[38;5;220m'* ]]
+}
+
+@test "STABLE status still renders a green check" {
+  run "$AST" --openai --section=rankings
+  [ "$status" -eq 0 ]
+  [[ "$output" == *$'\033[32m✓ STABLE'* ]]
+}
+
+@test "--json passes the excellent status through unchanged" {
+  run "$AST" --json
+  [ "$status" -eq 0 ]
+  echo "$output" | jq -e '[.rankings[] | select(.status == "excellent")] | length > 0' >/dev/null
+}
