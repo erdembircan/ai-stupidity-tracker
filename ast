@@ -804,7 +804,7 @@ render() {
     (.data.modelScores | to_entries | [.[] | select(.value.provider == $provider)]) as $models |
     (.data.recommendations) as $reco |
     {
-      goodModels: ([.data.modelScores[] | select(.status == "good") | .name] | join(", ")),
+      goodModels: ([.data.modelScores[] | select(.status == "good" or .status == "excellent") | .name] | join(", ")),
       models: [$models[] | {rank: (.key + 1), name: .value.name, score: .value.currentScore, status: .value.status}],
       modelCount: ($models | length),
       maxNameLen: ([$models[].value.name | length] | max // 0),

@@ -439,6 +439,18 @@ setup() {
   [[ "$output" == *$'\033[32m✓ STABLE'* ]]
 }
 
+@test "global performing-well list includes EXCELLENT models" {
+  run "$AST" --section=global
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"claude-opus-5"* ]]
+}
+
+@test "global performing-well list still includes good models" {
+  run "$AST" --section=global
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"gpt-5.4"* ]]
+}
+
 @test "--json passes the excellent status through unchanged" {
   run "$AST" --json
   [ "$status" -eq 0 ]

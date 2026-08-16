@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Models in the `EXCELLENT` tier no longer render with a cross. The status never had a case of its own, so it fell through to the same fallback that marks failures — the top model on the board was wearing the symbol reserved for the worst, and the whole row read as an alert. `EXCELLENT` now gets a gold `★`, one clear step above the green `✓` on a stable model
+- The global index no longer leaves the best models out of its own "performing well" list. The count came from the API and already included the `EXCELLENT` tier, but the names printed underneath it were filtered to `good` alone — so the header claimed twelve models were doing well and then named ten, omitting the two sitting at the very top of the board
 
 ## [1.3.1] - 2026-08-05
 

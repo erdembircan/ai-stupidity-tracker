@@ -4,6 +4,24 @@
   "data": {
     "modelScores": [
       {
+        "id": "1000",
+        "name": "claude-opus-5",
+        "provider": "anthropic",
+        "vendor": "anthropic",
+        "currentScore": 82,
+        "score": 82,
+        "trend": "up",
+        "lastUpdated": "2026-04-02T18:00:03.045Z",
+        "status": "excellent",
+        "isNew": false,
+        "usesReasoningEffort": false,
+        "isStale": false,
+        "staleDuration": 0,
+        "confidenceLower": 74.5,
+        "confidenceUpper": 89.5,
+        "standardError": 3.8
+      },
+      {
         "id": "230",
         "name": "gpt-5.4",
         "provider": "openai",
@@ -406,24 +424,6 @@
         "confidenceLower": 0,
         "confidenceUpper": 0,
         "standardError": 0
-      },
-      {
-        "id": "1000",
-        "name": "claude-opus-5",
-        "provider": "anthropic",
-        "vendor": "anthropic",
-        "currentScore": 82,
-        "score": 82,
-        "trend": "up",
-        "lastUpdated": "2026-04-02T18:00:03.045Z",
-        "status": "excellent",
-        "isNew": false,
-        "usesReasoningEffort": false,
-        "isStale": false,
-        "staleDuration": 0,
-        "confidenceLower": 74.5,
-        "confidenceUpper": 89.5,
-        "standardError": 3.8
       }
     ],
     "alerts": [],
