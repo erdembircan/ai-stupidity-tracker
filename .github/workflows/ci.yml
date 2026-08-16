@@ -8,4 +8,4 @@ on:
 
 jobs:
   checks:
-    uses: ./.github/workflows/templates/checks.yml
+    uses: ./.github/workflows/checks.yml

@@ -7,7 +7,7 @@ on:
 jobs:
   checks:
     if: ${{ !contains(github.ref, '-') }}
-    uses: ./.github/workflows/templates/checks.yml
+    uses: ./.github/workflows/checks.yml
 
   homebrew:
     name: Bump Homebrew formula
