@@ -1,5 +1,5 @@
 SHELL := /bin/bash
-SCRIPTS := ast ast-hook
+SCRIPTS := ast ast-hook .github/scripts/update-docs.sh
 
 .PHONY: check lint fmt fmt-fix test test-live install uninstall
 
