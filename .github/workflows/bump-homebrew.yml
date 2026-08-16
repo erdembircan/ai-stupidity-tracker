@@ -23,19 +23,27 @@ jobs:
           COMMITTER_TOKEN: ${{ secrets.COMMITTER_TOKEN }}
 
   docs:
-    name: Update docs version
+    name: Update docs
     needs: checks
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out release tag
+        uses: actions/checkout@v4
+        with:
+          path: source
+
+      - name: Check out docs branch
+        uses: actions/checkout@v4
         with:
           ref: gh-pages
+          path: pages
 
-      - name: Update version in docs
+      - name: Update version and changelog in docs
         run: |
           VERSION="${GITHUB_REF#refs/tags/v}"
-          sed -i -E "s|<!-- auto-updated by CI --> <td>[0-9]+\.[0-9]+\.[0-9]+</td>|<!-- auto-updated by CI --> <td>${VERSION}</td>|" index.html
+          source/.github/scripts/update-docs.sh "$VERSION" source/CHANGELOG.md pages/index.html
 
       - uses: EndBug/add-and-commit@v9
         with:
+          cwd: pages
           message: "docs: update version to ${{ github.ref_name }}"
