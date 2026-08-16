@@ -86,6 +86,13 @@ setup() {
   echo "$output" | jq -e '.globalIndex.trend' >/dev/null
 }
 
+@test "--json preserves the excellent status verbatim" {
+  run "$AST" --json
+  [ "$status" -eq 0 ]
+  count=$(echo "$output" | jq '[.rankings[] | select(.status == "excellent")] | length')
+  [ "$count" -eq 2 ]
+}
+
 @test "--version prints version number" {
   run "$AST" --version
   [ "$status" -eq 0 ]
@@ -113,6 +120,13 @@ setup() {
   [ "$status" -eq 0 ]
   [[ "$output" == *"Claude Rankings"* ]]
   [[ "$output" == *"Global AI Index"* ]]
+}
+
+@test "NO_COLOR keeps the excellent star without escapes" {
+  run env NO_COLOR=1 "$AST" --section=rankings
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"★ EXCELLENT"* ]]
+  ! printf '%s' "$output" | grep -q $'\033'
 }
 
 # ── Normal Output ────────────────────────────────────
@@ -258,6 +272,18 @@ setup() {
   [[ "$output" != *"Alerts"* ]]
 }
 
+@test "rankings render excellent models with a filled star" {
+  run "$AST" --section=rankings
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"★ EXCELLENT"* ]]
+}
+
+@test "excellent status renders in gold" {
+  run "$AST" --section=rankings
+  [ "$status" -eq 0 ]
+  [[ "$output" == *$'\033[38;5;220m★ EXCELLENT'* ]]
+}
+
 @test "--section=coder shows only best coder" {
   run "$AST" --section=coder
   [ "$status" -eq 0 ]
@@ -291,6 +317,12 @@ setup() {
   [ "$status" -eq 0 ]
   [[ "$output" == *"Global AI Index"* ]]
   [[ "$output" != *"Rankings"* ]]
+}
+
+@test "global index good-models list includes excellent models" {
+  run "$AST" --section=global
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"claude-opus-5"* ]]
 }
 
 @test "default output shows all sections" {
