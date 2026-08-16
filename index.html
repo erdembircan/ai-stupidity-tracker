@@ -247,6 +247,59 @@
       border-radius: 3px;
     }
 
+    /* ── Changelog ────────────────────────────── */
+    .changelog {
+      margin-top: 4px;
+    }
+
+    .changelog-date {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 400;
+    }
+
+    .changelog-kind {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--link);
+      margin-top: 14px;
+      margin-bottom: 6px;
+    }
+
+    .changelog-list {
+      list-style: none;
+      margin-bottom: 8px;
+    }
+
+    .changelog-list li {
+      position: relative;
+      padding-left: 16px;
+      margin-bottom: 6px;
+      font-size: 15px;
+    }
+
+    .changelog-list li::before {
+      content: "›";
+      position: absolute;
+      left: 0;
+      color: var(--muted);
+    }
+
+    .changelog-list code {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 13px;
+      background: var(--code-bg);
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+
+    .changelog-more {
+      margin-top: 12px;
+      font-size: 14px;
+    }
+
     /* ── Footer ───────────────────────────────── */
     .footer {
       max-width: 720px;
@@ -397,6 +450,14 @@
       <span class="bin-tag">ast</span>
       <span class="bin-tag">ast-hook</span>
     </div>
+
+    <hr class="separator">
+
+    <!-- Changelog — the block between the markers below is regenerated on every
+         release tag by .github/scripts/update-docs.sh on master. Never hand-edit
+         it, and never remove the markers. -->
+    <!-- CHANGELOG:START -->
+    <!-- CHANGELOG:END -->
   </main>
 
   <!-- Footer -->
