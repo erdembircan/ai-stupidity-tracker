@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 
 - A `--flag` that does things
 - An entry with a [link](https://example.com/docs) inside it
+- An entry linking to a [query](https://example.com/s?a=1&b=2) with an ampersand
 - An entry that wraps onto
   a second line
 

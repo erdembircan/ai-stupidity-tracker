@@ -33,11 +33,27 @@ grep -qF -- "$START_MARKER" "$INDEX" || die "missing $START_MARKER in $INDEX"
 grep -qF -- "$END_MARKER" "$INDEX" || die "missing $END_MARKER in $INDEX"
 
 # ── Inline markdown → HTML ────────────────────────────
+# Escape by walking the string: since bash 5.2 an unescaped & in a ${var//…/…}
+# replacement expands to the matched text, and the \& that avoids it is taken
+# literally by bash 3.2, so no substitution form is portable across both.
+html_escape() {
+  local s="$1" out="" c
+  while [[ -n "$s" ]]; do
+    c="${s:0:1}"
+    s="${s:1}"
+    case "$c" in
+    "&") out+="&amp;" ;;
+    "<") out+="&lt;" ;;
+    ">") out+="&gt;" ;;
+    *) out+="$c" ;;
+    esac
+  done
+  printf '%s' "$out"
+}
+
 inline_html() {
-  local line="$1" before rest code after full text url
-  line="${line//&/&amp;}"
-  line="${line//</&lt;}"
-  line="${line//>/&gt;}"
+  local line before rest code after full text url
+  line="$(html_escape "$1")"
   while [[ "$line" == *'`'*'`'* ]]; do
     before="${line%%\`*}"
     rest="${line#*\`}"
@@ -49,7 +65,9 @@ inline_html() {
     full="${BASH_REMATCH[0]}"
     text="${BASH_REMATCH[1]}"
     url="${BASH_REMATCH[2]}"
-    line="${line//"$full"/<a href=\"$url\">$text</a>}"
+    before="${line%%"$full"*}"
+    after="${line#*"$full"}"
+    line="${before}<a href=\"$url\">$text</a>${after}"
   done
   printf '%s' "$line"
 }
