@@ -45,7 +45,7 @@ ln -s "$(pwd)/ast" /usr/local/bin/ast
 ast                              # Claude status report (default)
 ast --openai                     # OpenAI status report
 ast --claude                     # Claude status report (explicit)
-ast --watch                      # Live dashboard, refreshes every 60s
+ast --watch                      # Live dashboard, refreshes every 1800s (30 min)
 ast --watch 300                  # Live dashboard, custom interval (300s)
 ast --graph=claude-opus-4-6      # Live score graph for a model (implies --watch)
 ast --track=claude-opus-4-6      # Highlight a model name in the output
