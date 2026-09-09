@@ -602,6 +602,40 @@ setup() {
   [ "$output" = "claude-sonnet-4-6" ]
 }
 
+@test "picker_busy_start with a selection announces the switch" {
+  run bash -c '
+    source "'"$AST"'"
+    picker_busy_start "claude-sonnet-4-6" 2>"'"$BATS_TEST_TMPDIR"'/spinner.out"
+    sleep 0.2
+    spinner_stop 2>/dev/null
+    cat "'"$BATS_TEST_TMPDIR"'/spinner.out"
+  '
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Switching to claude-sonnet-4-6"* ]]
+}
+
+@test "picker_busy_start with no selection announces a refresh" {
+  run bash -c '
+    source "'"$AST"'"
+    picker_busy_start "" 2>"'"$BATS_TEST_TMPDIR"'/spinner.out"
+    sleep 0.2
+    spinner_stop 2>/dev/null
+    cat "'"$BATS_TEST_TMPDIR"'/spinner.out"
+  '
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Refreshing"* ]]
+}
+
+@test "picker_busy_start clears the stale picker frame" {
+  run bash -c '
+    source "'"$AST"'"
+    picker_busy_start "" 2>/dev/null
+    spinner_stop 2>/dev/null
+  '
+  [ "$status" -eq 0 ]
+  [[ "$output" == *$'\033[2J\033[H'* ]]
+}
+
 @test "sourcing ast does not run main" {
   run bash -c 'source "'"$AST"'"; echo SOURCED_OK'
   [ "$status" -eq 0 ]
