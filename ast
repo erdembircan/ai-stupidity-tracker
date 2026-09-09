@@ -939,6 +939,22 @@ apply_model_selection() {
   fi
 }
 
+# ── Picker Busy Feedback ───────────────────────────
+# After the picker closes, the watch loop refetches both endpoints before
+# anything new is drawn, so the stale picker frame would sit frozen on
+# screen with no feedback. Clear it and run the spinner with a message
+# that says what is actually happening. The unconditional spinner_stop
+# after the fetches shuts it down.
+picker_busy_start() {
+  local selected="$1"
+  printf '\033[2J\033[H'
+  if [[ -n "$selected" ]]; then
+    spinner_start "Switching to ${selected} — fetching fresh scores"
+  else
+    spinner_start "Refreshing"
+  fi
+}
+
 # ── Model Picker View ──────────────────────────────
 # Full-screen picker. Reads the PICKER_NAMES / PICKER_SCORES /
 # PICKER_STATUSES / PICKER_MAXLEN globals populated by picker_loop.
@@ -1439,6 +1455,7 @@ watch_loop() {
     if [[ "$SWITCHER_ACTIVE" == true && ("$key" == "m" || "$key" == "M") ]]; then
       picker_loop "$dashboard"
       apply_model_selection "$PICKER_RESULT"
+      picker_busy_start "$PICKER_RESULT"
       continue
     fi
     if [[ "$key" == $'\x12' ]]; then
