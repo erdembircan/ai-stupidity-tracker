@@ -59,6 +59,7 @@ readonly SYM_ARROW='→'
 readonly SYM_BULLET='•'
 readonly SYM_UP='↑'
 readonly SYM_DOWN='↓'
+readonly SYM_POINTER='▸'
 
 # ── Box Drawing Helpers ─────────────────────────────
 # Right border column (2 indent + BOX_WIDTH)
@@ -674,6 +675,12 @@ render_drift() {
 # GRAPH_DATA is a space-separated list of "timestamp@score" pairs
 GRAPH_DATA=""
 GRAPH_MODEL=""
+SWITCHER_ACTIVE=false
+PICKER_RESULT=""
+PICKER_NAMES=()
+PICKER_SCORES=()
+PICKER_STATUSES=()
+PICKER_MAXLEN=0
 
 render_graph() {
   [[ -z "$GRAPH_MODEL" ]] && return
@@ -777,6 +784,180 @@ render_graph() {
 
   box_bottom
   printf "\n"
+}
+
+# ── Provider Model List ────────────────────────────
+# Emits the current provider's switchable models as name\tscore\tstatus,
+# one per line, in alphabetical order by name. Models with status
+# "unavailable" are excluded — you cannot meaningfully graph a model
+# with no score.
+provider_model_rows() {
+  local dashboard="$1"
+  printf '%s\n' "$dashboard" | jq -r --arg provider "$PROVIDER" '
+    [.data.modelScores[] | select(.provider == $provider and .status != "unavailable")]
+    | sort_by(.name)
+    | .[] | [.name, (.currentScore | tostring), .status] | @tsv'
+}
+
+# ── Apply Model Selection ──────────────────────────
+# Repoint the active track/graph target to the newly chosen model.
+# Only features that were already active are updated; the graph history
+# is reset only when the graphed model actually changes.
+apply_model_selection() {
+  local selected="$1"
+  [[ -z "$selected" ]] && return
+  if [[ -n "$GRAPH_MODEL" && "$selected" != "$GRAPH_MODEL" ]]; then
+    GRAPH_MODEL="$selected"
+    GRAPH_DATA=""
+  fi
+  if [[ -n "$TRACK_MODEL" ]]; then
+    TRACK_MODEL="$selected"
+  fi
+}
+
+# ── Model Picker View ──────────────────────────────
+# Full-screen picker. Reads the PICKER_NAMES / PICKER_SCORES /
+# PICKER_STATUSES / PICKER_MAXLEN globals populated by picker_loop.
+# Arg: selected index.
+render_picker() {
+  local sel="$1"
+  local maxlen="$PICKER_MAXLEN"
+  local target="${GRAPH_MODEL:-$TRACK_MODEL}"
+
+  local now
+  now=$(date +"%Y-%m-%d %H:%M")
+
+  printf "\n"
+  printf '%s\n' "  ${BOLD}${CYAN}${SYM_DIAMOND} AST${RST}  ${DIM}v${VERSION} ${GRAY}${SYM_BULLET} ${now}${RST}"
+  printf "\n"
+
+  box_top "Switch Model · ${PROVIDER_LABEL}"
+  if ((${#PICKER_NAMES[@]} == 0)); then
+    box_empty "No switchable ${PROVIDER_LABEL} models available"
+  else
+    local i
+    for ((i = 0; i < ${#PICKER_NAMES[@]}; i++)); do
+      local name="${PICKER_NAMES[$i]}"
+      local score="${PICKER_SCORES[$i]}"
+      local status="${PICKER_STATUSES[$i]}"
+      local sym sc
+      case "$status" in
+      excellent)
+        sym="$SYM_STAR"
+        sc="$GOLD"
+        ;;
+      good | stable)
+        sym="$SYM_CHECK"
+        sc="$GREEN"
+        ;;
+      volatile | warning)
+        sym="$SYM_WARN"
+        sc="$YELLOW"
+        ;;
+      *)
+        sym="$SYM_CROSS"
+        sc="$RED"
+        ;;
+      esac
+      local pad_len=$((maxlen - ${#name}))
+      ((pad_len < 0)) && pad_len=0
+      local pad_str
+      pad_str=$(printf '%*s' "$pad_len" '')
+      local cur_tag=""
+      [[ "$name" == "$target" ]] && cur_tag=" ${DIM}(current)${RST}"
+      local score_str
+      score_str=$(printf '%-3s' "$score")
+      if ((i == sel)); then
+        box_row "${CYAN}${BOLD}${SYM_POINTER}${RST} ${BOLD}${WHITE}${name}${RST}${pad_str} ${BOLD}${score_str}${RST} ${sc}${sym}${RST}${cur_tag}"
+      else
+        box_row "  ${name}${pad_str} ${score_str} ${sc}${sym}${RST}${cur_tag}"
+      fi
+    done
+  fi
+  box_bottom
+  printf "\n"
+  printf '%s\n' "  ${DIM}${SYM_UP}/${SYM_DOWN} move ${GRAY}${SYM_BULLET}${RST} ${DIM}Enter select ${GRAY}${SYM_BULLET}${RST} ${DIM}q/Esc cancel${RST}"
+}
+
+# ── Model Picker Loop ──────────────────────────────
+picker_loop() {
+  local dashboard="$1"
+  PICKER_RESULT=""
+  PICKER_NAMES=()
+  PICKER_SCORES=()
+  PICKER_STATUSES=()
+  PICKER_MAXLEN=0
+
+  local rows
+  rows=$(provider_model_rows "$dashboard")
+
+  if [[ -n "$rows" ]]; then
+    local name score status
+    while IFS=$'\t' read -r name score status; do
+      [[ -z "$name" ]] && continue
+      PICKER_NAMES+=("$name")
+      PICKER_SCORES+=("$score")
+      PICKER_STATUSES+=("$status")
+      ((${#name} > PICKER_MAXLEN)) && PICKER_MAXLEN=${#name}
+    done <<<"$rows"
+  fi
+
+  local count=${#PICKER_NAMES[@]}
+  local target="${GRAPH_MODEL:-$TRACK_MODEL}"
+
+  # Start cursor on the current target if present.
+  local sel=0 i
+  for ((i = 0; i < count; i++)); do
+    if [[ "${PICKER_NAMES[$i]}" == "$target" ]]; then
+      sel=$i
+      break
+    fi
+  done
+
+  while true; do
+    local frame
+    frame=$(render_picker "$sel")
+    # Clear each line to EOL before drawing it, so a shorter picker row never
+    # leaves the previous frame's tail behind — mid-line (box_row jumps the
+    # cursor to the border column without erasing) or right of the border.
+    # \033[J then clears any lines below the frame.
+    printf '\033[H\033[K%s\033[J' "${frame//$'\n'/$'\n\033[K'}"
+
+    local key=""
+    IFS= read -rsn1 key 2>/dev/null || true
+
+    # Empty read == Enter (newline stripped by read -n1).
+    if [[ -z "$key" ]]; then
+      if ((count > 0)); then
+        PICKER_RESULT="${PICKER_NAMES[$sel]}"
+      fi
+      return
+    fi
+
+    case "$key" in
+    $'\033')
+      # Possible arrow-key escape sequence; bare Esc == cancel.
+      # Integer -t 1 keeps this bash-3.2-safe: buffered "[A"/"[B" bytes
+      # return instantly; a bare Esc falls through after <=1s.
+      local rest=""
+      IFS= read -rsn2 -t 1 rest 2>/dev/null || true
+      case "$rest" in
+      '[A') ((count > 0)) && sel=$(((sel - 1 + count) % count)) ;;
+      '[B') ((count > 0)) && sel=$(((sel + 1) % count)) ;;
+      *)
+        PICKER_RESULT=""
+        return
+        ;;
+      esac
+      ;;
+    k | K) ((count > 0)) && sel=$(((sel - 1 + count) % count)) ;;
+    j | J) ((count > 0)) && sel=$(((sel + 1) % count)) ;;
+    q | Q)
+      PICKER_RESULT=""
+      return
+      ;;
+    esac
+  done
 }
 
 readonly DEFAULT_SECTION_ORDER="global,rankings,recommendations,coder,alerts,trust,drift"
@@ -887,6 +1068,10 @@ main() {
       printf '%s\n' "                        Sections: global,rankings,recommendations,coder,alerts,trust,drift,graph"
       printf '%s\n' "    --version           Show version number"
       printf '%s\n' "    --help              Show this help message"
+      printf '\n'
+      printf '%s\n' "  ${BOLD}Model switcher:${RST}"
+      printf '%s\n' "    In watch mode with --track or --graph, press ${BOLD}m${RST} to open a"
+      printf '%s\n' "    picker and switch the tracked/graphed model without restarting."
       printf '\n'
       printf '%s\n' "  ${BOLD}Environment:${RST}"
       printf '%s\n' "    NO_COLOR=1          Disable colors and box-drawing right borders"
@@ -1006,6 +1191,11 @@ main() {
     fi
   fi
 
+  # A track/graph target in watch mode enables the live model switcher.
+  if [[ "$watch_mode" == true && (-n "$GRAPH_MODEL" || -n "$TRACK_MODEL") ]]; then
+    SWITCHER_ACTIVE=true
+  fi
+
   if [[ "$json_mode" == true ]]; then
     output_json
     return
@@ -1108,12 +1298,19 @@ watch_loop() {
 
     local next_update
     next_update=$(date -d "+${WATCH_INTERVAL} seconds" +"%Y-%m-%d %H:%M" 2>/dev/null || date -v+"${WATCH_INTERVAL}S" +"%Y-%m-%d %H:%M")
-    printf '%s\n' "  ${DIM}Next update ${next_update} ${GRAY}${SYM_BULLET}${RST} ${DIM}Ctrl+R refresh ${GRAY}${SYM_BULLET}${RST} ${DIM}Ctrl+C to exit${RST}"
+    local switch_hint=""
+    [[ "$SWITCHER_ACTIVE" == true ]] && switch_hint=" ${GRAY}${SYM_BULLET}${RST} ${DIM}m switch model${RST}"
+    printf '%s\n' "  ${DIM}Next update ${next_update} ${GRAY}${SYM_BULLET}${RST} ${DIM}Ctrl+R refresh ${GRAY}${SYM_BULLET}${RST} ${DIM}Ctrl+C to exit${RST}${switch_hint}"
 
     prev_ranks="$curr_ranks"
 
     local key=""
     IFS= read -rsn1 -t "$WATCH_INTERVAL" key 2>/dev/null || true
+    if [[ "$SWITCHER_ACTIVE" == true && ("$key" == "m" || "$key" == "M") ]]; then
+      picker_loop "$dashboard"
+      apply_model_selection "$PICKER_RESULT"
+      continue
+    fi
     if [[ "$key" == $'\x12' ]]; then
       spinner_start "Refreshing"
       continue
@@ -1121,4 +1318,6 @@ watch_loop() {
   done
 }
 
-main "$@"
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+  main "$@"
+fi

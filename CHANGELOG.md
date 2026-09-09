@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Live model switcher in watch mode — when `--track` or `--graph` is set, press `m` to open a picker and swap the tracked/graphed model without restarting the process. The picker lists the current provider's models alphabetically (score and status shown), navigates with the arrow keys, and resets the graph history when a new model is chosen
+
 ## [1.3.3] - 2026-08-17
 
 ### Added
@@ -172,6 +178,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI workflow with ShellCheck, shfmt, and bats
 - Offline test fixtures for deterministic testing
 
+[unreleased]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.3.3...HEAD
 [1.3.3]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.3.2...v1.3.3
 [1.3.2]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.3.1...v1.3.2
 [1.3.1]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.3.0...v1.3.1
