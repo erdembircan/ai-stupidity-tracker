@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.1] - 2026-09-09
+
 ### Fixed
 
 - Choosing a model in the watch-mode picker — or cancelling it — left the last picker frame frozen on screen while both endpoints were refetched, so the app looked hung. The screen now clears and the spinner runs until the redraw, naming the newly selected model when there is one
@@ -200,7 +202,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI workflow with ShellCheck, shfmt, and bats
 - Offline test fixtures for deterministic testing
 
-[Unreleased]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.5.0...HEAD
+[Unreleased]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.5.1...HEAD
+[1.5.1]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.3.3...v1.4.0
 [1.3.3]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.3.2...v1.3.3
