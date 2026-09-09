@@ -440,3 +440,84 @@ setup() {
   [ "$last_time" = "10:46" ]
   [ "${#entries[@]}" -eq "$max_samples" ]
 }
+
+# ── Model Switcher ─────────────────────────────────
+
+@test "provider_model_rows lists only anthropic selectable models" {
+  run bash -c '
+    PROVIDER=anthropic
+    source "'"$AST"'"
+    provider_model_rows "$(cat "'"$DIR"'/test/fixtures/dashboard.json")" | cut -f1
+  '
+  [ "$status" -eq 0 ]
+  # 8 selectable anthropic models in the fixture
+  [ "$(printf '%s\n' "$output" | grep -c .)" -eq 8 ]
+  # all are claude
+  [ "$(printf '%s\n' "$output" | grep -cv claude)" -eq 0 ]
+  # the unavailable model is excluded
+  [[ "$output" != *"claude-opus-4-7"* ]]
+}
+
+@test "provider_model_rows excludes unavailable models and emits score+status" {
+  run bash -c '
+    PROVIDER=anthropic
+    source "'"$AST"'"
+    provider_model_rows "$(cat "'"$DIR"'/test/fixtures/dashboard.json")"
+  '
+  [ "$status" -eq 0 ]
+  # tab-separated name<TAB>score<TAB>status — check a known row
+  [[ "$output" == *$'claude-opus-5\t82\texcellent'* ]]
+}
+
+@test "provider_model_rows respects provider selection" {
+  run bash -c '
+    PROVIDER=openai
+    source "'"$AST"'"
+    provider_model_rows "$(cat "'"$DIR"'/test/fixtures/dashboard.json")" | cut -f1
+  '
+  [ "$status" -eq 0 ]
+  [ "$(printf '%s\n' "$output" | grep -cv gpt)" -eq 0 ]
+}
+
+@test "apply_model_selection repoints graph and resets graph data" {
+  run bash -c '
+    source "'"$AST"'"
+    GRAPH_MODEL="claude-opus-5"
+    GRAPH_DATA="10:00@80 10:01@81"
+    TRACK_MODEL=""
+    apply_model_selection "claude-sonnet-4-6"
+    echo "$GRAPH_MODEL|$GRAPH_DATA"
+  '
+  [ "$status" -eq 0 ]
+  [ "$output" = "claude-sonnet-4-6|" ]
+}
+
+@test "apply_model_selection keeps graph history when model unchanged" {
+  run bash -c '
+    source "'"$AST"'"
+    GRAPH_MODEL="claude-opus-5"
+    GRAPH_DATA="10:00@80 10:01@81"
+    apply_model_selection "claude-opus-5"
+    echo "$GRAPH_MODEL|$GRAPH_DATA"
+  '
+  [ "$status" -eq 0 ]
+  [ "$output" = "claude-opus-5|10:00@80 10:01@81" ]
+}
+
+@test "apply_model_selection repoints track target" {
+  run bash -c '
+    source "'"$AST"'"
+    GRAPH_MODEL=""
+    TRACK_MODEL="claude-opus-5"
+    apply_model_selection "claude-sonnet-4-6"
+    echo "$TRACK_MODEL"
+  '
+  [ "$status" -eq 0 ]
+  [ "$output" = "claude-sonnet-4-6" ]
+}
+
+@test "sourcing ast does not run main" {
+  run bash -c 'source "'"$AST"'"; echo SOURCED_OK'
+  [ "$status" -eq 0 ]
+  [ "$output" = "SOURCED_OK" ]
+}

@@ -67,6 +67,17 @@ ast --openai --watch           # Live OpenAI dashboard
 ast --openai --section=coder   # OpenAI best coder only
 ```
 
+## Switching models live
+
+When you run watch mode with `--track` or `--graph`, AST shows a **Model** control at the top of the dashboard. Press `m` to open the picker, use the arrow keys to move through the current provider's models — each shown with its score and status — and press `Enter` to switch. `Esc` cancels.
+
+The newly selected model becomes the tracked and graphed target immediately, no restart required. Switching resets the score graph so it starts collecting fresh history for the new model.
+
+```bash
+ast --graph=claude-opus-4-6      # start graphing one model...
+                                 # ...then press m to switch to another
+```
+
 ## Development
 
 ```bash
