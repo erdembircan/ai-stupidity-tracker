@@ -927,7 +927,11 @@ picker_loop() {
   while true; do
     local frame
     frame=$(render_picker "$sel")
-    printf '\033[H%s\033[J' "$frame"
+    # Clear each line to EOL before drawing it, so a shorter picker row never
+    # leaves the previous frame's tail behind — mid-line (box_row jumps the
+    # cursor to the border column without erasing) or right of the border.
+    # \033[J then clears any lines below the frame.
+    printf '\033[H\033[K%s\033[J' "${frame//$'\n'/$'\n\033[K'}"
 
     local key=""
     IFS= read -rsn1 key 2>/dev/null || true
