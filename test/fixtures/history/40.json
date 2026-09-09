@@ -3,17 +3,16 @@
   "data": [
     {
       "timestamp": "2026-09-09T10:47:15.192Z",
-      "score": 73,
+      "score": 70,
       "axes": {
         "correctness": 0.80,
-        "spec": 0.70,
         "codeQuality": 0.70,
         "efficiency": 0.60,
         "stability": 0.70,
         "refusal": 0.90,
         "recovery": 0.50
       },
-      "stupidScore": 73,
+      "stupidScore": 70,
       "suite": "hourly"
     }
   ]

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `Best Coder` read nine axes the API no longer serves, so five of them came back empty and the remaining values shifted into the wrong variables — the breakdown row showed code quality as "Complexity" and efficiency as "Quality", and every score was deflated. It now reads the seven axes the API actually returns (`correctness`, `spec`, `codeQuality`, `efficiency`, `stability`, `refusal`, `recovery`)
+
+### Changed
+
+- `Best Coder` score is now the linear weighted sum of those seven axes with the site's published weights (35/15/15/10/10/10/5), taken from the newest hourly code-benchmark run instead of the combined run. The undocumented exponent, curve and penalty steps are gone. The breakdown row shows `Correctness`, `Spec` and `Quality`; in `--json`, `bestCoder.complexity` is replaced by `bestCoder.spec`
+
 ## [1.4.0] - 2026-09-09
 
 ### Added

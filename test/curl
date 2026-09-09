@@ -29,7 +29,13 @@ for arg in "$@"; do
     exit 0
     ;;
   *dashboard/history/*)
-    cat "$FIXTURES/history.json"
+    id="${arg##*dashboard/history/}"
+    id="${id%%\?*}"
+    if [[ -f "$FIXTURES/history/$id.json" ]]; then
+      cat "$FIXTURES/history/$id.json"
+    else
+      cat "$FIXTURES/history.json"
+    fi
     exit 0
     ;;
   esac

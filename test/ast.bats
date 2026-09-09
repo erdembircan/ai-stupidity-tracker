@@ -288,6 +288,8 @@ setup() {
   run "$AST" --section=coder
   [ "$status" -eq 0 ]
   [[ "$output" == *"Best Coder"* ]]
+  [[ "$output" == *"claude-opus-4-8"* ]]
+  [[ "$output" == *"90.2"* ]]
   [[ "$output" != *"Rankings"* ]]
   [[ "$output" != *"Alerts"* ]]
 }
@@ -331,6 +333,79 @@ setup() {
   [[ "$output" == *"Global AI Index"* ]]
   [[ "$output" == *"Rankings"* ]]
   [[ "$output" == *"Alerts"* ]]
+}
+
+# ── Best Coder ──────────────────────────────────────
+
+@test "--section=coder shows the 7-axis breakdown row" {
+  run "$AST" --section=coder
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Correctness 96%  Spec 90%  Quality 84%"* ]]
+  [[ "$output" != *"Complexity"* ]]
+}
+
+@test "--json bestCoder reflects the 7-axis score and fields" {
+  run "$AST" --json
+  [ "$status" -eq 0 ]
+  name=$(echo "$output" | jq -r '.bestCoder.name')
+  score=$(echo "$output" | jq -r '.bestCoder.score')
+  correctness=$(echo "$output" | jq -r '.bestCoder.correctness')
+  spec=$(echo "$output" | jq -r '.bestCoder.spec')
+  codeQuality=$(echo "$output" | jq -r '.bestCoder.codeQuality')
+  [ "$name" = "claude-opus-4-8" ]
+  [ "$score" = "90.2" ]
+  [ "$correctness" = "96" ]
+  [ "$spec" = "90" ]
+  [ "$codeQuality" = "84" ]
+  has_complexity=$(echo "$output" | jq '.bestCoder | has("complexity")')
+  [ "$has_complexity" = "false" ]
+}
+
+@test "fetch_coding_scores scores the 7-axis hourly data and skips models missing an axis" {
+  run bash -c '
+    PROVIDER=anthropic
+    source "'"$AST"'"
+    fetch_coding_scores "$(cat "'"$DIR"'/test/fixtures/dashboard.json")"
+  '
+  [ "$status" -eq 0 ]
+  first_line=$(printf '%s\n' "$output" | sed -n '1p')
+  second_line=$(printf '%s\n' "$output" | sed -n '2p')
+  [[ "$first_line" == "90.2|claude-opus-4-8|"* ]]
+  [[ "$second_line" == "83.5|claude-opus-5|"* ]]
+  [[ "$output" != *"claude-sonnet-4-20250514"* ]]
+  remaining=$(printf '%s\n' "$output" | tail -n +3)
+  not_default=$(printf '%s\n' "$remaining" | grep -cv '^73\.5|' || true)
+  [ "$not_default" -eq 0 ]
+}
+
+@test "calc_coding_score computes the linear weighted sum of the 7 axes" {
+  run bash -c '
+    source "'"$AST"'"
+    calc_coding_score 1 1 1 1 1 1 1
+  '
+  [ "$status" -eq 0 ]
+  [ "$output" = "100.0" ]
+
+  run bash -c '
+    source "'"$AST"'"
+    calc_coding_score 0 0 0 0 0 0 0
+  '
+  [ "$status" -eq 0 ]
+  [ "$output" = "0.0" ]
+
+  run bash -c '
+    source "'"$AST"'"
+    calc_coding_score 0.96 0.90 0.84 0.80 0.90 1.0 0.70
+  '
+  [ "$status" -eq 0 ]
+  [ "$output" = "90.2" ]
+}
+
+@test "--openai --section=coder scores from the default hourly fixture" {
+  run "$AST" --openai --section=coder
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Best Coder (OpenAI)"* ]]
+  [[ "$output" == *"73.5"* ]]
 }
 
 # ── API Retry ───────────────────────────────────────
