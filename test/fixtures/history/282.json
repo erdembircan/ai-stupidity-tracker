@@ -1,0 +1,20 @@
+{
+  "success": true,
+  "data": [
+    {
+      "timestamp": "2026-09-09T10:47:15.192Z",
+      "score": 90,
+      "axes": {
+        "correctness": 0.96,
+        "spec": 0.90,
+        "codeQuality": 0.84,
+        "efficiency": 0.80,
+        "stability": 0.90,
+        "refusal": 1.0,
+        "recovery": 0.70
+      },
+      "stupidScore": 90,
+      "suite": "hourly"
+    }
+  ]
+}

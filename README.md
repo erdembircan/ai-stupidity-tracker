@@ -11,7 +11,7 @@ A CLI tool that tracks AI model performance on [aistupidlevel.info](https://aist
 - **Global Index** — overall AI health score and trend
 - **Model Rankings** — where all tracked models rank on the leaderboard
 - **Recommendations (7d)** — 7-day rolling picks: best for code, most reliable, fastest, best value
-- **Best Coder** — provider's top model for coding, calculated from 9-axis benchmark data
+- **Best Coder** — provider's top model for coding, scored from the latest 7-axis code-benchmark run using the site's published axis weights
 - **Alerts** — active degradations, instability warnings, and models to avoid
 - **Provider Trust** — trust score, trend, and incident count
 - **Drift Incidents** — detected performance drift for tracked models
