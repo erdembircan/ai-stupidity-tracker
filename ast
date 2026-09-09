@@ -837,7 +837,6 @@ render_picker() {
   local now
   now=$(date +"%Y-%m-%d %H:%M")
 
-  printf '\033[2J\033[H'
   printf "\n"
   printf '%s\n' "  ${BOLD}${CYAN}${SYM_DIAMOND} AST${RST}  ${DIM}v${VERSION} ${GRAY}${SYM_BULLET} ${now}${RST}"
   printf "\n"
@@ -926,7 +925,9 @@ picker_loop() {
   done
 
   while true; do
-    render_picker "$sel"
+    local frame
+    frame=$(render_picker "$sel")
+    printf '\033[H%s\033[J' "$frame"
 
     local key=""
     IFS= read -rsn1 key 2>/dev/null || true
