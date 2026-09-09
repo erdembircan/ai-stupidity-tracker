@@ -15,6 +15,8 @@ A CLI tool that tracks AI model performance on [aistupidlevel.info](https://aist
 - **Alerts** — active degradations, instability warnings, and models to avoid
 - **Provider Trust** — trust score, trend, and incident count
 - **Drift Incidents** — detected performance drift for tracked models
+- **Switch Suggestion** — keep-or-switch verdict for the model you track, based on the provider's top tier (`--track`)
+- **Score Graph** — live sparkline of one model's score over time (`--graph`)
 
 ## Requirements
 
