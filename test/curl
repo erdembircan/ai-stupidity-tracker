@@ -20,6 +20,17 @@ fi
 
 for arg in "$@"; do
   case "$arg" in
+  *api/models/*)
+    if [[ "${AST_CURL_FAIL_MODELS:-}" == "1" ]]; then
+      exit 1
+    fi
+    id="${arg##*/}"
+    if [[ -f "$FIXTURES/models/$id.json" ]]; then
+      cat "$FIXTURES/models/$id.json"
+      exit 0
+    fi
+    exit 1
+    ;;
   *global-index*)
     cat "$FIXTURES/global-index.json"
     exit 0

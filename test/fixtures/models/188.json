@@ -1,0 +1,9 @@
+{
+  "id": 188,
+  "name": "claude-opus-4-5-20251101",
+  "latestScore": {
+    "stupidScore": 64,
+    "suite": "hourly",
+    "note": "[SYNTHETIC] anchor=tier(70) swing=1.0 form=0.0 drift=0.0 nudge=0.0 event=none"
+  }
+}

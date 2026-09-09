@@ -607,3 +607,152 @@ setup() {
   [ "$status" -eq 0 ]
   [ "$output" = "SOURCED_OK" ]
 }
+
+# ── Switch Suggestion ──────────────────────────────
+
+@test "switch suggestion: top-tier tracked model keeps" {
+  run "$AST" --track=claude-opus-4-8
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Switch Suggestion"* ]]
+  [[ "$output" == *"KEEP"* ]]
+  [[ "$output" == *"Tier 80 matches the top tier"* ]]
+}
+
+@test "switch suggestion: top-tier model keeps even when another top-tier model scores higher" {
+  run "$AST" --track=claude-opus-5
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"KEEP"* ]]
+}
+
+@test "switch suggestion: below-top-tier tracked model switches to the top-tier target" {
+  run "$AST" --track=claude-sonnet-4-6
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"SWITCH"* ]]
+  [[ "$output" == *"claude-opus-5"* ]]
+  [[ "$output" == *"(tier 80, score 82)"* ]]
+  [[ "$output" == *"Tracked tier 71 · top tier 80"* ]]
+  [[ "$output" != *"KEEP"* ]]
+}
+
+@test "switch suggestion: missing tier data is UNKNOWN" {
+  run "$AST" --track=claude-opus-4-7
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"UNKNOWN"* ]]
+  [[ "$output" == *"No tier data for this model"* ]]
+}
+
+@test "switch suggestion: unmatched track name is NOT FOUND" {
+  run "$AST" --track=no-such-model
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"NOT FOUND"* ]]
+  [[ "$output" == *"No Claude model matches the tracked name"* ]]
+}
+
+@test "switch suggestion: failed tier fetch is UNAVAILABLE" {
+  export AST_CURL_FAIL_MODELS=1
+  run "$AST" --track=claude-opus-4-8
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"UNAVAILABLE"* ]]
+  [[ "$output" == *"Could not fetch tier data"* ]]
+}
+
+@test "switch suggestion: hidden without --track" {
+  run "$AST"
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"Switch Suggestion"* ]]
+}
+
+@test "switch suggestion: shown regardless of --section, section filter still applies" {
+  run "$AST" --section=rankings --track=claude-opus-4-8
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Switch Suggestion"* ]]
+  [[ "$output" == *"Claude Rankings"* ]]
+  [[ "$output" != *"Global AI Index"* ]]
+}
+
+@test "switch suggestion: is not a valid section" {
+  run "$AST" --section=switch
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"Unknown section: switch"* ]]
+}
+
+@test "switch suggestion: --openai score tie-break picks the higher-scoring top-tier model" {
+  run "$AST" --openai --track=gpt-5.3-codex
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"SWITCH"* ]]
+  [[ "$output" == *"gpt-5.4"* ]]
+}
+
+@test "switch suggestion: --openai top-tier tracked model keeps" {
+  run "$AST" --openai --track=gpt-5.2
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"KEEP"* ]]
+}
+
+@test "switch suggestion: NO_COLOR output has no ANSI escapes" {
+  run env NO_COLOR=1 "$AST" --track=claude-opus-4-8
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Switch Suggestion"* ]]
+  ! printf '%s' "$output" | grep -q $'\033'
+}
+
+@test "switch suggestion: box renders before Global AI Index" {
+  run "$AST" --track=claude-opus-4-8
+  [ "$status" -eq 0 ]
+  switch_line=$(printf '%s\n' "$output" | awk '/Switch Suggestion/ { print NR; exit }')
+  global_line=$(printf '%s\n' "$output" | awk '/Global AI Index/ { print NR; exit }')
+  [ -n "$switch_line" ]
+  [ -n "$global_line" ]
+  [ "$switch_line" -lt "$global_line" ]
+}
+
+@test "compute_switch_suggestion: switches to the higher-scoring top-tier candidate" {
+  run bash -c '
+    source "'"$AST"'"
+    rows=$(printf "a\t1\t70\tgood\t80\nb\t2\t75\tgood\t80\nc\t3\t60\tgood\t79\n")
+    compute_switch_suggestion "$rows" "c"
+  '
+  [ "$status" -eq 0 ]
+  IFS=$'\t' read -r verdict tracked tracked_tier top_tier target target_score target_tier <<<"$output"
+  [ "$verdict" = "SWITCH" ]
+  [ "$target" = "b" ]
+  [ "$top_tier" = "80" ]
+}
+
+@test "compute_switch_suggestion: top-tier tracked model keeps even though another scores higher" {
+  run bash -c '
+    source "'"$AST"'"
+    rows=$(printf "a\t1\t70\tgood\t80\nb\t2\t75\tgood\t80\nc\t3\t60\tgood\t79\n")
+    compute_switch_suggestion "$rows" "a"
+  '
+  [ "$status" -eq 0 ]
+  [[ "$output" == "KEEP"* ]]
+}
+
+@test "compute_switch_suggestion: no tiered candidates is UNAVAILABLE" {
+  run bash -c '
+    source "'"$AST"'"
+    rows=$(printf "a\t1\t70\tgood\t\nb\t2\t75\tgood\t\n")
+    compute_switch_suggestion "$rows" "a"
+  '
+  [ "$status" -eq 0 ]
+  [[ "$output" == "UNAVAILABLE"* ]]
+}
+
+@test "compute_switch_suggestion: resolves the tracked model by substring, first match wins" {
+  run bash -c '
+    source "'"$AST"'"
+    rows=$(printf "claude-opus-5\t1\t70\tgood\t80\nclaude-opus-4-8\t2\t75\tgood\t80\n")
+    compute_switch_suggestion "$rows" "claude-opus"
+  '
+  [ "$status" -eq 0 ]
+  IFS=$'\t' read -r verdict tracked _ <<<"$output"
+  [ "$tracked" = "claude-opus-5" ]
+}
+
+@test "--json --track output is unchanged (no switchSuggestion key)" {
+  run "$AST" --json --track=claude-opus-4-8
+  [ "$status" -eq 0 ]
+  echo "$output" | jq empty
+  [ "$(echo "$output" | jq -e 'has("switchSuggestion")')" = "false" ]
+}
