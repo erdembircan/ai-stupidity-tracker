@@ -381,7 +381,7 @@
       <tr>
         <td>stable</td>
         <td class="check">✅</td>
-        <!-- auto-updated by CI --> <td>1.4.0</td>
+        <!-- auto-updated by CI --> <td>1.5.0</td>
       </tr>
       <tr>
         <td>head</td>
@@ -413,10 +413,18 @@
          it, and never remove the markers. -->
     <!-- CHANGELOG:START -->
     <section class="changelog">
-      <p class="section-label">What's new in v1.4.0 <span class="changelog-date">2026-09-09</span></p>
+      <p class="section-label">What's new in v1.5.0 <span class="changelog-date">2026-09-09</span></p>
       <h3 class="changelog-kind">Added</h3>
       <ul class="changelog-list">
-        <li>Live model switcher in watch mode — when <code>--track</code> or <code>--graph</code> is set, press <code>m</code> to open a picker and swap the tracked/graphed model without restarting the process. The picker lists the current provider's models alphabetically (score and status shown), navigates with the arrow keys, and resets the graph history when a new model is chosen</li>
+        <li><code>Switch Suggestion</code> box, shown whenever <code>--track</code> is set — tells you to <code>KEEP</code> the tracked model when it shares the provider's top tier, or to <code>SWITCH</code> and names the top-tier model with the highest current score. The tier comes from the per-model endpoint (<code>/api/models/&lt;id&gt;</code>), so the verdict does not flip with the run-to-run score noise. Also reports <code>UNKNOWN</code>, <code>NOT FOUND</code> and <code>UNAVAILABLE</code>. Follows the live model switcher in watch mode</li>
+      </ul>
+      <h3 class="changelog-kind">Changed</h3>
+      <ul class="changelog-list">
+        <li><code>Best Coder</code> score is now the linear weighted sum of the seven axes with the site's published weights (35/15/15/10/10/10/5), taken from the newest hourly code-benchmark run instead of the combined run. The undocumented exponent, curve and penalty steps are gone. The breakdown row shows <code>Correctness</code>, <code>Spec</code> and <code>Quality</code>; in <code>--json</code>, <code>bestCoder.complexity</code> is replaced by <code>bestCoder.spec</code></li>
+      </ul>
+      <h3 class="changelog-kind">Fixed</h3>
+      <ul class="changelog-list">
+        <li><code>Best Coder</code> read nine axes the API no longer serves, so five of them came back empty and the remaining values shifted into the wrong variables — the breakdown row showed code quality as "Complexity" and efficiency as "Quality", and every score was deflated. It now reads the seven axes the API actually returns (<code>correctness</code>, <code>spec</code>, <code>codeQuality</code>, <code>efficiency</code>, <code>stability</code>, <code>refusal</code>, <code>recovery</code>)</li>
       </ul>
       <p class="changelog-more"><a href="https://github.com/erdembircan/ai-stupidity-tracker/blob/master/CHANGELOG.md">Full changelog</a></p>
     </section>
