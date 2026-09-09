@@ -69,7 +69,7 @@ ast --openai --section=coder   # OpenAI best coder only
 
 ## Switching models live
 
-When you run watch mode with `--track` or `--graph`, AST shows a **Model** control at the top of the dashboard. Press `m` to open the picker, use the arrow keys to move through the current provider's models — each shown with its score and status — and press `Enter` to switch. `Esc` cancels.
+When you run watch mode with `--track` or `--graph`, press `m` to open the model picker: use the arrow keys to move through the current provider's models — each shown with its score and status — and press `Enter` to switch. `Esc` cancels. The dashboard footer shows an `m switch model` hint whenever the picker is available.
 
 The newly selected model becomes the tracked and graphed target immediately, no restart required. Switching resets the score graph so it starts collecting fresh history for the new model.
 

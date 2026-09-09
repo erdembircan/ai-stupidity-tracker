@@ -59,7 +59,6 @@ readonly SYM_ARROW='→'
 readonly SYM_BULLET='•'
 readonly SYM_UP='↑'
 readonly SYM_DOWN='↓'
-readonly SYM_DROPDOWN='▾'
 readonly SYM_POINTER='▸'
 
 # ── Box Drawing Helpers ─────────────────────────────
@@ -815,16 +814,6 @@ apply_model_selection() {
   fi
 }
 
-# ── Model Switcher Control ─────────────────────────
-render_switcher() {
-  [[ "$SWITCHER_ACTIVE" == true ]] || return
-  local target="${GRAPH_MODEL:-$TRACK_MODEL}"
-  box_top "Model"
-  dot_row "${CYAN}${SYM_DROPDOWN}${RST} ${BOLD}${WHITE}${target}${RST}" "${DIM}[m] switch${RST}"
-  box_bottom
-  printf "\n"
-}
-
 # ── Model Picker View ──────────────────────────────
 # Full-screen picker. Reads the PICKER_NAMES / PICKER_SCORES /
 # PICKER_STATUSES / PICKER_MAXLEN globals populated by picker_loop.
@@ -1035,8 +1024,6 @@ render() {
   printf "\n"
   printf '%s\n' "  ${BOLD}${CYAN}${SYM_DIAMOND} AST${RST}  ${DIM}v${VERSION} ${GRAY}${SYM_BULLET} ${last_updated}${RST}"
   printf "\n"
-
-  render_switcher
 
   # ── Render sections in order ────────────────────
   local order="${SECTIONS:-$DEFAULT_SECTION_ORDER}"
