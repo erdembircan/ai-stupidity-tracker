@@ -149,11 +149,31 @@ TRACK_MODEL=""
 
 highlight_model() {
   local name="$1"
-  if [[ -n "$TRACK_MODEL" && "$name" == *"$TRACK_MODEL"* ]]; then
+  if [[ -n "$TRACK_MODEL" && "$name" == "$TRACK_MODEL" ]]; then
     printf '%s' "${TRACK_HL}${name}${RST}"
   else
     printf '%s' "$name"
   fi
+}
+
+# ── Track Model Validation ─────────────────────────
+# Exit with the available model list when --track names a model that does
+# not exist in the provider's rankings, mirroring the --graph behavior.
+# Fails open when the dashboard payload cannot be parsed.
+validate_track_model() {
+  local dashboard="$1"
+  [[ -z "$TRACK_MODEL" ]] && return 0
+  local match
+  match=$(printf '%s\n' "$dashboard" | jq -r \
+    --arg provider "$PROVIDER" --arg name "$TRACK_MODEL" \
+    '[.data.modelScores[] | select(.provider == $provider and .name == $name)] | length' 2>/dev/null)
+  [[ "$match" != "0" ]] && return 0
+  spinner_stop
+  printf "  ${RED}${SYM_CROSS} Model '%s' not found in %s rankings${RST}\n" "$TRACK_MODEL" "$PROVIDER_LABEL" >&2
+  printf '%s\n' "  ${DIM}Available models:${RST}" >&2
+  printf '%s\n' "$dashboard" | jq -r --arg provider "$PROVIDER" \
+    '.data.modelScores[] | select(.provider == $provider) | "    " + .name' >&2
+  exit 1
 }
 
 # ── Spinner ─────────────────────────────────────────
@@ -300,10 +320,10 @@ compute_switch_suggestion() {
   local top_tier=-1
   local name id score status tier
 
-  # Resolve the tracked model: first row whose name contains track_model.
+  # Resolve the tracked model by exact name.
   while IFS=$'\t' read -r name id score status tier; do
     [[ -z "$name" ]] && continue
-    if [[ -z "$tracked_name" && "$name" == *"$track_model"* ]]; then
+    if [[ -z "$tracked_name" && "$name" == "$track_model" ]]; then
       tracked_name="$name"
       tracked_tier="$tier"
     fi
@@ -1356,6 +1376,7 @@ main() {
   spinner_start "Fetching ${PROVIDER_LABEL} status"
   local dashboard global_index
   dashboard=$(fetch_data "$DASHBOARD_URL")
+  validate_track_model "$dashboard"
   global_index=$(fetch_data "$GLOBAL_INDEX_URL")
 
   local now
@@ -1390,6 +1411,7 @@ watch_loop() {
 
     spinner_stop
     if [[ "$first_run" == true ]]; then
+      validate_track_model "$dashboard"
       first_run=false
     fi
 

@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Choosing a model in the watch-mode picker — or cancelling it — left the last picker frame frozen on screen while both endpoints were refetched, so the app looked hung. The screen now clears and the spinner runs until the redraw, naming the newly selected model when there is one
+- `--track` matched models by greedy substring, so tracking `claude-opus-4` highlighted every model containing that string and the Switch Suggestion silently resolved to the first of them. Matching is now exact: one name, one model
+- `--track` now validates the supplied name against the provider's rankings and exits with the available model list when nothing matches — the same behavior `--graph` already had — instead of silently substring-matching whatever was given
 
 ## [1.5.0] - 2026-09-09
 

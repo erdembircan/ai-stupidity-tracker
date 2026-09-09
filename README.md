@@ -96,6 +96,8 @@ The decision uses the model's *tier* — the base level the API assigns to each 
 
 Other outcomes: `UNKNOWN` when the API has no tier for the tracked model, `NOT FOUND` when no model of the selected provider matches the tracked name, and `UNAVAILABLE` when the tier data could not be fetched.
 
+`--track` takes the exact model name as it appears in the rankings — matching is not fuzzy, and a prefix such as `claude-opus` is not enough. The name is checked against the live model list on startup: when it matches no model of the selected provider, `ast` exits with an error listing the available models, the same way `--graph` does.
+
 The box is tied to `--track` only. `--graph` does not show it, and `--section` neither adds nor removes it. In watch mode it is re-evaluated on every refresh, and when you switch the tracked model with `m` it follows the new selection.
 
 ```bash

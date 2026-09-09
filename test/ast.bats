@@ -675,11 +675,35 @@ setup() {
   [[ "$output" == *"No tier data for this model"* ]]
 }
 
-@test "switch suggestion: unmatched track name is NOT FOUND" {
+@test "--track with an unknown model name exits with the available model list" {
   run "$AST" --track=no-such-model
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"Model 'no-such-model' not found in Claude rankings"* ]]
+  [[ "$output" == *"Available models:"* ]]
+  [[ "$output" == *"claude-opus-4-8"* ]]
+}
+
+@test "--track with a prefix of a real model name is rejected, not substring-matched" {
+  run "$AST" --track=claude-opus
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"Model 'claude-opus' not found in Claude rankings"* ]]
+  [[ "$output" == *"Available models:"* ]]
+}
+
+@test "highlight_model highlights the exact name only, not superstrings" {
+  run bash -c '
+    source "'"$AST"'"
+    TRACK_MODEL="claude-opus-4"
+    exact=$(highlight_model "claude-opus-4")
+    superstring=$(highlight_model "claude-opus-4-8")
+    printf "%s\n%s\n" "$exact" "$superstring"
+  '
   [ "$status" -eq 0 ]
-  [[ "$output" == *"NOT FOUND"* ]]
-  [[ "$output" == *"No Claude model matches the tracked name"* ]]
+  first_line=$(printf '%s\n' "$output" | sed -n 1p)
+  second_line=$(printf '%s\n' "$output" | sed -n 2p)
+  [ "$first_line" != "claude-opus-4" ]
+  [[ "$first_line" == *"claude-opus-4"* ]]
+  [ "$second_line" = "claude-opus-4-8" ]
 }
 
 @test "switch suggestion: failed tier fetch is UNAVAILABLE" {
@@ -773,15 +797,20 @@ setup() {
   [[ "$output" == "UNAVAILABLE"* ]]
 }
 
-@test "compute_switch_suggestion: resolves the tracked model by substring, first match wins" {
+@test "compute_switch_suggestion: resolves the tracked model by exact name only" {
   run bash -c '
     source "'"$AST"'"
     rows=$(printf "claude-opus-5\t1\t70\tgood\t80\nclaude-opus-4-8\t2\t75\tgood\t80\n")
+    compute_switch_suggestion "$rows" "claude-opus-4-8"
     compute_switch_suggestion "$rows" "claude-opus"
   '
   [ "$status" -eq 0 ]
-  IFS=$'\t' read -r verdict tracked _ <<<"$output"
-  [ "$tracked" = "claude-opus-5" ]
+  first_line=$(printf '%s\n' "$output" | sed -n 1p)
+  second_line=$(printf '%s\n' "$output" | sed -n 2p)
+  IFS=$'\t' read -r verdict tracked _ <<<"$first_line"
+  [ "$verdict" = "KEEP" ]
+  [ "$tracked" = "claude-opus-4-8" ]
+  [[ "$second_line" == "NOT_FOUND"* ]]
 }
 
 @test "--json --track output is unchanged (no switchSuggestion key)" {
