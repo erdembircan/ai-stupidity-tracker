@@ -5,8 +5,6 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
 ## [1.5.0] - 2026-09-09
 
 ### Added
@@ -15,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- `Best Coder` score is now the linear weighted sum of those seven axes with the site's published weights (35/15/15/10/10/10/5), taken from the newest hourly code-benchmark run instead of the combined run. The undocumented exponent, curve and penalty steps are gone. The breakdown row shows `Correctness`, `Spec` and `Quality`; in `--json`, `bestCoder.complexity` is replaced by `bestCoder.spec`
+- `Best Coder` score is now the linear weighted sum of the seven axes with the site's published weights (35/15/15/10/10/10/5), taken from the newest hourly code-benchmark run instead of the combined run. The undocumented exponent, curve and penalty steps are gone. The breakdown row shows `Correctness`, `Spec` and `Quality`; in `--json`, `bestCoder.complexity` is replaced by `bestCoder.spec`
 
 ### Fixed
 
@@ -194,7 +192,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI workflow with ShellCheck, shfmt, and bats
 - Offline test fixtures for deterministic testing
 
-[unreleased]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.5.0...HEAD
 [1.5.0]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.3.3...v1.4.0
 [1.3.3]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.3.2...v1.3.3
