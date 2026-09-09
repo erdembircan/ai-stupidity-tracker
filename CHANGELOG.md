@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Live model switcher in watch mode — when `--track` or `--graph` is set, press `m` to open a picker and swap the tracked/graphed model without restarting the process. The picker lists the current provider's models (score and status shown), navigates with the arrow keys, and resets the graph history when a new model is chosen
+- Live model switcher in watch mode — when `--track` or `--graph` is set, press `m` to open a picker and swap the tracked/graphed model without restarting the process. The picker lists the current provider's models alphabetically (score and status shown), navigates with the arrow keys, and resets the graph history when a new model is chosen
 
 ## [1.3.3] - 2026-08-17
 
