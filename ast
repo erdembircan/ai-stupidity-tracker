@@ -788,14 +788,15 @@ render_graph() {
 
 # ── Provider Model List ────────────────────────────
 # Emits the current provider's switchable models as name\tscore\tstatus,
-# one per line, in leaderboard order. Models with status "unavailable"
-# are excluded — you cannot meaningfully graph a model with no score.
+# one per line, in alphabetical order by name. Models with status
+# "unavailable" are excluded — you cannot meaningfully graph a model
+# with no score.
 provider_model_rows() {
   local dashboard="$1"
   printf '%s\n' "$dashboard" | jq -r --arg provider "$PROVIDER" '
-    .data.modelScores[]
-    | select(.provider == $provider and .status != "unavailable")
-    | [.name, (.currentScore | tostring), .status] | @tsv'
+    [.data.modelScores[] | select(.provider == $provider and .status != "unavailable")]
+    | sort_by(.name)
+    | .[] | [.name, (.currentScore | tostring), .status] | @tsv'
 }
 
 # ── Apply Model Selection ──────────────────────────

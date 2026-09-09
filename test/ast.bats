@@ -479,6 +479,17 @@ setup() {
   [ "$(printf '%s\n' "$output" | grep -cv gpt)" -eq 0 ]
 }
 
+@test "provider_model_rows sorts models alphabetically by name" {
+  run bash -c '
+    PROVIDER=anthropic
+    source "'"$AST"'"
+    provider_model_rows "$(cat "'"$DIR"'/test/fixtures/dashboard.json")" | cut -f1
+  '
+  [ "$status" -eq 0 ]
+  sorted=$(printf '%s\n' "$output" | LC_ALL=C sort)
+  [ "$output" = "$sorted" ]
+}
+
 @test "apply_model_selection repoints graph and resets graph data" {
   run bash -c '
     source "'"$AST"'"
