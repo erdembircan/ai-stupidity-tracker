@@ -48,7 +48,7 @@ ast --claude                     # Claude status report (explicit)
 ast --watch                      # Live dashboard, refreshes every 1800s (30 min)
 ast --watch 300                  # Live dashboard, custom interval (300s)
 ast --graph=claude-opus-4-6      # Live score graph for a model (implies --watch)
-ast --track=claude-opus-4-6      # Highlight a model name in the output
+ast --track=claude-opus-4-6      # Highlight a model and show the switch suggestion
 ast --json                       # Machine-readable JSON output
 ast --section=coder              # Show only Best Coder section
 ast --section=rankings,alerts    # Show specific sections in order
@@ -76,6 +76,29 @@ The newly selected model becomes the tracked and graphed target immediately, no 
 ```bash
 ast --graph=claude-opus-4-6      # start graphing one model...
                                  # ...then press m to switch to another
+```
+
+## Switch suggestion
+
+`--track` also turns on a **Switch Suggestion** box at the top of the report. It answers one question: should you keep using the model you track, or move to the provider's current top model?
+
+The decision uses the model's *tier* — the base level the API assigns to each model, exposed on the per-model endpoint `/api/models/<id>` — not the leaderboard score. Scores move from run to run; the tier does not. Models sharing the top tier are treated as equivalent, so the box says `KEEP` even when another top-tier model happens to hold a higher score at that moment. It says `SWITCH` only when the tracked model sits below the top tier, and it names the top-tier model with the highest current score as the target.
+
+```
+  ╭── Switch Suggestion ────────────────────────────────╮
+  │ ⚠ SWITCH  claude-opus-4-8                           │
+  │   → claude-fable-5 (tier 80, score 72)              │
+  │   Tracked tier 79 · top tier 80                     │
+  ╰─────────────────────────────────────────────────────╯
+```
+
+Other outcomes: `UNKNOWN` when the API has no tier for the tracked model, `NOT FOUND` when no model of the selected provider matches the tracked name, and `UNAVAILABLE` when the tier data could not be fetched.
+
+The box is tied to `--track` only. `--graph` does not show it, and `--section` neither adds nor removes it. In watch mode it is re-evaluated on every refresh, and when you switch the tracked model with `m` it follows the new selection.
+
+```bash
+ast --track=claude-opus-4-8          # one-shot report with the suggestion box
+ast --watch --track=claude-opus-4-8  # live; press m to track another model
 ```
 
 ## Development

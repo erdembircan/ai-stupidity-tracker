@@ -1,0 +1,9 @@
+{
+  "id": 160,
+  "name": "claude-sonnet-4-5-20250929",
+  "latestScore": {
+    "stupidScore": 63,
+    "suite": "hourly",
+    "note": "[SYNTHETIC] anchor=tier(69) swing=1.0 form=0.0 drift=0.0 nudge=0.0 event=none"
+  }
+}

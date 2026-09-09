@@ -7,6 +7,7 @@ readonly BASE_URL="https://aistupidlevel.info"
 readonly DASHBOARD_URL="${BASE_URL}/dashboard/cached?period=latest&sortBy=combined&analyticsPeriod=latest"
 readonly GLOBAL_INDEX_URL="${BASE_URL}/dashboard/global-index"
 readonly HISTORY_URL="${BASE_URL}/dashboard/history"
+readonly MODEL_API_URL="${BASE_URL}/api/models"
 readonly BOX_WIDTH=55
 readonly MIN_TERM_WIDTH=$((BOX_WIDTH + 2))
 NARROW_TERM=false
@@ -250,6 +251,111 @@ fetch_coding_scores() {
 
   # Sort by score descending
   printf '%s\n' "${results[@]}" | sort -t'|' -k1 -rn
+}
+
+# Emits one line per provider model, in dashboard order, tab-separated:
+# name<TAB>id<TAB>currentScore<TAB>status<TAB>tier (tier may be empty).
+fetch_tiers() {
+  local dashboard="$1"
+  local tmpdir
+  tmpdir=$(mktemp -d)
+
+  local rows
+  rows=$(printf '%s\n' "$dashboard" | jq -r \
+    --arg provider "$PROVIDER" \
+    '.data.modelScores[] | select(.provider == $provider) | [.name, .id, (.currentScore|tostring), .status] | @tsv')
+
+  # Fetch per-model tier data in parallel
+  local pids=()
+  local name id score status
+  while IFS=$'\t' read -r name id score status; do
+    [[ -z "$id" ]] && continue
+    curl -sf --max-time 10 "${MODEL_API_URL}/${id}" \
+      >"${tmpdir}/${id}.json" 2>/dev/null &
+    pids+=($!)
+  done <<<"$rows"
+  for pid in "${pids[@]}"; do
+    wait "$pid" 2>/dev/null || true
+  done
+
+  while IFS=$'\t' read -r name id score status; do
+    [[ -z "$id" ]] && continue
+    local file="${tmpdir}/${id}.json"
+    local tier=""
+    if [[ -s "$file" ]]; then
+      tier=$(jq -r '(.latestScore.note // "") | [match("tier\\(([0-9]+)\\)"; "g").captures[0].string] | .[0] // empty' "$file" 2>/dev/null) || tier=""
+    fi
+    printf '%s\t%s\t%s\t%s\t%s\n' "$name" "$id" "$score" "$status" "$tier"
+  done <<<"$rows"
+
+  rm -rf "$tmpdir"
+}
+
+# Pure decision rule — no network, no globals except its arguments.
+# Prints: verdict<TAB>tracked_name<TAB>tracked_tier<TAB>top_tier<TAB>target_name<TAB>target_score<TAB>target_tier
+compute_switch_suggestion() {
+  local tier_rows="$1" track_model="$2"
+
+  local tracked_name="" tracked_tier=""
+  local top_tier=-1
+  local name id score status tier
+
+  # Resolve the tracked model: first row whose name contains track_model.
+  while IFS=$'\t' read -r name id score status tier; do
+    [[ -z "$name" ]] && continue
+    if [[ -z "$tracked_name" && "$name" == *"$track_model"* ]]; then
+      tracked_name="$name"
+      tracked_tier="$tier"
+    fi
+  done <<<"$tier_rows"
+
+  if [[ -z "$tracked_name" ]]; then
+    printf 'NOT_FOUND\t\t\t\t\t\t\n'
+    return
+  fi
+
+  # Candidate set = rows with a non-empty tier; find the top tier.
+  local has_candidate=false
+  while IFS=$'\t' read -r name id score status tier; do
+    [[ -z "$name" ]] && continue
+    [[ -z "$tier" ]] && continue
+    has_candidate=true
+    ((tier > top_tier)) && top_tier=$tier
+  done <<<"$tier_rows"
+
+  if [[ "$has_candidate" != true ]]; then
+    printf 'UNAVAILABLE\t\t\t\t\t\t\n'
+    return
+  fi
+
+  if [[ -z "$tracked_tier" ]]; then
+    printf 'UNKNOWN\t%s\t\t\t\t\t\n' "$tracked_name"
+    return
+  fi
+
+  if ((tracked_tier == top_tier)); then
+    printf 'KEEP\t%s\t%s\t%s\t\t\t\n' "$tracked_name" "$tracked_tier" "$top_tier"
+    return
+  fi
+
+  # SWITCH — pick the candidate with tier == top_tier and the highest score
+  # (non-numeric score counts as -1); on a score tie the first in dashboard
+  # order wins.
+  local target_name="" target_score="" target_tier="" target_cmp=-1
+  while IFS=$'\t' read -r name id score status tier; do
+    [[ -z "$name" ]] && continue
+    [[ "$tier" != "$top_tier" ]] && continue
+    local cmp_score="$score"
+    [[ "$cmp_score" =~ ^-?[0-9]+$ ]] || cmp_score=-1
+    if [[ -z "$target_name" ]] || ((cmp_score > target_cmp)); then
+      target_name="$name"
+      target_score="$score"
+      target_tier="$tier"
+      target_cmp="$cmp_score"
+    fi
+  done <<<"$tier_rows"
+
+  printf 'SWITCH\t%s\t%s\t%s\t%s\t%s\t%s\n' "$tracked_name" "$tracked_tier" "$top_tier" "$target_name" "$target_score" "$target_tier"
 }
 
 # ── Fetch Data ──────────────────────────────────────
@@ -652,6 +758,42 @@ render_drift() {
   fi
 }
 
+render_switch() {
+  [[ -z "$TRACK_MODEL" ]] && return
+  local tier_rows
+  tier_rows=$(fetch_tiers "$R_DASHBOARD")
+  local verdict tracked tracked_tier top_tier target target_score target_tier
+  IFS=$'\t' read -r verdict tracked tracked_tier top_tier target target_score target_tier < <(
+    compute_switch_suggestion "$tier_rows" "$TRACK_MODEL"
+  )
+  box_top "Switch Suggestion"
+  case "$verdict" in
+  KEEP)
+    box_row "${GREEN}${SYM_CHECK} KEEP${RST}  $(highlight_model "$tracked")"
+    box_row "  ${DIM}Tier ${tracked_tier} matches the top tier${RST}"
+    ;;
+  SWITCH)
+    box_row "${YELLOW}${SYM_WARN} SWITCH${RST}  $(highlight_model "$tracked")"
+    box_row "  ${SYM_ARROW} ${BOLD}${target}${RST} ${DIM}(tier ${target_tier}, score ${target_score})${RST}"
+    box_row "  ${DIM}Tracked tier ${tracked_tier} · top tier ${top_tier}${RST}"
+    ;;
+  UNKNOWN)
+    box_row "${GRAY}? UNKNOWN${RST}  $(highlight_model "$tracked")"
+    box_row "  ${DIM}No tier data for this model${RST}"
+    ;;
+  NOT_FOUND)
+    box_row "${RED}${SYM_CROSS} NOT FOUND${RST}  ${TRACK_MODEL}"
+    box_row "  ${DIM}No ${PROVIDER_LABEL} model matches the tracked name${RST}"
+    ;;
+  *)
+    box_row "${RED}${SYM_CROSS} UNAVAILABLE${RST}"
+    box_row "  ${DIM}Could not fetch tier data${RST}"
+    ;;
+  esac
+  box_bottom
+  printf "\n"
+}
+
 # ── Graph Rendering ───────────────────────────────
 # Braille-based sparkline chart for model score over time
 # GRAPH_DATA is a space-separated list of "timestamp@score" pairs
@@ -1008,6 +1150,8 @@ render() {
   printf '%s\n' "  ${BOLD}${CYAN}${SYM_DIAMOND} AST${RST}  ${DIM}v${VERSION} ${GRAY}${SYM_BULLET} ${last_updated}${RST}"
   printf "\n"
 
+  render_switch
+
   # ── Render sections in order ────────────────────
   local order="${SECTIONS:-$DEFAULT_SECTION_ORDER}"
   local section
@@ -1045,7 +1189,7 @@ main() {
       printf '%s\n' "    --json              Machine-readable JSON output"
       printf '%s\n' "    --watch[=SECONDS]   Live dashboard, refreshes every N seconds (default: 1800; Ctrl+R to refresh)"
       printf '%s\n' "    --graph=MODEL       Real-time score graph for a model (implies --watch)"
-      printf '%s\n' "    --track=MODEL       Highlight a model name in the output"
+      printf '%s\n' "    --track=MODEL       Highlight a model and show the Switch Suggestion box"
       printf '%s\n' "    --section=LIST      Show only specific sections (comma-separated)"
       printf '%s\n' "                        Sections: global,rankings,recommendations,coder,alerts,trust,drift,graph"
       printf '%s\n' "    --version           Show version number"
@@ -1054,6 +1198,10 @@ main() {
       printf '%s\n' "  ${BOLD}Model switcher:${RST}"
       printf '%s\n' "    In watch mode with --track or --graph, press ${BOLD}m${RST} to open a"
       printf '%s\n' "    picker and switch the tracked/graphed model without restarting."
+      printf '\n'
+      printf '%s\n' "  ${BOLD}Switch suggestion:${RST}"
+      printf '%s\n' "    With --track, a box at the top says KEEP when the tracked model is in"
+      printf '%s\n' "    the provider's top tier, or SWITCH and names the top-tier model to use."
       printf '\n'
       printf '%s\n' "  ${BOLD}Environment:${RST}"
       printf '%s\n' "    NO_COLOR=1          Disable colors and box-drawing right borders"
