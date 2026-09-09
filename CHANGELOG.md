@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-09-09
+
 ### Added
 
 - `Switch Suggestion` box, shown whenever `--track` is set — tells you to `KEEP` the tracked model when it shares the provider's top tier, or to `SWITCH` and names the top-tier model with the highest current score. The tier comes from the per-model endpoint (`/api/models/<id>`), so the verdict does not flip with the run-to-run score noise. Also reports `UNKNOWN`, `NOT FOUND` and `UNAVAILABLE`. Follows the live model switcher in watch mode
@@ -192,7 +194,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI workflow with ShellCheck, shfmt, and bats
 - Offline test fixtures for deterministic testing
 
-[unreleased]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.4.0...HEAD
+[unreleased]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.5.0...HEAD
+[1.5.0]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.3.3...v1.4.0
 [1.3.3]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.3.2...v1.3.3
 [1.3.2]: https://github.com/erdembircan/ai-stupidity-tracker/compare/v1.3.1...v1.3.2
