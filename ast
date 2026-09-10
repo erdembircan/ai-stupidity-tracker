@@ -7,6 +7,7 @@ readonly BASE_URL="https://aistupidlevel.info"
 readonly DASHBOARD_URL="${BASE_URL}/dashboard/cached?period=latest&sortBy=combined&analyticsPeriod=latest"
 readonly GLOBAL_INDEX_URL="${BASE_URL}/dashboard/global-index"
 readonly MODEL_API_URL="${BASE_URL}/api/models"
+readonly DRIFT_BATCH_URL="${BASE_URL}/api/drift/batch"
 readonly BOX_WIDTH=55
 readonly MIN_TERM_WIDTH=$((BOX_WIDTH + 2))
 NARROW_TERM=false
@@ -288,7 +289,9 @@ fetch_coding_scores() {
 }
 
 # Emits one line per provider model, in dashboard order, tab-separated:
-# name<TAB>id<TAB>currentScore<TAB>n<TAB>mean<TAB>ss (mean/ss empty when n=0).
+# name<TAB>id<TAB>currentScore<TAB>n<TAB>mean<TAB>ss<TAB>drift (mean/ss empty
+# when n=0; drift empty when the drift batch could not be fetched or has no
+# entry for the id).
 fetch_run_levels() {
   local dashboard="$1"
   local tmpdir
@@ -296,6 +299,10 @@ fetch_run_levels() {
 
   local rows
   rows=$(fetch_model_run_files "$dashboard" "$tmpdir")
+
+  local batch
+  batch=$(curl -sf --max-time 10 "$DRIFT_BATCH_URL" 2>/dev/null) || batch='{}'
+  [[ -z "$batch" ]] && batch='{}'
 
   local name id score
   while IFS=$'\t' read -r name id score; do
@@ -312,24 +319,32 @@ fetch_run_levels() {
     else
       stats=$'0\t\t'
     fi
-    printf '%s\t%s\t%s\t%s\n' "$name" "$id" "$score" "$stats"
+    local drift
+    drift=$(jq -r --arg id "$id" '[(.data // [])[] | select((.modelId|tostring) == $id) | .data.driftStatus // empty] | .[0] // empty' <<<"$batch" 2>/dev/null) || drift=""
+    printf '%s\t%s\t%s\t%s\t%s\n' "$name" "$id" "$score" "$stats" "$drift"
   done <<<"$rows"
 
   rm -rf "$tmpdir"
 }
 
 # Pure decision rule — no network, no globals except its arguments.
-# Rows are name<TAB>id<TAB>currentScore<TAB>n<TAB>mean<TAB>ss.
+# Rows are name<TAB>id<TAB>currentScore<TAB>n<TAB>mean<TAB>ss<TAB>drift.
 # Prints: verdict<TAB>tracked<TAB>tracked_level<TAB>tracked_n<TAB>top<TAB>top_level<TAB>top_n<TAB>gap<TAB>band<TAB>band_known<TAB>strength
-# strength is "confident" or "uncertain": uncertain when the band is unknown;
-# otherwise KEEP is confident when gap <= band/2, SWITCH is confident when
-# gap >= 2*band. Empty for NOT_FOUND/UNAVAILABLE/NO_DATA.
+# strength is one of confident | uncertain | drift alert | drift warning:
+# a tracked model under a DEGRADATION/CRITICAL drift alert always gets
+# "drift alert" (SWITCH to the best non-alerted candidate, or KEEP on itself
+# when none exists); otherwise strength is "confident"/"uncertain" from the
+# gap vs. band (KEEP confident when gap <= band/2, SWITCH confident when
+# gap >= 2*band, "uncertain" when the band is unknown), except a KEEP verdict
+# on a model with a WARNING drift status reports "drift warning" instead.
+# Empty for NOT_FOUND/UNAVAILABLE/NO_DATA. Alerted models are never chosen
+# as the top/target. Empty or unrecognized drift status counts as NORMAL.
 compute_switch_suggestion() {
   local rows="$1" track_model="$2"
 
   awk -F'\t' -v track="$track_model" '
     {
-      name[NR] = $1; score[NR] = $3; n[NR] = $4; mean[NR] = $5; ss[NR] = $6
+      name[NR] = $1; score[NR] = $3; n[NR] = $4; mean[NR] = $5; ss[NR] = $6; drift[NR] = $7
       count = NR
       if (name[NR] == track && tracked_idx == 0) tracked_idx = NR
     }
@@ -339,11 +354,27 @@ compute_switch_suggestion() {
         exit
       }
 
-      has_candidate = 0
+      has_run = 0
+      for (i = 1; i <= count; i++) {
+        if (n[i] + 0 > 0) { has_run = 1; break }
+      }
+      if (!has_run) {
+        print "UNAVAILABLE\t\t\t\t\t\t\t\t\t\t"
+        exit
+      }
+
+      if (n[tracked_idx] + 0 == 0) {
+        printf "NO_DATA\t%s\t\t\t\t\t\t\t\t\t\n", name[tracked_idx]
+        exit
+      }
+
+      tracked_alerted = (drift[tracked_idx] == "DEGRADATION" || drift[tracked_idx] == "CRITICAL")
+
+      # Candidate set for "top": has a run and is not under a drift alert.
       top_idx = 0
       for (i = 1; i <= count; i++) {
         if (n[i] + 0 == 0) continue
-        has_candidate = 1
+        if (drift[i] == "DEGRADATION" || drift[i] == "CRITICAL") continue
         if (top_idx == 0) { top_idx = i; continue }
         if (mean[i] + 0 > mean[top_idx] + 0) {
           top_idx = i
@@ -355,17 +386,11 @@ compute_switch_suggestion() {
         }
       }
 
-      if (!has_candidate) {
-        print "UNAVAILABLE\t\t\t\t\t\t\t\t\t\t"
-        exit
-      }
+      no_clean_candidate = (top_idx == 0)
+      if (no_clean_candidate) top_idx = tracked_idx
 
-      if (n[tracked_idx] + 0 == 0) {
-        printf "NO_DATA\t%s\t\t\t\t\t\t\t\t\t\n", name[tracked_idx]
-        exit
-      }
-
-      # Pooled standard deviation of runs within models (n_m >= 2).
+      # Pooled standard deviation of runs within models (n_m >= 2), over all
+      # models regardless of drift status.
       ss_sum = 0; df_sum = 0
       for (i = 1; i <= count; i++) {
         if (n[i] + 0 < 2) continue
@@ -380,14 +405,19 @@ compute_switch_suggestion() {
       gap = top_level - tracked_level
       band = 1.96 * sd * sqrt(1 / (n[tracked_idx] + 0) + 1 / (n[top_idx] + 0))
 
-      verdict = (gap <= band) ? "KEEP" : "SWITCH"
-
-      if (!band_known) {
-        strength = "uncertain"
-      } else if (verdict == "KEEP") {
-        strength = (gap <= band / 2) ? "confident" : "uncertain"
+      if (tracked_alerted) {
+        verdict = no_clean_candidate ? "KEEP" : "SWITCH"
+        strength = "drift alert"
       } else {
-        strength = (gap >= 2 * band) ? "confident" : "uncertain"
+        verdict = (gap <= band) ? "KEEP" : "SWITCH"
+        if (!band_known) {
+          strength = "uncertain"
+        } else if (verdict == "KEEP") {
+          strength = (gap <= band / 2) ? "confident" : "uncertain"
+        } else {
+          strength = (gap >= 2 * band) ? "confident" : "uncertain"
+        }
+        if (verdict == "KEEP" && drift[tracked_idx] == "WARNING") strength = "drift warning"
       }
 
       printf "%s\t%s\t%.1f\t%d\t%s\t%.1f\t%d\t%.1f\t%.1f\t%d\t%s\n", \
@@ -809,7 +839,9 @@ render_switch() {
   case "$verdict" in
   KEEP)
     box_row "${GREEN}${SYM_CHECK} KEEP${RST}  $(highlight_model "$tracked")"
-    if [[ "$tracked" == "$top" ]]; then
+    if [[ "$strength" == "drift alert" ]]; then
+      box_row "  ${DIM}No clean alternative · drift alert${RST}"
+    elif [[ "$tracked" == "$top" ]]; then
       box_row "  ${DIM}Top of ${PROVIDER_LABEL} · ${strength}${RST}"
     else
       box_row "  ${DIM}Tied with ${top} · ${strength}${RST}"

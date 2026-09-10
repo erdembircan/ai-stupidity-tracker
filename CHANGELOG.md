@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `Switch Suggestion` no longer reads a tier from the API. It now measures: for every model of the provider it takes the real code-benchmark runs of the last 24 hours, uses their average as the model's level, and compares the gap to the top model's level against the run-to-run noise measured from those same runs. Gap inside the noise band is `KEEP`, beyond it is `SWITCH`. The box shows the verdict, the model it was measured against, and one word — `confident` or `uncertain` — for how close the gap sits to the noise edge. `UNKNOWN` is replaced by `NO DATA` (no real run in the last 24 hours)
 - `Best Coder` and `Switch Suggestion` now read the per-model history endpoint (`/api/models/<id>/history?period=24h`) and skip rows the site marks as synthetic placeholders; the old `/dashboard/history` fetch is gone
+- `Switch Suggestion` also reads the site's drift detector (`/api/drift/batch`): a tracked model under a `DEGRADATION` or `CRITICAL` alert is told to `SWITCH` regardless of the gap, alerted models are never offered as the target, and a `WARNING` on a kept model shows as `drift warning`
 
 ### Fixed
 

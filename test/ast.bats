@@ -644,12 +644,12 @@ setup() {
 
 # ── Switch Suggestion ──────────────────────────────
 
-@test "switch suggestion: top model keeps when the gap is inside the noise band" {
+@test "switch suggestion: top model keeps when the gap is inside the noise band, with a drift warning" {
   run "$AST" --track=claude-opus-4-8
   [ "$status" -eq 0 ]
   [[ "$output" == *"Switch Suggestion"* ]]
   [[ "$output" == *"KEEP"* ]]
-  [[ "$output" == *"Tied with claude-opus-5 · uncertain"* ]]
+  [[ "$output" == *"Tied with claude-opus-5 · drift warning"* ]]
 }
 
 @test "switch suggestion: the top model itself keeps with a zero gap" {
@@ -670,12 +670,37 @@ setup() {
   [[ "$output" != *"runs)"* ]]
 }
 
-@test "switch suggestion: a single-run tracked model still switches when the gap exceeds the band" {
+@test "switch suggestion: a drift-alerted tracked model always switches to a clean candidate" {
+  run "$AST" --track=claude-opus-4-5-20251101
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"SWITCH"* ]]
+  [[ "$output" == *"claude-opus-5"* ]]
+  [[ "$output" == *"· drift alert"* ]]
+}
+
+@test "switch suggestion: a critically drift-alerted default-fixture model switches to a clean candidate" {
+  run "$AST" --track=claude-opus-4-6
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"SWITCH"* ]]
+  [[ "$output" == *"claude-opus-5"* ]]
+  [[ "$output" == *"· drift alert"* ]]
+}
+
+@test "switch suggestion: falls back to the band rule when the drift batch fetch fails" {
+  export AST_CURL_FAIL_DRIFT=1
   run "$AST" --track=claude-opus-4-5-20251101
   [ "$status" -eq 0 ]
   [[ "$output" == *"SWITCH"* ]]
   [[ "$output" == *"claude-opus-5"* ]]
   [[ "$output" == *"· uncertain"* ]]
+}
+
+@test "switch suggestion: --openai a drift-alerted tracked model switches to a clean candidate" {
+  run "$AST" --openai --track=gpt-5.3-codex
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"SWITCH"* ]]
+  [[ "$output" == *"gpt-5.4"* ]]
+  [[ "$output" == *"· drift alert"* ]]
 }
 
 @test "switch suggestion: no real runs in the last 24h is NO DATA" {
@@ -771,7 +796,7 @@ setup() {
 @test "compute_switch_suggestion: KEEP when the gap is inside the pooled noise band" {
   run bash -c '
     source "'"$AST"'"
-    rows=$(printf "a\t1\t70\t2\t80\t2\nb\t2\t75\t2\t79\t2\n")
+    rows=$(printf "a\t1\t70\t2\t80\t2\tNORMAL\nb\t2\t75\t2\t79\t2\tNORMAL\n")
     compute_switch_suggestion "$rows" "b"
   '
   [ "$status" -eq 0 ]
@@ -787,7 +812,7 @@ setup() {
 @test "compute_switch_suggestion: single-run models give an unknown zero band and still switch" {
   run bash -c '
     source "'"$AST"'"
-    rows=$(printf "a\t1\t80\t1\t80\t0\nb\t2\t70\t1\t70\t0\n")
+    rows=$(printf "a\t1\t80\t1\t80\t0\tNORMAL\nb\t2\t70\t1\t70\t0\tNORMAL\n")
     compute_switch_suggestion "$rows" "b"
   '
   [ "$status" -eq 0 ]
@@ -801,7 +826,7 @@ setup() {
 @test "compute_switch_suggestion: SWITCH is confident when the gap reaches twice the band" {
   run bash -c '
     source "'"$AST"'"
-    rows=$(printf "a\t1\t100\t2\t100\t0\nb\t2\t50\t2\t50\t0\n")
+    rows=$(printf "a\t1\t100\t2\t100\t0\tNORMAL\nb\t2\t50\t2\t50\t0\tNORMAL\n")
     compute_switch_suggestion "$rows" "b"
   '
   [ "$status" -eq 0 ]
@@ -815,7 +840,7 @@ setup() {
 @test "compute_switch_suggestion: no candidate has any runs is UNAVAILABLE" {
   run bash -c '
     source "'"$AST"'"
-    rows=$(printf "a\t1\t70\t0\t\t\nb\t2\t75\t0\t\t\n")
+    rows=$(printf "a\t1\t70\t0\t\t\tNORMAL\nb\t2\t75\t0\t\t\tNORMAL\n")
     compute_switch_suggestion "$rows" "a"
   '
   [ "$status" -eq 0 ]
@@ -825,7 +850,7 @@ setup() {
 @test "compute_switch_suggestion: tracked model with no runs is NO_DATA even with candidates available" {
   run bash -c '
     source "'"$AST"'"
-    rows=$(printf "a\t1\t70\t0\t\t\nb\t2\t75\t2\t80\t2\n")
+    rows=$(printf "a\t1\t70\t0\t\t\tNORMAL\nb\t2\t75\t2\t80\t2\tNORMAL\n")
     compute_switch_suggestion "$rows" "a"
   '
   [ "$status" -eq 0 ]
@@ -837,7 +862,7 @@ setup() {
 @test "compute_switch_suggestion: level tie breaks on higher currentScore, non-numeric loses" {
   run bash -c '
     source "'"$AST"'"
-    rows=$(printf "a\t1\t70\t2\t80\t2\nb\t2\tunavailable\t2\t80\t2\nc\t3\t65\t3\t50\t6\n")
+    rows=$(printf "a\t1\t70\t2\t80\t2\tNORMAL\nb\t2\tunavailable\t2\t80\t2\tNORMAL\nc\t3\t65\t3\t50\t6\tNORMAL\n")
     compute_switch_suggestion "$rows" "c"
   '
   [ "$status" -eq 0 ]
@@ -849,7 +874,7 @@ setup() {
 @test "compute_switch_suggestion: resolves the tracked model by exact name only" {
   run bash -c '
     source "'"$AST"'"
-    rows=$(printf "claude-opus-5\t1\t82\t3\t82\t8\nclaude-opus-4-8\t2\t81\t2\t80\t2\n")
+    rows=$(printf "claude-opus-5\t1\t82\t3\t82\t8\tNORMAL\nclaude-opus-4-8\t2\t81\t2\t80\t2\tNORMAL\n")
     compute_switch_suggestion "$rows" "claude-opus-4-8"
     compute_switch_suggestion "$rows" "claude-opus"
   '
@@ -860,6 +885,68 @@ setup() {
   [ "$verdict" = "KEEP" ]
   [ "$tracked" = "claude-opus-4-8" ]
   [[ "$second_line" == "NOT_FOUND"* ]]
+}
+
+@test "compute_switch_suggestion: a drift-alerted tracked model switches to the clean candidate even when an alerted model scores higher" {
+  run bash -c '
+    source "'"$AST"'"
+    rows=$(printf "a\t1\t100\t2\t100\t0\tDEGRADATION\nb\t2\t50\t2\t50\t0\tNORMAL\nc\t3\t40\t2\t40\t0\tDEGRADATION\n")
+    compute_switch_suggestion "$rows" "c"
+  '
+  [ "$status" -eq 0 ]
+  IFS=$'\t' read -r verdict tracked tracked_level tracked_n top top_level top_n gap band band_known strength <<<"$output"
+  [ "$verdict" = "SWITCH" ]
+  [ "$top" = "b" ]
+  [ "$strength" = "drift alert" ]
+}
+
+@test "compute_switch_suggestion: a drift-alerted tracked model keeps itself when no clean candidate exists" {
+  run bash -c '
+    source "'"$AST"'"
+    rows=$(printf "a\t1\t100\t2\t100\t0\tCRITICAL\nb\t2\t40\t2\t40\t0\tDEGRADATION\n")
+    compute_switch_suggestion "$rows" "b"
+  '
+  [ "$status" -eq 0 ]
+  IFS=$'\t' read -r verdict tracked tracked_level tracked_n top top_level top_n gap band band_known strength <<<"$output"
+  [ "$verdict" = "KEEP" ]
+  [ "$top" = "b" ]
+  [ "$strength" = "drift alert" ]
+}
+
+@test "compute_switch_suggestion: a WARNING tracked model with a zero gap keeps with a drift warning" {
+  run bash -c '
+    source "'"$AST"'"
+    rows=$(printf "a\t1\t90\t2\t80\t2\tNORMAL\nb\t2\t80\t2\t80\t2\tWARNING\n")
+    compute_switch_suggestion "$rows" "b"
+  '
+  [ "$status" -eq 0 ]
+  IFS=$'\t' read -r verdict tracked tracked_level tracked_n top top_level top_n gap band band_known strength <<<"$output"
+  [ "$verdict" = "KEEP" ]
+  [ "$strength" = "drift warning" ]
+}
+
+@test "compute_switch_suggestion: a WARNING tracked model beyond the band still switches on band strength" {
+  run bash -c '
+    source "'"$AST"'"
+    rows=$(printf "a\t1\t100\t2\t100\t0\tNORMAL\nb\t2\t50\t2\t50\t0\tWARNING\n")
+    compute_switch_suggestion "$rows" "b"
+  '
+  [ "$status" -eq 0 ]
+  IFS=$'\t' read -r verdict tracked tracked_level tracked_n top top_level top_n gap band band_known strength <<<"$output"
+  [ "$verdict" = "SWITCH" ]
+  [ "$strength" = "confident" ]
+}
+
+@test "compute_switch_suggestion: an alerted model with the highest level is never chosen as top for a clean tracked model" {
+  run bash -c '
+    source "'"$AST"'"
+    rows=$(printf "a\t1\t100\t2\t100\t0\tDEGRADATION\nb\t2\t60\t2\t60\t0\tNORMAL\nc\t3\t50\t2\t50\t0\tNORMAL\n")
+    compute_switch_suggestion "$rows" "c"
+  '
+  [ "$status" -eq 0 ]
+  IFS=$'\t' read -r verdict tracked tracked_level tracked_n top top_level top_n gap band band_known strength <<<"$output"
+  [ "$top" = "b" ]
+  [ "$top" != "a" ]
 }
 
 @test "--json --track output is unchanged (no switchSuggestion key)" {

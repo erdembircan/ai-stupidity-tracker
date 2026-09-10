@@ -33,6 +33,13 @@ for arg in "$@"; do
     fi
     exit 0
     ;;
+  *api/drift/batch*)
+    if [[ "${AST_CURL_FAIL_DRIFT:-}" == "1" ]]; then
+      exit 1
+    fi
+    cat "$FIXTURES/drift-batch.json"
+    exit 0
+    ;;
   *global-index*)
     cat "$FIXTURES/global-index.json"
     exit 0

@@ -1,0 +1,255 @@
+{
+  "success": true,
+  "data": [
+    {
+      "modelId": 281,
+      "modelName": "claude-opus-5",
+      "data": {
+        "modelId": 281,
+        "modelName": "claude-opus-5",
+        "driftStatus": "NORMAL",
+        "dataSource": "measured"
+      }
+    },
+    {
+      "modelId": 282,
+      "modelName": "claude-opus-4-8",
+      "data": {
+        "modelId": 282,
+        "modelName": "claude-opus-4-8",
+        "driftStatus": "WARNING",
+        "dataSource": "measured"
+      }
+    },
+    {
+      "modelId": 230,
+      "modelName": "gpt-5.4",
+      "data": {
+        "modelId": 230,
+        "modelName": "gpt-5.4",
+        "driftStatus": "NORMAL",
+        "dataSource": "measured"
+      }
+    },
+    {
+      "modelId": 204,
+      "modelName": "gpt-5.2",
+      "data": {
+        "modelId": 204,
+        "modelName": "gpt-5.2",
+        "driftStatus": "NORMAL",
+        "dataSource": "measured"
+      }
+    },
+    {
+      "modelId": 40,
+      "modelName": "claude-sonnet-4-20250514",
+      "data": {
+        "modelId": 40,
+        "modelName": "claude-sonnet-4-20250514",
+        "driftStatus": "NORMAL",
+        "dataSource": "measured"
+      }
+    },
+    {
+      "modelId": 188,
+      "modelName": "claude-opus-4-5-20251101",
+      "data": {
+        "modelId": 188,
+        "modelName": "claude-opus-4-5-20251101",
+        "driftStatus": "DEGRADATION",
+        "dataSource": "measured"
+      }
+    },
+    {
+      "modelId": 221,
+      "modelName": "claude-sonnet-4-6",
+      "data": {
+        "modelId": 221,
+        "modelName": "claude-sonnet-4-6",
+        "driftStatus": "NORMAL",
+        "dataSource": "measured"
+      }
+    },
+    {
+      "modelId": 226,
+      "modelName": "gpt-5.3-codex",
+      "data": {
+        "modelId": 226,
+        "modelName": "gpt-5.3-codex",
+        "driftStatus": "DEGRADATION",
+        "dataSource": "measured"
+      }
+    },
+    {
+      "modelId": 160,
+      "modelName": "claude-sonnet-4-5-20250929",
+      "data": {
+        "modelId": 160,
+        "modelName": "claude-sonnet-4-5-20250929",
+        "driftStatus": "NORMAL",
+        "dataSource": "measured"
+      }
+    },
+    {
+      "modelId": 166,
+      "modelName": "deepseek-reasoner",
+      "data": {
+        "modelId": 166,
+        "modelName": "deepseek-reasoner",
+        "driftStatus": "NORMAL",
+        "dataSource": "measured"
+      }
+    },
+    {
+      "modelId": 220,
+      "modelName": "claude-opus-4-6",
+      "data": {
+        "modelId": 220,
+        "modelName": "claude-opus-4-6",
+        "driftStatus": "CRITICAL",
+        "dataSource": "measured"
+      }
+    },
+    {
+      "modelId": 171,
+      "modelName": "kimi-latest",
+      "data": {
+        "modelId": 171,
+        "modelName": "kimi-latest",
+        "driftStatus": "NORMAL",
+        "dataSource": "measured"
+      }
+    },
+    {
+      "modelId": 38,
+      "modelName": "claude-opus-4-1-20250805",
+      "data": {
+        "modelId": 38,
+        "modelName": "claude-opus-4-1-20250805",
+        "driftStatus": "NORMAL",
+        "dataSource": "measured"
+      }
+    },
+    {
+      "modelId": 170,
+      "modelName": "kimi-thinking-preview",
+      "data": {
+        "modelId": 170,
+        "modelName": "kimi-thinking-preview",
+        "driftStatus": "NORMAL",
+        "dataSource": "measured"
+      }
+    },
+    {
+      "modelId": 185,
+      "modelName": "gemini-3-pro-preview",
+      "data": {
+        "modelId": 185,
+        "modelName": "gemini-3-pro-preview",
+        "driftStatus": "NORMAL",
+        "dataSource": "measured"
+      }
+    },
+    {
+      "modelId": 44,
+      "modelName": "gemini-2.5-flash",
+      "data": {
+        "modelId": 44,
+        "modelName": "gemini-2.5-flash",
+        "driftStatus": "NORMAL",
+        "dataSource": "measured"
+      }
+    },
+    {
+      "modelId": 42,
+      "modelName": "grok-code-fast-1",
+      "data": {
+        "modelId": 42,
+        "modelName": "grok-code-fast-1",
+        "driftStatus": "NORMAL",
+        "dataSource": "measured"
+      }
+    },
+    {
+      "modelId": 41,
+      "modelName": "grok-4-latest",
+      "data": {
+        "modelId": 41,
+        "modelName": "grok-4-latest",
+        "driftStatus": "NORMAL",
+        "dataSource": "measured"
+      }
+    },
+    {
+      "modelId": 140,
+      "modelName": "grok-4-0709",
+      "data": {
+        "modelId": 140,
+        "modelName": "grok-4-0709",
+        "driftStatus": "NORMAL",
+        "dataSource": "measured"
+      }
+    },
+    {
+      "modelId": 172,
+      "modelName": "kimi-k2-turbo-preview",
+      "data": {
+        "modelId": 172,
+        "modelName": "kimi-k2-turbo-preview",
+        "driftStatus": "NORMAL",
+        "dataSource": "measured"
+      }
+    },
+    {
+      "modelId": 169,
+      "modelName": "kimi-k2-0905-preview",
+      "data": {
+        "modelId": 169,
+        "modelName": "kimi-k2-0905-preview",
+        "driftStatus": "NORMAL",
+        "dataSource": "measured"
+      }
+    },
+    {
+      "modelId": 165,
+      "modelName": "glm-4.6",
+      "data": {
+        "modelId": 165,
+        "modelName": "glm-4.6",
+        "driftStatus": "NORMAL",
+        "dataSource": "measured"
+      }
+    },
+    {
+      "modelId": 167,
+      "modelName": "deepseek-chat",
+      "data": {
+        "modelId": 167,
+        "modelName": "deepseek-chat",
+        "driftStatus": "NORMAL",
+        "dataSource": "measured"
+      }
+    },
+    {
+      "modelId": 217,
+      "modelName": "glm-4.7",
+      "data": {
+        "modelId": 217,
+        "modelName": "glm-4.7",
+        "driftStatus": "NORMAL",
+        "dataSource": "measured"
+      }
+    },
+    {
+      "modelId": 999,
+      "modelName": "claude-opus-4-7",
+      "data": {
+        "modelId": 999,
+        "modelName": "claude-opus-4-7",
+        "driftStatus": "NORMAL",
+        "dataSource": "measured"
+      }
+    }
+  ]
+}
