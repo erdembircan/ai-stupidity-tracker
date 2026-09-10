@@ -1,9 +1,0 @@
-{
-  "id": 226,
-  "name": "gpt-5.3-codex",
-  "latestScore": {
-    "stupidScore": 64,
-    "suite": "hourly",
-    "note": "[SYNTHETIC] anchor=tier(75) swing=1.0 form=0.0 drift=0.0 nudge=0.0 event=none"
-  }
-}

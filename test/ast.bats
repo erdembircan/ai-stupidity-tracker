@@ -288,8 +288,8 @@ setup() {
   run "$AST" --section=coder
   [ "$status" -eq 0 ]
   [[ "$output" == *"Best Coder"* ]]
-  [[ "$output" == *"claude-opus-4-8"* ]]
-  [[ "$output" == *"90.2"* ]]
+  [[ "$output" == *"claude-opus-5"* ]]
+  [[ "$output" == *"88.5"* ]]
   [[ "$output" != *"Rankings"* ]]
   [[ "$output" != *"Alerts"* ]]
 }
@@ -337,31 +337,31 @@ setup() {
 
 # ── Best Coder ──────────────────────────────────────
 
-@test "--section=coder shows the 7-axis breakdown row" {
+@test "--section=coder shows the 9-axis breakdown row" {
   run "$AST" --section=coder
   [ "$status" -eq 0 ]
-  [[ "$output" == *"Correctness 96%  Spec 90%  Quality 84%"* ]]
-  [[ "$output" != *"Complexity"* ]]
+  [[ "$output" == *"Correctness 95%  Complexity 80%  Quality 84%"* ]]
+  [[ "$output" != *"Spec"* ]]
 }
 
-@test "--json bestCoder reflects the 7-axis score and fields" {
+@test "--json bestCoder reflects the 9-axis score and fields" {
   run "$AST" --json
   [ "$status" -eq 0 ]
   name=$(echo "$output" | jq -r '.bestCoder.name')
   score=$(echo "$output" | jq -r '.bestCoder.score')
   correctness=$(echo "$output" | jq -r '.bestCoder.correctness')
-  spec=$(echo "$output" | jq -r '.bestCoder.spec')
+  complexity=$(echo "$output" | jq -r '.bestCoder.complexity')
   codeQuality=$(echo "$output" | jq -r '.bestCoder.codeQuality')
-  [ "$name" = "claude-opus-4-8" ]
-  [ "$score" = "90.2" ]
-  [ "$correctness" = "96" ]
-  [ "$spec" = "90" ]
+  [ "$name" = "claude-opus-5" ]
+  [ "$score" = "88.5" ]
+  [ "$correctness" = "95" ]
+  [ "$complexity" = "80" ]
   [ "$codeQuality" = "84" ]
-  has_complexity=$(echo "$output" | jq '.bestCoder | has("complexity")')
-  [ "$has_complexity" = "false" ]
+  has_spec=$(echo "$output" | jq '.bestCoder | has("spec")')
+  [ "$has_spec" = "false" ]
 }
 
-@test "fetch_coding_scores scores the 7-axis hourly data and skips models missing an axis" {
+@test "fetch_coding_scores scores the 9-axis real hourly data and skips models without a real run" {
   run bash -c '
     PROVIDER=anthropic
     source "'"$AST"'"
@@ -370,42 +370,42 @@ setup() {
   [ "$status" -eq 0 ]
   first_line=$(printf '%s\n' "$output" | sed -n '1p')
   second_line=$(printf '%s\n' "$output" | sed -n '2p')
-  [[ "$first_line" == "90.2|claude-opus-4-8|"* ]]
-  [[ "$second_line" == "83.5|claude-opus-5|"* ]]
+  [[ "$first_line" == "88.5|claude-opus-5|"* ]]
+  [[ "$second_line" == "81.8|claude-opus-4-8|"* ]]
   [[ "$output" != *"claude-sonnet-4-20250514"* ]]
   remaining=$(printf '%s\n' "$output" | tail -n +3)
-  not_default=$(printf '%s\n' "$remaining" | grep -cv '^73\.5|' || true)
+  not_default=$(printf '%s\n' "$remaining" | grep -cv '^72\.0|' || true)
   [ "$not_default" -eq 0 ]
 }
 
-@test "calc_coding_score computes the linear weighted sum of the 7 axes" {
+@test "calc_coding_score computes the linear weighted sum of the 9 axes" {
   run bash -c '
     source "'"$AST"'"
-    calc_coding_score 1 1 1 1 1 1 1
+    calc_coding_score 1 1 1 1 1 1 1 1 1
   '
   [ "$status" -eq 0 ]
   [ "$output" = "100.0" ]
 
   run bash -c '
     source "'"$AST"'"
-    calc_coding_score 0 0 0 0 0 0 0
+    calc_coding_score 0 0 0 0 0 0 0 0 0
   '
   [ "$status" -eq 0 ]
   [ "$output" = "0.0" ]
 
   run bash -c '
     source "'"$AST"'"
-    calc_coding_score 0.96 0.90 0.84 0.80 0.90 1.0 0.70
+    calc_coding_score 0.95 0.80 0.84 0.70 0.90 0.90 0.90 1.0 1.0
   '
   [ "$status" -eq 0 ]
-  [ "$output" = "90.2" ]
+  [ "$output" = "88.5" ]
 }
 
 @test "--openai --section=coder scores from the default hourly fixture" {
   run "$AST" --openai --section=coder
   [ "$status" -eq 0 ]
   [[ "$output" == *"Best Coder (OpenAI)"* ]]
-  [[ "$output" == *"73.5"* ]]
+  [[ "$output" == *"72.0"* ]]
 }
 
 # ── API Retry ───────────────────────────────────────
@@ -644,35 +644,122 @@ setup() {
 
 # ── Switch Suggestion ──────────────────────────────
 
-@test "switch suggestion: top-tier tracked model keeps" {
+@test "switch suggestion: top model keeps when the gap is inside the noise band, with a drift warning" {
   run "$AST" --track=claude-opus-4-8
   [ "$status" -eq 0 ]
   [[ "$output" == *"Switch Suggestion"* ]]
   [[ "$output" == *"KEEP"* ]]
-  [[ "$output" == *"Tier 80 matches the top tier"* ]]
+  [[ "$output" == *"Tied with claude-opus-5 · drift warning"* ]]
 }
 
-@test "switch suggestion: top-tier model keeps even when another top-tier model scores higher" {
+@test "switch suggestion: the top model itself keeps with a zero gap" {
   run "$AST" --track=claude-opus-5
   [ "$status" -eq 0 ]
   [[ "$output" == *"KEEP"* ]]
+  [[ "$output" == *"Top of Claude · confident"* ]]
 }
 
-@test "switch suggestion: below-top-tier tracked model switches to the top-tier target" {
+@test "switch suggestion: a gap beyond the noise band switches to the top model" {
   run "$AST" --track=claude-sonnet-4-6
   [ "$status" -eq 0 ]
   [[ "$output" == *"SWITCH"* ]]
   [[ "$output" == *"claude-opus-5"* ]]
-  [[ "$output" == *"(tier 80, score 82)"* ]]
-  [[ "$output" == *"Tracked tier 71 · top tier 80"* ]]
+  [[ "$output" == *"· confident"* ]]
   [[ "$output" != *"KEEP"* ]]
+  [[ "$output" != *"Noise band"* ]]
+  [[ "$output" != *"runs)"* ]]
 }
 
-@test "switch suggestion: missing tier data is UNKNOWN" {
-  run "$AST" --track=claude-opus-4-7
+@test "switch suggestion: a drift-alerted tracked model always switches to a clean candidate" {
+  run "$AST" --track=claude-opus-4-5-20251101
   [ "$status" -eq 0 ]
-  [[ "$output" == *"UNKNOWN"* ]]
-  [[ "$output" == *"No tier data for this model"* ]]
+  [[ "$output" == *"SWITCH"* ]]
+  [[ "$output" == *"claude-opus-5"* ]]
+  [[ "$output" == *"· drift alert"* ]]
+}
+
+@test "switch suggestion: a critically drift-alerted default-fixture model switches to a clean candidate" {
+  run "$AST" --track=claude-opus-4-6
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"SWITCH"* ]]
+  [[ "$output" == *"claude-opus-5"* ]]
+  [[ "$output" == *"· drift alert"* ]]
+}
+
+@test "switch suggestion: falls back to the band rule when the drift batch fetch fails" {
+  export AST_CURL_FAIL_DRIFT=1
+  run "$AST" --track=claude-opus-4-5-20251101
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"SWITCH"* ]]
+  [[ "$output" == *"claude-opus-5"* ]]
+  [[ "$output" == *"· uncertain"* ]]
+}
+
+@test "switch suggestion: --openai a drift-alerted tracked model switches to a clean candidate" {
+  run "$AST" --openai --track=gpt-5.3-codex
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"SWITCH"* ]]
+  [[ "$output" == *"gpt-5.4"* ]]
+  [[ "$output" == *"· drift alert"* ]]
+}
+
+@test "switch suggestion: no real runs in the last 24h is NO DATA" {
+  run "$AST" --track=claude-sonnet-4-20250514
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"NO DATA"* ]]
+  [[ "$output" == *"No real code-benchmark runs in the last 24h"* ]]
+}
+
+@test "switch suggestion: failed run fetch is UNAVAILABLE" {
+  export AST_CURL_FAIL_MODELS=1
+  run "$AST" --track=claude-opus-4-8
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"UNAVAILABLE"* ]]
+  [[ "$output" == *"Could not fetch benchmark runs"* ]]
+}
+
+@test "switch suggestion: hidden without --track" {
+  run "$AST"
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"Switch Suggestion"* ]]
+}
+
+@test "switch suggestion: shown regardless of --section, section filter still applies" {
+  run "$AST" --section=rankings --track=claude-opus-4-8
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Switch Suggestion"* ]]
+  [[ "$output" == *"Claude Rankings"* ]]
+  [[ "$output" != *"Global AI Index"* ]]
+}
+
+@test "switch suggestion: is not a valid section" {
+  run "$AST" --section=switch
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"Unknown section: switch"* ]]
+}
+
+@test "switch suggestion: --openai top model keeps when the gap is inside the noise band" {
+  run "$AST" --openai --track=gpt-5.2
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"KEEP"* ]]
+  [[ "$output" == *"Tied with gpt-5.4 · confident"* ]]
+}
+
+@test "switch suggestion: NO_COLOR output has no ANSI escapes" {
+  run env NO_COLOR=1 "$AST" --track=claude-opus-4-8
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"Switch Suggestion"* ]]
+  ! printf '%s' "$output" | grep -q $'\033'
+}
+
+@test "switch suggestion: box renders before Global AI Index" {
+  run "$AST" --track=claude-opus-4-8
+  [ "$status" -eq 0 ]
+  switch_line=$(printf '%s\n' "$output" | awk '/Switch Suggestion/ { print NR; exit }')
+  global_line=$(printf '%s\n' "$output" | awk '/Global AI Index/ { print NR; exit }')
+  [ -n "$switch_line" ]
+  [ -n "$global_line" ]
+  [ "$switch_line" -lt "$global_line" ]
 }
 
 @test "--track with an unknown model name exits with the available model list" {
@@ -706,101 +793,88 @@ setup() {
   [ "$second_line" = "claude-opus-4-8" ]
 }
 
-@test "switch suggestion: failed tier fetch is UNAVAILABLE" {
-  export AST_CURL_FAIL_MODELS=1
-  run "$AST" --track=claude-opus-4-8
-  [ "$status" -eq 0 ]
-  [[ "$output" == *"UNAVAILABLE"* ]]
-  [[ "$output" == *"Could not fetch tier data"* ]]
-}
-
-@test "switch suggestion: hidden without --track" {
-  run "$AST"
-  [ "$status" -eq 0 ]
-  [[ "$output" != *"Switch Suggestion"* ]]
-}
-
-@test "switch suggestion: shown regardless of --section, section filter still applies" {
-  run "$AST" --section=rankings --track=claude-opus-4-8
-  [ "$status" -eq 0 ]
-  [[ "$output" == *"Switch Suggestion"* ]]
-  [[ "$output" == *"Claude Rankings"* ]]
-  [[ "$output" != *"Global AI Index"* ]]
-}
-
-@test "switch suggestion: is not a valid section" {
-  run "$AST" --section=switch
-  [ "$status" -eq 1 ]
-  [[ "$output" == *"Unknown section: switch"* ]]
-}
-
-@test "switch suggestion: --openai score tie-break picks the higher-scoring top-tier model" {
-  run "$AST" --openai --track=gpt-5.3-codex
-  [ "$status" -eq 0 ]
-  [[ "$output" == *"SWITCH"* ]]
-  [[ "$output" == *"gpt-5.4"* ]]
-}
-
-@test "switch suggestion: --openai top-tier tracked model keeps" {
-  run "$AST" --openai --track=gpt-5.2
-  [ "$status" -eq 0 ]
-  [[ "$output" == *"KEEP"* ]]
-}
-
-@test "switch suggestion: NO_COLOR output has no ANSI escapes" {
-  run env NO_COLOR=1 "$AST" --track=claude-opus-4-8
-  [ "$status" -eq 0 ]
-  [[ "$output" == *"Switch Suggestion"* ]]
-  ! printf '%s' "$output" | grep -q $'\033'
-}
-
-@test "switch suggestion: box renders before Global AI Index" {
-  run "$AST" --track=claude-opus-4-8
-  [ "$status" -eq 0 ]
-  switch_line=$(printf '%s\n' "$output" | awk '/Switch Suggestion/ { print NR; exit }')
-  global_line=$(printf '%s\n' "$output" | awk '/Global AI Index/ { print NR; exit }')
-  [ -n "$switch_line" ]
-  [ -n "$global_line" ]
-  [ "$switch_line" -lt "$global_line" ]
-}
-
-@test "compute_switch_suggestion: switches to the higher-scoring top-tier candidate" {
+@test "compute_switch_suggestion: KEEP when the gap is inside the pooled noise band" {
   run bash -c '
     source "'"$AST"'"
-    rows=$(printf "a\t1\t70\tgood\t80\nb\t2\t75\tgood\t80\nc\t3\t60\tgood\t79\n")
-    compute_switch_suggestion "$rows" "c"
+    rows=$(printf "a\t1\t70\t2\t80\t2\tNORMAL\nb\t2\t75\t2\t79\t2\tNORMAL\n")
+    compute_switch_suggestion "$rows" "b"
   '
   [ "$status" -eq 0 ]
-  IFS=$'\t' read -r verdict tracked tracked_tier top_tier target target_score target_tier <<<"$output"
+  IFS=$'\t' read -r verdict tracked tracked_level tracked_n top top_level top_n gap band band_known strength <<<"$output"
+  [ "$verdict" = "KEEP" ]
+  [ "$top" = "a" ]
+  [ "$gap" = "1.0" ]
+  [ "$band" = "2.8" ]
+  [ "$band_known" = "1" ]
+  [ "$strength" = "confident" ]
+}
+
+@test "compute_switch_suggestion: single-run models give an unknown zero band and still switch" {
+  run bash -c '
+    source "'"$AST"'"
+    rows=$(printf "a\t1\t80\t1\t80\t0\tNORMAL\nb\t2\t70\t1\t70\t0\tNORMAL\n")
+    compute_switch_suggestion "$rows" "b"
+  '
+  [ "$status" -eq 0 ]
+  IFS=$'\t' read -r verdict tracked tracked_level tracked_n top top_level top_n gap band band_known strength <<<"$output"
   [ "$verdict" = "SWITCH" ]
-  [ "$target" = "b" ]
-  [ "$top_tier" = "80" ]
+  [ "$band" = "0.0" ]
+  [ "$band_known" = "0" ]
+  [ "$strength" = "uncertain" ]
 }
 
-@test "compute_switch_suggestion: top-tier tracked model keeps even though another scores higher" {
+@test "compute_switch_suggestion: SWITCH is confident when the gap reaches twice the band" {
   run bash -c '
     source "'"$AST"'"
-    rows=$(printf "a\t1\t70\tgood\t80\nb\t2\t75\tgood\t80\nc\t3\t60\tgood\t79\n")
-    compute_switch_suggestion "$rows" "a"
+    rows=$(printf "a\t1\t100\t2\t100\t0\tNORMAL\nb\t2\t50\t2\t50\t0\tNORMAL\n")
+    compute_switch_suggestion "$rows" "b"
   '
   [ "$status" -eq 0 ]
-  [[ "$output" == "KEEP"* ]]
+  IFS=$'\t' read -r verdict tracked tracked_level tracked_n top top_level top_n gap band band_known strength <<<"$output"
+  [ "$verdict" = "SWITCH" ]
+  [ "$band" = "0.0" ]
+  [ "$band_known" = "1" ]
+  [ "$strength" = "confident" ]
 }
 
-@test "compute_switch_suggestion: no tiered candidates is UNAVAILABLE" {
+@test "compute_switch_suggestion: no candidate has any runs is UNAVAILABLE" {
   run bash -c '
     source "'"$AST"'"
-    rows=$(printf "a\t1\t70\tgood\t\nb\t2\t75\tgood\t\n")
+    rows=$(printf "a\t1\t70\t0\t\t\tNORMAL\nb\t2\t75\t0\t\t\tNORMAL\n")
     compute_switch_suggestion "$rows" "a"
   '
   [ "$status" -eq 0 ]
   [[ "$output" == "UNAVAILABLE"* ]]
 }
 
+@test "compute_switch_suggestion: tracked model with no runs is NO_DATA even with candidates available" {
+  run bash -c '
+    source "'"$AST"'"
+    rows=$(printf "a\t1\t70\t0\t\t\tNORMAL\nb\t2\t75\t2\t80\t2\tNORMAL\n")
+    compute_switch_suggestion "$rows" "a"
+  '
+  [ "$status" -eq 0 ]
+  [[ "$output" == "NO_DATA"* ]]
+  IFS=$'\t' read -r verdict tracked _ <<<"$output"
+  [ "$tracked" = "a" ]
+}
+
+@test "compute_switch_suggestion: level tie breaks on higher currentScore, non-numeric loses" {
+  run bash -c '
+    source "'"$AST"'"
+    rows=$(printf "a\t1\t70\t2\t80\t2\tNORMAL\nb\t2\tunavailable\t2\t80\t2\tNORMAL\nc\t3\t65\t3\t50\t6\tNORMAL\n")
+    compute_switch_suggestion "$rows" "c"
+  '
+  [ "$status" -eq 0 ]
+  IFS=$'\t' read -r verdict tracked tracked_level tracked_n top top_level top_n gap band band_known <<<"$output"
+  [ "$verdict" = "SWITCH" ]
+  [ "$top" = "a" ]
+}
+
 @test "compute_switch_suggestion: resolves the tracked model by exact name only" {
   run bash -c '
     source "'"$AST"'"
-    rows=$(printf "claude-opus-5\t1\t70\tgood\t80\nclaude-opus-4-8\t2\t75\tgood\t80\n")
+    rows=$(printf "claude-opus-5\t1\t82\t3\t82\t8\tNORMAL\nclaude-opus-4-8\t2\t81\t2\t80\t2\tNORMAL\n")
     compute_switch_suggestion "$rows" "claude-opus-4-8"
     compute_switch_suggestion "$rows" "claude-opus"
   '
@@ -811,6 +885,68 @@ setup() {
   [ "$verdict" = "KEEP" ]
   [ "$tracked" = "claude-opus-4-8" ]
   [[ "$second_line" == "NOT_FOUND"* ]]
+}
+
+@test "compute_switch_suggestion: a drift-alerted tracked model switches to the clean candidate even when an alerted model scores higher" {
+  run bash -c '
+    source "'"$AST"'"
+    rows=$(printf "a\t1\t100\t2\t100\t0\tDEGRADATION\nb\t2\t50\t2\t50\t0\tNORMAL\nc\t3\t40\t2\t40\t0\tDEGRADATION\n")
+    compute_switch_suggestion "$rows" "c"
+  '
+  [ "$status" -eq 0 ]
+  IFS=$'\t' read -r verdict tracked tracked_level tracked_n top top_level top_n gap band band_known strength <<<"$output"
+  [ "$verdict" = "SWITCH" ]
+  [ "$top" = "b" ]
+  [ "$strength" = "drift alert" ]
+}
+
+@test "compute_switch_suggestion: a drift-alerted tracked model keeps itself when no clean candidate exists" {
+  run bash -c '
+    source "'"$AST"'"
+    rows=$(printf "a\t1\t100\t2\t100\t0\tCRITICAL\nb\t2\t40\t2\t40\t0\tDEGRADATION\n")
+    compute_switch_suggestion "$rows" "b"
+  '
+  [ "$status" -eq 0 ]
+  IFS=$'\t' read -r verdict tracked tracked_level tracked_n top top_level top_n gap band band_known strength <<<"$output"
+  [ "$verdict" = "KEEP" ]
+  [ "$top" = "b" ]
+  [ "$strength" = "drift alert" ]
+}
+
+@test "compute_switch_suggestion: a WARNING tracked model with a zero gap keeps with a drift warning" {
+  run bash -c '
+    source "'"$AST"'"
+    rows=$(printf "a\t1\t90\t2\t80\t2\tNORMAL\nb\t2\t80\t2\t80\t2\tWARNING\n")
+    compute_switch_suggestion "$rows" "b"
+  '
+  [ "$status" -eq 0 ]
+  IFS=$'\t' read -r verdict tracked tracked_level tracked_n top top_level top_n gap band band_known strength <<<"$output"
+  [ "$verdict" = "KEEP" ]
+  [ "$strength" = "drift warning" ]
+}
+
+@test "compute_switch_suggestion: a WARNING tracked model beyond the band still switches on band strength" {
+  run bash -c '
+    source "'"$AST"'"
+    rows=$(printf "a\t1\t100\t2\t100\t0\tNORMAL\nb\t2\t50\t2\t50\t0\tWARNING\n")
+    compute_switch_suggestion "$rows" "b"
+  '
+  [ "$status" -eq 0 ]
+  IFS=$'\t' read -r verdict tracked tracked_level tracked_n top top_level top_n gap band band_known strength <<<"$output"
+  [ "$verdict" = "SWITCH" ]
+  [ "$strength" = "confident" ]
+}
+
+@test "compute_switch_suggestion: an alerted model with the highest level is never chosen as top for a clean tracked model" {
+  run bash -c '
+    source "'"$AST"'"
+    rows=$(printf "a\t1\t100\t2\t100\t0\tDEGRADATION\nb\t2\t60\t2\t60\t0\tNORMAL\nc\t3\t50\t2\t50\t0\tNORMAL\n")
+    compute_switch_suggestion "$rows" "c"
+  '
+  [ "$status" -eq 0 ]
+  IFS=$'\t' read -r verdict tracked tracked_level tracked_n top top_level top_n gap band band_known strength <<<"$output"
+  [ "$top" = "b" ]
+  [ "$top" != "a" ]
 }
 
 @test "--json --track output is unchanged (no switchSuggestion key)" {

@@ -20,16 +20,25 @@ fi
 
 for arg in "$@"; do
   case "$arg" in
-  *api/models/*)
+  *api/models/*/history*)
     if [[ "${AST_CURL_FAIL_MODELS:-}" == "1" ]]; then
       exit 1
     fi
-    id="${arg##*/}"
-    if [[ -f "$FIXTURES/models/$id.json" ]]; then
-      cat "$FIXTURES/models/$id.json"
-      exit 0
+    id="${arg##*api/models/}"
+    id="${id%%/*}"
+    if [[ -f "$FIXTURES/runs/$id.json" ]]; then
+      cat "$FIXTURES/runs/$id.json"
+    else
+      cat "$FIXTURES/runs/default.json"
     fi
-    exit 1
+    exit 0
+    ;;
+  *api/drift/batch*)
+    if [[ "${AST_CURL_FAIL_DRIFT:-}" == "1" ]]; then
+      exit 1
+    fi
+    cat "$FIXTURES/drift-batch.json"
+    exit 0
     ;;
   *global-index*)
     cat "$FIXTURES/global-index.json"
@@ -37,16 +46,6 @@ for arg in "$@"; do
     ;;
   *dashboard/cached*)
     cat "$FIXTURES/dashboard.json"
-    exit 0
-    ;;
-  *dashboard/history/*)
-    id="${arg##*dashboard/history/}"
-    id="${id%%\?*}"
-    if [[ -f "$FIXTURES/history/$id.json" ]]; then
-      cat "$FIXTURES/history/$id.json"
-    else
-      cat "$FIXTURES/history.json"
-    fi
     exit 0
     ;;
   esac

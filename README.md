@@ -11,11 +11,11 @@ A CLI tool that tracks AI model performance on [aistupidlevel.info](https://aist
 - **Global Index** — overall AI health score and trend
 - **Model Rankings** — where all tracked models rank on the leaderboard
 - **Recommendations (7d)** — 7-day rolling picks: best for code, most reliable, fastest, best value
-- **Best Coder** — provider's top model for coding, scored from the latest 7-axis code-benchmark run using the site's published axis weights
+- **Best Coder** — provider's top model for coding, scored from its latest real 9-axis code-benchmark run using the site's published axis weights
 - **Alerts** — active degradations, instability warnings, and models to avoid
 - **Provider Trust** — trust score, trend, and incident count
 - **Drift Incidents** — detected performance drift for tracked models
-- **Switch Suggestion** — keep-or-switch verdict for the model you track, based on the provider's top tier (`--track`)
+- **Switch Suggestion** — keep-or-switch verdict for the model you track, measured against the provider's top model over the last 24h of real runs (`--track`)
 - **Score Graph** — live sparkline of one model's score over time (`--graph`)
 
 ## Requirements
@@ -84,17 +84,20 @@ ast --graph=claude-opus-4-6      # start graphing one model...
 
 `--track` also turns on a **Switch Suggestion** box at the top of the report. It answers one question: should you keep using the model you track, or move to the provider's current top model?
 
-The decision uses the model's *tier* — the base level the API assigns to each model, exposed on the per-model endpoint `/api/models/<id>` — not the leaderboard score. Scores move from run to run; the tier does not. Models sharing the top tier are treated as equivalent, so the box says `KEEP` even when another top-tier model happens to hold a higher score at that moment. It says `SWITCH` only when the tracked model sits below the top tier, and it names the top-tier model with the highest current score as the target.
+The verdict is measured, not guessed. For every model of the selected provider, `ast` pulls the real code-benchmark runs of the last 24 hours (`/api/models/<id>/history?period=24h`, hourly suite only, synthetic placeholder rows excluded) and takes their average as the model's *level*. The top model is the one with the highest level. The gap between your model's level and the top level is then compared with the *noise band* — how much scores normally jump from one run to the next, computed from those same runs across all models. Gap inside the band means the two models are not distinguishable on today's data: `KEEP`. Gap beyond the band: `SWITCH`, and the box names the top model.
+
+The rule uses whatever runs exist. With one run per model it compares those single runs; as runs accumulate, the levels and the band become sharper on their own. Under the verdict the box gives one word for how much to trust it: `confident` when the gap sits well inside the band (KEEP) or well beyond it (SWITCH), `uncertain` when it sits near the edge and the next run could flip the call, `drift alert` or `drift warning` when the site's drift detector decided or coloured the call.
+
+The site's own drift detector is folded in as a second signal. Every model carries a drift status computed by the site against that model's own history (`/api/drift/batch`, free tier). A tracked model under an active drift alert (`DEGRADATION` or `CRITICAL`) gets `SWITCH` regardless of the gap, and models under an alert are never offered as the target; if no clean model is left, the box says `KEEP` with `No clean alternative · drift alert`. A `WARNING` on the tracked model does not change a `KEEP` verdict but marks it `drift warning` instead of `confident`.
 
 ```
   ╭── Switch Suggestion ────────────────────────────────╮
-  │ ⚠ SWITCH  claude-opus-4-8                           │
-  │   → claude-fable-5 (tier 80, score 72)              │
-  │   Tracked tier 79 · top tier 80                     │
+  │ ⚠ SWITCH  claude-sonnet-4-6                         │
+  │   → claude-opus-5 · confident                       │
   ╰─────────────────────────────────────────────────────╯
 ```
 
-Other outcomes: `UNKNOWN` when the API has no tier for the tracked model, `NOT FOUND` when no model of the selected provider matches the tracked name, and `UNAVAILABLE` when the tier data could not be fetched.
+Other outcomes: `NO DATA` when the tracked model has no real run in the last 24 hours, `NOT FOUND` when no model of the selected provider matches the tracked name, and `UNAVAILABLE` when the runs could not be fetched.
 
 `--track` takes the exact model name as it appears in the rankings — matching is not fuzzy, and a prefix such as `claude-opus` is not enough. The name is checked against the live model list on startup: when it matches no model of the selected provider, `ast` exits with an error listing the available models, the same way `--graph` does.
 
