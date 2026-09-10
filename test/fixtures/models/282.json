@@ -1,9 +1,0 @@
-{
-  "id": 282,
-  "name": "claude-opus-4-8",
-  "latestScore": {
-    "stupidScore": 81,
-    "suite": "hourly",
-    "note": "[SYNTHETIC] anchor=tier(80) swing=1.0 form=0.0 drift=0.0 nudge=0.0 event=none"
-  }
-}

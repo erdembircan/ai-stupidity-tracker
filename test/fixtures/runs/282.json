@@ -1,0 +1,43 @@
+{
+  "modelId": "282",
+  "period": "24 hours",
+  "dataPoints": 2,
+  "history": [
+    {
+      "timestamp": "2026-09-10T02:00:00Z",
+      "stupidScore": 79,
+      "displayScore": 79,
+      "suite": "hourly",
+      "note": "~$0.06",
+      "axes": {
+        "correctness": 0.80,
+        "complexity": 0.60,
+        "codeQuality": 0.70,
+        "efficiency": 0.50,
+        "stability": 0.70,
+        "edgeCases": 0.70,
+        "debugging": 0.70,
+        "format": 0.90,
+        "safety": 1.0
+      }
+    },
+    {
+      "timestamp": "2026-09-10T06:00:00Z",
+      "stupidScore": 81,
+      "displayScore": 81,
+      "suite": "hourly",
+      "note": "~$0.06",
+      "axes": {
+        "correctness": 0.90,
+        "complexity": 0.70,
+        "codeQuality": 0.80,
+        "efficiency": 0.60,
+        "stability": 0.80,
+        "edgeCases": 0.80,
+        "debugging": 0.80,
+        "format": 1.0,
+        "safety": 1.0
+      }
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "modelId": "40",
+  "period": "24 hours",
+  "dataPoints": 2,
+  "history": [
+    {
+      "timestamp": "2026-09-10T02:00:00Z",
+      "stupidScore": 70,
+      "displayScore": 70,
+      "suite": "hourly",
+      "note": "[SYNTHETIC] anchor=tier(70) swing=0.0 form=0.0 drift=0.0 nudge=0.0 event=none",
+      "axes": {
+        "correctness": 0.70,
+        "spec": 0.70,
+        "codeQuality": 0.70,
+        "efficiency": 0.70,
+        "stability": 0.70,
+        "refusal": 0.70,
+        "recovery": 0.70
+      }
+    },
+    {
+      "timestamp": "2026-09-10T06:00:00Z",
+      "stupidScore": 71,
+      "displayScore": 71,
+      "suite": "hourly",
+      "note": "[SYNTHETIC] anchor=tier(70) swing=0.0 form=0.0 drift=0.0 nudge=0.0 event=none",
+      "axes": {
+        "correctness": 0.71,
+        "spec": 0.71,
+        "codeQuality": 0.71,
+        "efficiency": 0.71,
+        "stability": 0.71,
+        "refusal": 0.71,
+        "recovery": 0.71
+      }
+    }
+  ]
+}

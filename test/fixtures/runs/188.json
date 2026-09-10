@@ -1,0 +1,25 @@
+{
+  "modelId": "188",
+  "period": "24 hours",
+  "dataPoints": 1,
+  "history": [
+    {
+      "timestamp": "2026-09-10T06:00:00Z",
+      "stupidScore": 75,
+      "displayScore": 75,
+      "suite": "hourly",
+      "note": "~$0.06",
+      "axes": {
+        "correctness": 0.80,
+        "complexity": 0.60,
+        "codeQuality": 0.70,
+        "efficiency": 0.50,
+        "stability": 0.70,
+        "edgeCases": 0.70,
+        "debugging": 0.70,
+        "format": 0.90,
+        "safety": 1.0
+      }
+    }
+  ]
+}

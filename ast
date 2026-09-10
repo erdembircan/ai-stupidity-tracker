@@ -6,7 +6,6 @@ readonly VERSION="1.5.1"
 readonly BASE_URL="https://aistupidlevel.info"
 readonly DASHBOARD_URL="${BASE_URL}/dashboard/cached?period=latest&sortBy=combined&analyticsPeriod=latest"
 readonly GLOBAL_INDEX_URL="${BASE_URL}/dashboard/global-index"
-readonly HISTORY_URL="${BASE_URL}/dashboard/history"
 readonly MODEL_API_URL="${BASE_URL}/api/models"
 readonly BOX_WIDTH=55
 readonly MIN_TERM_WIDTH=$((BOX_WIDTH + 2))
@@ -210,16 +209,43 @@ spinner_stop() {
 trap spinner_stop EXIT
 
 # ── Coding Score Calculation ───────────────────────
-# Linear weighted sum of the seven hourly-suite axes, using the weights the
-# site publishes for the code benchmark (correctness 35%, spec 15%,
-# codeQuality 15%, efficiency 10%, stability 10%, refusal 10%, recovery 5%).
+# Linear weighted sum of the nine hourly-suite axes, using the weights the
+# site publishes for the code benchmark (correctness 40%, complexity 20%,
+# codeQuality 15%, stability 10%, efficiency 5%, edgeCases 3%, debugging 3%,
+# format 2%, safety 2%).
 calc_coding_score() {
-  local corr="$1" spec="$2" cq="$3" eff="$4" stab="$5" ref="$6" rec="$7"
-  awk -v corr="$corr" -v spec="$spec" -v cq="$cq" -v eff="$eff" \
-    -v stab="$stab" -v ref="$ref" -v rec="$rec" '
+  local corr="$1" cmplx="$2" cq="$3" eff="$4" stab="$5" edge="$6" dbg="$7" fmt="$8" safe="$9"
+  awk -v corr="$corr" -v cmplx="$cmplx" -v cq="$cq" -v eff="$eff" -v stab="$stab" \
+    -v edge="$edge" -v dbg="$dbg" -v fmt="$fmt" -v safe="$safe" '
     BEGIN {
-      printf "%.1f", corr*35 + spec*15 + cq*15 + eff*10 + stab*10 + ref*10 + rec*5
+      printf "%.1f", corr*40 + cmplx*20 + cq*15 + eff*5 + stab*10 + edge*3 + dbg*3 + fmt*2 + safe*2
     }'
+}
+
+# Emits provider model rows name<TAB>id<TAB>currentScore, in dashboard order,
+# and downloads each model's real-run history into ${tmpdir}/${id}.json in
+# parallel as a side effect.
+fetch_model_run_files() {
+  local dashboard="$1" tmpdir="$2"
+
+  local rows
+  rows=$(printf '%s\n' "$dashboard" | jq -r \
+    --arg provider "$PROVIDER" \
+    '.data.modelScores[] | select(.provider == $provider) | [.name, .id, (.currentScore|tostring)] | @tsv')
+
+  local pids=()
+  local name id score
+  while IFS=$'\t' read -r name id score; do
+    [[ -z "$id" ]] && continue
+    curl -sf --max-time 10 "${MODEL_API_URL}/${id}/history?period=24h" \
+      >"${tmpdir}/${id}.json" 2>/dev/null &
+    pids+=($!)
+  done <<<"$rows"
+  for pid in "${pids[@]}"; do
+    wait "$pid" 2>/dev/null || true
+  done
+
+  printf '%s\n' "$rows"
 }
 
 fetch_coding_scores() {
@@ -227,45 +253,33 @@ fetch_coding_scores() {
   local tmpdir
   tmpdir=$(mktemp -d)
 
-  # Get model IDs for the provider
-  local model_ids
-  model_ids=$(printf '%s\n' "$dashboard" | jq -r \
-    --arg provider "$PROVIDER" \
-    '[.data.modelScores[] | select(.provider == $provider) | .id] | .[]')
-
-  # Fetch history for each model in parallel
-  local pids=()
-  for id in $model_ids; do
-    curl -sf --max-time 10 "${HISTORY_URL}/${id}?period=latest&sortBy=hourly" \
-      >"${tmpdir}/${id}.json" 2>/dev/null &
-    pids+=($!)
-  done
-  for pid in "${pids[@]}"; do
-    wait "$pid" 2>/dev/null || true
-  done
+  local rows
+  rows=$(fetch_model_run_files "$dashboard" "$tmpdir")
 
   # Calculate coding score for each model
   local results=()
-  for id in $model_ids; do
+  local name id score
+  while IFS=$'\t' read -r name id score; do
+    [[ -z "$id" ]] && continue
     local file="${tmpdir}/${id}.json"
     [[ -s "$file" ]] || continue
 
-    local name axes
-    name=$(printf '%s\n' "$dashboard" | jq -r \
-      --arg id "$id" '.data.modelScores[] | select(.id == $id) | .name')
-    axes=$(jq -r '.data[0].axes // {} |
-      [.correctness, .spec, .codeQuality, .efficiency, .stability, .refusal, .recovery] |
-      if any(. == null) then empty else @tsv end' "$file" 2>/dev/null) || continue
+    local axes
+    axes=$(jq -r '
+      [.history[] | select(.suite == "hourly" and (((.note // "") | startswith("[SYNTHETIC]")) | not))]
+      | sort_by(.timestamp) | last | .axes // {}
+      | [.correctness, .complexity, .codeQuality, .efficiency, .stability, .edgeCases, .debugging, .format, .safety]
+      | if any(. == null) then empty else @tsv end' "$file" 2>/dev/null) || continue
     [[ -z "$axes" ]] && continue
 
-    local corr spec cq eff stab ref rec
-    read -r corr spec cq eff stab ref rec <<<"$axes"
+    local corr cmplx cq eff stab edge dbg fmt safe
+    read -r corr cmplx cq eff stab edge dbg fmt safe <<<"$axes"
 
-    local score
-    score=$(calc_coding_score "$corr" "$spec" "$cq" "$eff" "$stab" "$ref" "$rec")
+    local cscore
+    cscore=$(calc_coding_score "$corr" "$cmplx" "$cq" "$eff" "$stab" "$edge" "$dbg" "$fmt" "$safe")
 
-    results+=("${score}|${name}|${corr}|${spec}|${cq}")
-  done
+    results+=("${cscore}|${name}|${corr}|${cmplx}|${cq}")
+  done <<<"$rows"
 
   rm -rf "$tmpdir"
 
@@ -274,108 +288,102 @@ fetch_coding_scores() {
 }
 
 # Emits one line per provider model, in dashboard order, tab-separated:
-# name<TAB>id<TAB>currentScore<TAB>status<TAB>tier (tier may be empty).
-fetch_tiers() {
+# name<TAB>id<TAB>currentScore<TAB>n<TAB>mean<TAB>ss (mean/ss empty when n=0).
+fetch_run_levels() {
   local dashboard="$1"
   local tmpdir
   tmpdir=$(mktemp -d)
 
   local rows
-  rows=$(printf '%s\n' "$dashboard" | jq -r \
-    --arg provider "$PROVIDER" \
-    '.data.modelScores[] | select(.provider == $provider) | [.name, .id, (.currentScore|tostring), .status] | @tsv')
+  rows=$(fetch_model_run_files "$dashboard" "$tmpdir")
 
-  # Fetch per-model tier data in parallel
-  local pids=()
-  local name id score status
-  while IFS=$'\t' read -r name id score status; do
-    [[ -z "$id" ]] && continue
-    curl -sf --max-time 10 "${MODEL_API_URL}/${id}" \
-      >"${tmpdir}/${id}.json" 2>/dev/null &
-    pids+=($!)
-  done <<<"$rows"
-  for pid in "${pids[@]}"; do
-    wait "$pid" 2>/dev/null || true
-  done
-
-  while IFS=$'\t' read -r name id score status; do
+  local name id score
+  while IFS=$'\t' read -r name id score; do
     [[ -z "$id" ]] && continue
     local file="${tmpdir}/${id}.json"
-    local tier=""
+    local stats
     if [[ -s "$file" ]]; then
-      tier=$(jq -r '(.latestScore.note // "") | [match("tier\\(([0-9]+)\\)"; "g").captures[0].string] | .[0] // empty' "$file" 2>/dev/null) || tier=""
+      stats=$(jq -r '
+        [.history[] | select(.suite == "hourly" and (((.note // "") | startswith("[SYNTHETIC]")) | not)) | .stupidScore] as $s
+        | ($s | length) as $n
+        | (if $n > 0 then ($s | add / $n) else null end) as $m
+        | [$n, ($m // ""), (if $n > 0 then ($s | map((. - $m) * (. - $m)) | add) else "" end)]
+        | @tsv' "$file" 2>/dev/null) || stats=$'0\t\t'
+    else
+      stats=$'0\t\t'
     fi
-    printf '%s\t%s\t%s\t%s\t%s\n' "$name" "$id" "$score" "$status" "$tier"
+    printf '%s\t%s\t%s\t%s\n' "$name" "$id" "$score" "$stats"
   done <<<"$rows"
 
   rm -rf "$tmpdir"
 }
 
 # Pure decision rule — no network, no globals except its arguments.
-# Prints: verdict<TAB>tracked_name<TAB>tracked_tier<TAB>top_tier<TAB>target_name<TAB>target_score<TAB>target_tier
+# Rows are name<TAB>id<TAB>currentScore<TAB>n<TAB>mean<TAB>ss.
+# Prints: verdict<TAB>tracked<TAB>tracked_level<TAB>tracked_n<TAB>top<TAB>top_level<TAB>top_n<TAB>gap<TAB>band<TAB>band_known
 compute_switch_suggestion() {
-  local tier_rows="$1" track_model="$2"
+  local rows="$1" track_model="$2"
 
-  local tracked_name="" tracked_tier=""
-  local top_tier=-1
-  local name id score status tier
+  awk -F'\t' -v track="$track_model" '
+    {
+      name[NR] = $1; score[NR] = $3; n[NR] = $4; mean[NR] = $5; ss[NR] = $6
+      count = NR
+      if (name[NR] == track && tracked_idx == 0) tracked_idx = NR
+    }
+    END {
+      if (tracked_idx == 0) {
+        print "NOT_FOUND\t\t\t\t\t\t\t\t\t"
+        exit
+      }
 
-  # Resolve the tracked model by exact name.
-  while IFS=$'\t' read -r name id score status tier; do
-    [[ -z "$name" ]] && continue
-    if [[ -z "$tracked_name" && "$name" == "$track_model" ]]; then
-      tracked_name="$name"
-      tracked_tier="$tier"
-    fi
-  done <<<"$tier_rows"
+      has_candidate = 0
+      top_idx = 0
+      for (i = 1; i <= count; i++) {
+        if (n[i] + 0 == 0) continue
+        has_candidate = 1
+        if (top_idx == 0) { top_idx = i; continue }
+        if (mean[i] + 0 > mean[top_idx] + 0) {
+          top_idx = i
+        } else if (mean[i] + 0 == mean[top_idx] + 0) {
+          cs_i = score[i]; cs_top = score[top_idx]
+          if (cs_i !~ /^-?[0-9]+$/) cs_i = -1
+          if (cs_top !~ /^-?[0-9]+$/) cs_top = -1
+          if (cs_i + 0 > cs_top + 0) top_idx = i
+        }
+      }
 
-  if [[ -z "$tracked_name" ]]; then
-    printf 'NOT_FOUND\t\t\t\t\t\t\n'
-    return
-  fi
+      if (!has_candidate) {
+        print "UNAVAILABLE\t\t\t\t\t\t\t\t\t"
+        exit
+      }
 
-  # Candidate set = rows with a non-empty tier; find the top tier.
-  local has_candidate=false
-  while IFS=$'\t' read -r name id score status tier; do
-    [[ -z "$name" ]] && continue
-    [[ -z "$tier" ]] && continue
-    has_candidate=true
-    ((tier > top_tier)) && top_tier=$tier
-  done <<<"$tier_rows"
+      if (n[tracked_idx] + 0 == 0) {
+        printf "NO_DATA\t%s\t\t\t\t\t\t\t\t\n", name[tracked_idx]
+        exit
+      }
 
-  if [[ "$has_candidate" != true ]]; then
-    printf 'UNAVAILABLE\t\t\t\t\t\t\n'
-    return
-  fi
+      # Pooled standard deviation of runs within models (n_m >= 2).
+      ss_sum = 0; df_sum = 0
+      for (i = 1; i <= count; i++) {
+        if (n[i] + 0 < 2) continue
+        ss_sum += ss[i] + 0
+        df_sum += (n[i] + 0) - 1
+      }
+      band_known = (df_sum > 0) ? 1 : 0
+      sd = band_known ? sqrt(ss_sum / df_sum) : 0
 
-  if [[ -z "$tracked_tier" ]]; then
-    printf 'UNKNOWN\t%s\t\t\t\t\t\n' "$tracked_name"
-    return
-  fi
+      tracked_level = mean[tracked_idx] + 0
+      top_level = mean[top_idx] + 0
+      gap = top_level - tracked_level
+      band = 1.96 * sd * sqrt(1 / (n[tracked_idx] + 0) + 1 / (n[top_idx] + 0))
 
-  if ((tracked_tier == top_tier)); then
-    printf 'KEEP\t%s\t%s\t%s\t\t\t\n' "$tracked_name" "$tracked_tier" "$top_tier"
-    return
-  fi
+      verdict = (gap <= band) ? "KEEP" : "SWITCH"
 
-  # SWITCH — pick the candidate with tier == top_tier and the highest score
-  # (non-numeric score counts as -1); on a score tie the first in dashboard
-  # order wins.
-  local target_name="" target_score="" target_tier="" target_cmp=-1
-  while IFS=$'\t' read -r name id score status tier; do
-    [[ -z "$name" ]] && continue
-    [[ "$tier" != "$top_tier" ]] && continue
-    local cmp_score="$score"
-    [[ "$cmp_score" =~ ^-?[0-9]+$ ]] || cmp_score=-1
-    if [[ -z "$target_name" ]] || ((cmp_score > target_cmp)); then
-      target_name="$name"
-      target_score="$score"
-      target_tier="$tier"
-      target_cmp="$cmp_score"
-    fi
-  done <<<"$tier_rows"
-
-  printf 'SWITCH\t%s\t%s\t%s\t%s\t%s\t%s\n' "$tracked_name" "$tracked_tier" "$top_tier" "$target_name" "$target_score" "$target_tier"
+      printf "%s\t%s\t%.1f\t%d\t%s\t%.1f\t%d\t%.1f\t%.1f\t%d\n", \
+        verdict, name[tracked_idx], tracked_level, n[tracked_idx], \
+        name[top_idx], top_level, n[top_idx], gap, band, band_known
+    }
+  ' <<<"$rows"
 }
 
 # ── Fetch Data ──────────────────────────────────────
@@ -470,15 +478,15 @@ output_json() {
   if [[ -n "$coding_scores" ]]; then
     local top_line
     top_line=$(head -1 <<<"$coding_scores")
-    local cscore cname corr spec cq
-    IFS='|' read -r cscore cname corr spec cq <<<"$top_line"
+    local cscore cname corr cmplx cq
+    IFS='|' read -r cscore cname corr cmplx cq <<<"$top_line"
     best_coder_json=$(jq -n \
       --arg name "$cname" \
       --argjson score "$cscore" \
       --argjson correctness "$(awk -v v="$corr" 'BEGIN { printf "%.0f", v * 100 }')" \
-      --argjson spec "$(awk -v v="$spec" 'BEGIN { printf "%.0f", v * 100 }')" \
+      --argjson complexity "$(awk -v v="$cmplx" 'BEGIN { printf "%.0f", v * 100 }')" \
       --argjson codeQuality "$(awk -v v="$cq" 'BEGIN { printf "%.0f", v * 100 }')" \
-      '{name: $name, score: $score, correctness: $correctness, spec: $spec, codeQuality: $codeQuality}')
+      '{name: $name, score: $score, correctness: $correctness, complexity: $complexity, codeQuality: $codeQuality}')
   fi
 
   # Build the entire JSON in a single jq call
@@ -685,16 +693,16 @@ render_coder() {
   else
     local top_line
     top_line=$(head -1 <<<"$coding_scores")
-    local cscore name corr spec cq
-    IFS='|' read -r cscore name corr spec cq <<<"$top_line"
-    local corr_pct spec_pct cq_pct
-    corr_pct=$(awk -v v="$corr" 'BEGIN { printf "%d", v * 100 }')
-    spec_pct=$(awk -v v="$spec" 'BEGIN { printf "%d", v * 100 }')
-    cq_pct=$(awk -v v="$cq" 'BEGIN { printf "%d", v * 100 }')
+    local cscore name corr cmplx cq
+    IFS='|' read -r cscore name corr cmplx cq <<<"$top_line"
+    local corr_pct cmplx_pct cq_pct
+    corr_pct=$(awk -v v="$corr" 'BEGIN { printf "%.0f", v * 100 }')
+    cmplx_pct=$(awk -v v="$cmplx" 'BEGIN { printf "%.0f", v * 100 }')
+    cq_pct=$(awk -v v="$cq" 'BEGIN { printf "%.0f", v * 100 }')
     local name_display
     name_display=$(highlight_model "$name")
     box_row "${GREEN}${SYM_CHECK}${RST} ${name_display} ${BOLD}${cscore}${RST}"
-    box_row "  ${DIM}Correctness ${corr_pct}%  Spec ${spec_pct}%  Quality ${cq_pct}%${RST}"
+    box_row "  ${DIM}Correctness ${corr_pct}%  Complexity ${cmplx_pct}%  Quality ${cq_pct}%${RST}"
   fi
   box_bottom
   printf "\n"
@@ -778,28 +786,38 @@ render_drift() {
   fi
 }
 
+# "1 run" / "N runs"
+runs_label() {
+  if [[ "$1" == "1" ]]; then printf '1 run'; else printf '%s runs' "$1"; fi
+}
+
 render_switch() {
   [[ -z "$TRACK_MODEL" ]] && return
-  local tier_rows
-  tier_rows=$(fetch_tiers "$R_DASHBOARD")
-  local verdict tracked tracked_tier top_tier target target_score target_tier
-  IFS=$'\t' read -r verdict tracked tracked_tier top_tier target target_score target_tier < <(
-    compute_switch_suggestion "$tier_rows" "$TRACK_MODEL"
+  local rows
+  rows=$(fetch_run_levels "$R_DASHBOARD")
+  local verdict tracked tracked_level tracked_n top top_level top_n gap band band_known
+  IFS=$'\t' read -r verdict tracked tracked_level tracked_n top top_level top_n gap band band_known < <(
+    compute_switch_suggestion "$rows" "$TRACK_MODEL"
   )
+  local noise_row="Noise band ±${band}"
+  [[ "$band_known" == "0" ]] && noise_row="Noise band ±0.0 (needs 2+ runs per model)"
   box_top "Switch Suggestion"
   case "$verdict" in
   KEEP)
     box_row "${GREEN}${SYM_CHECK} KEEP${RST}  $(highlight_model "$tracked")"
-    box_row "  ${DIM}Tier ${tracked_tier} matches the top tier${RST}"
+    box_row "  ${DIM}Top ${top} ${top_level} ($(runs_label "$top_n"))${RST}"
+    box_row "  ${DIM}Tracked ${tracked_level} ($(runs_label "$tracked_n")) · gap ${gap}${RST}"
+    box_row "  ${DIM}${noise_row}${RST}"
     ;;
   SWITCH)
     box_row "${YELLOW}${SYM_WARN} SWITCH${RST}  $(highlight_model "$tracked")"
-    box_row "  ${SYM_ARROW} ${BOLD}${target}${RST} ${DIM}(tier ${target_tier}, score ${target_score})${RST}"
-    box_row "  ${DIM}Tracked tier ${tracked_tier} · top tier ${top_tier}${RST}"
+    box_row "  ${SYM_ARROW} ${BOLD}${top}${RST} ${DIM}${top_level} ($(runs_label "$top_n"))${RST}"
+    box_row "  ${DIM}Tracked ${tracked_level} ($(runs_label "$tracked_n")) · gap ${gap}${RST}"
+    box_row "  ${DIM}${noise_row}${RST}"
     ;;
-  UNKNOWN)
-    box_row "${GRAY}? UNKNOWN${RST}  $(highlight_model "$tracked")"
-    box_row "  ${DIM}No tier data for this model${RST}"
+  NO_DATA)
+    box_row "${GRAY}? NO DATA${RST}  $(highlight_model "$tracked")"
+    box_row "  ${DIM}No real code-benchmark runs in the last 24h${RST}"
     ;;
   NOT_FOUND)
     box_row "${RED}${SYM_CROSS} NOT FOUND${RST}  ${TRACK_MODEL}"
@@ -807,7 +825,7 @@ render_switch() {
     ;;
   *)
     box_row "${RED}${SYM_CROSS} UNAVAILABLE${RST}"
-    box_row "  ${DIM}Could not fetch tier data${RST}"
+    box_row "  ${DIM}Could not fetch benchmark runs${RST}"
     ;;
   esac
   box_bottom
@@ -1236,8 +1254,9 @@ main() {
       printf '%s\n' "    picker and switch the tracked/graphed model without restarting."
       printf '\n'
       printf '%s\n' "  ${BOLD}Switch suggestion:${RST}"
-      printf '%s\n' "    With --track, a box at the top says KEEP when the tracked model is in"
-      printf '%s\n' "    the provider's top tier, or SWITCH and names the top-tier model to use."
+      printf '%s\n' "    With --track, a box at the top compares the tracked model's average of"
+      printf '%s\n' "    its real code-benchmark runs (last 24h) with the provider's top model."
+      printf '%s\n' "    KEEP when the gap is inside the measured run-to-run noise, else SWITCH."
       printf '\n'
       printf '%s\n' "  ${BOLD}Environment:${RST}"
       printf '%s\n' "    NO_COLOR=1          Disable colors and box-drawing right borders"
