@@ -649,16 +649,14 @@ setup() {
   [ "$status" -eq 0 ]
   [[ "$output" == *"Switch Suggestion"* ]]
   [[ "$output" == *"KEEP"* ]]
-  [[ "$output" == *"Top claude-opus-5 82.0 (3 runs)"* ]]
-  [[ "$output" == *"Tracked 80.0 (2 runs) · gap 2.0"* ]]
-  [[ "$output" == *"Noise band ±2.8"* ]]
+  [[ "$output" == *"Tied with claude-opus-5 · uncertain"* ]]
 }
 
 @test "switch suggestion: the top model itself keeps with a zero gap" {
   run "$AST" --track=claude-opus-5
   [ "$status" -eq 0 ]
   [[ "$output" == *"KEEP"* ]]
-  [[ "$output" == *"Tracked 82.0 (3 runs) · gap 0.0"* ]]
+  [[ "$output" == *"Top of Claude · confident"* ]]
 }
 
 @test "switch suggestion: a gap beyond the noise band switches to the top model" {
@@ -666,18 +664,18 @@ setup() {
   [ "$status" -eq 0 ]
   [[ "$output" == *"SWITCH"* ]]
   [[ "$output" == *"claude-opus-5"* ]]
-  [[ "$output" == *"82.0 (3 runs)"* ]]
-  [[ "$output" == *"Tracked 71.0 (2 runs) · gap 11.0"* ]]
-  [[ "$output" == *"Noise band ±2.8"* ]]
+  [[ "$output" == *"· confident"* ]]
   [[ "$output" != *"KEEP"* ]]
+  [[ "$output" != *"Noise band"* ]]
+  [[ "$output" != *"runs)"* ]]
 }
 
 @test "switch suggestion: a single-run tracked model still switches when the gap exceeds the band" {
   run "$AST" --track=claude-opus-4-5-20251101
   [ "$status" -eq 0 ]
   [[ "$output" == *"SWITCH"* ]]
-  [[ "$output" == *"Tracked 75.0 (1 run) · gap 7.0"* ]]
-  [[ "$output" == *"Noise band ±3.6"* ]]
+  [[ "$output" == *"claude-opus-5"* ]]
+  [[ "$output" == *"· uncertain"* ]]
 }
 
 @test "switch suggestion: no real runs in the last 24h is NO DATA" {
@@ -719,8 +717,7 @@ setup() {
   run "$AST" --openai --track=gpt-5.2
   [ "$status" -eq 0 ]
   [[ "$output" == *"KEEP"* ]]
-  [[ "$output" == *"Top gpt-5.4 61.0 (2 runs)"* ]]
-  [[ "$output" == *"Noise band ±2.8"* ]]
+  [[ "$output" == *"Tied with gpt-5.4 · confident"* ]]
 }
 
 @test "switch suggestion: NO_COLOR output has no ANSI escapes" {
@@ -778,12 +775,13 @@ setup() {
     compute_switch_suggestion "$rows" "b"
   '
   [ "$status" -eq 0 ]
-  IFS=$'\t' read -r verdict tracked tracked_level tracked_n top top_level top_n gap band band_known <<<"$output"
+  IFS=$'\t' read -r verdict tracked tracked_level tracked_n top top_level top_n gap band band_known strength <<<"$output"
   [ "$verdict" = "KEEP" ]
   [ "$top" = "a" ]
   [ "$gap" = "1.0" ]
   [ "$band" = "2.8" ]
   [ "$band_known" = "1" ]
+  [ "$strength" = "confident" ]
 }
 
 @test "compute_switch_suggestion: single-run models give an unknown zero band and still switch" {
@@ -793,10 +791,25 @@ setup() {
     compute_switch_suggestion "$rows" "b"
   '
   [ "$status" -eq 0 ]
-  IFS=$'\t' read -r verdict tracked tracked_level tracked_n top top_level top_n gap band band_known <<<"$output"
+  IFS=$'\t' read -r verdict tracked tracked_level tracked_n top top_level top_n gap band band_known strength <<<"$output"
   [ "$verdict" = "SWITCH" ]
   [ "$band" = "0.0" ]
   [ "$band_known" = "0" ]
+  [ "$strength" = "uncertain" ]
+}
+
+@test "compute_switch_suggestion: SWITCH is confident when the gap reaches twice the band" {
+  run bash -c '
+    source "'"$AST"'"
+    rows=$(printf "a\t1\t100\t2\t100\t0\nb\t2\t50\t2\t50\t0\n")
+    compute_switch_suggestion "$rows" "b"
+  '
+  [ "$status" -eq 0 ]
+  IFS=$'\t' read -r verdict tracked tracked_level tracked_n top top_level top_n gap band band_known strength <<<"$output"
+  [ "$verdict" = "SWITCH" ]
+  [ "$band" = "0.0" ]
+  [ "$band_known" = "1" ]
+  [ "$strength" = "confident" ]
 }
 
 @test "compute_switch_suggestion: no candidate has any runs is UNAVAILABLE" {

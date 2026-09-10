@@ -320,7 +320,10 @@ fetch_run_levels() {
 
 # Pure decision rule — no network, no globals except its arguments.
 # Rows are name<TAB>id<TAB>currentScore<TAB>n<TAB>mean<TAB>ss.
-# Prints: verdict<TAB>tracked<TAB>tracked_level<TAB>tracked_n<TAB>top<TAB>top_level<TAB>top_n<TAB>gap<TAB>band<TAB>band_known
+# Prints: verdict<TAB>tracked<TAB>tracked_level<TAB>tracked_n<TAB>top<TAB>top_level<TAB>top_n<TAB>gap<TAB>band<TAB>band_known<TAB>strength
+# strength is "confident" or "uncertain": uncertain when the band is unknown;
+# otherwise KEEP is confident when gap <= band/2, SWITCH is confident when
+# gap >= 2*band. Empty for NOT_FOUND/UNAVAILABLE/NO_DATA.
 compute_switch_suggestion() {
   local rows="$1" track_model="$2"
 
@@ -332,7 +335,7 @@ compute_switch_suggestion() {
     }
     END {
       if (tracked_idx == 0) {
-        print "NOT_FOUND\t\t\t\t\t\t\t\t\t"
+        print "NOT_FOUND\t\t\t\t\t\t\t\t\t\t"
         exit
       }
 
@@ -353,12 +356,12 @@ compute_switch_suggestion() {
       }
 
       if (!has_candidate) {
-        print "UNAVAILABLE\t\t\t\t\t\t\t\t\t"
+        print "UNAVAILABLE\t\t\t\t\t\t\t\t\t\t"
         exit
       }
 
       if (n[tracked_idx] + 0 == 0) {
-        printf "NO_DATA\t%s\t\t\t\t\t\t\t\t\n", name[tracked_idx]
+        printf "NO_DATA\t%s\t\t\t\t\t\t\t\t\t\n", name[tracked_idx]
         exit
       }
 
@@ -379,9 +382,17 @@ compute_switch_suggestion() {
 
       verdict = (gap <= band) ? "KEEP" : "SWITCH"
 
-      printf "%s\t%s\t%.1f\t%d\t%s\t%.1f\t%d\t%.1f\t%.1f\t%d\n", \
+      if (!band_known) {
+        strength = "uncertain"
+      } else if (verdict == "KEEP") {
+        strength = (gap <= band / 2) ? "confident" : "uncertain"
+      } else {
+        strength = (gap >= 2 * band) ? "confident" : "uncertain"
+      }
+
+      printf "%s\t%s\t%.1f\t%d\t%s\t%.1f\t%d\t%.1f\t%.1f\t%d\t%s\n", \
         verdict, name[tracked_idx], tracked_level, n[tracked_idx], \
-        name[top_idx], top_level, n[top_idx], gap, band, band_known
+        name[top_idx], top_level, n[top_idx], gap, band, band_known, strength
     }
   ' <<<"$rows"
 }
@@ -786,34 +797,27 @@ render_drift() {
   fi
 }
 
-# "1 run" / "N runs"
-runs_label() {
-  if [[ "$1" == "1" ]]; then printf '1 run'; else printf '%s runs' "$1"; fi
-}
-
 render_switch() {
   [[ -z "$TRACK_MODEL" ]] && return
   local rows
   rows=$(fetch_run_levels "$R_DASHBOARD")
-  local verdict tracked tracked_level tracked_n top top_level top_n gap band band_known
-  IFS=$'\t' read -r verdict tracked tracked_level tracked_n top top_level top_n gap band band_known < <(
+  local verdict tracked top strength
+  IFS=$'\t' read -r verdict tracked _ _ top _ _ _ _ _ strength < <(
     compute_switch_suggestion "$rows" "$TRACK_MODEL"
   )
-  local noise_row="Noise band ±${band}"
-  [[ "$band_known" == "0" ]] && noise_row="Noise band ±0.0 (needs 2+ runs per model)"
   box_top "Switch Suggestion"
   case "$verdict" in
   KEEP)
     box_row "${GREEN}${SYM_CHECK} KEEP${RST}  $(highlight_model "$tracked")"
-    box_row "  ${DIM}Top ${top} ${top_level} ($(runs_label "$top_n"))${RST}"
-    box_row "  ${DIM}Tracked ${tracked_level} ($(runs_label "$tracked_n")) · gap ${gap}${RST}"
-    box_row "  ${DIM}${noise_row}${RST}"
+    if [[ "$tracked" == "$top" ]]; then
+      box_row "  ${DIM}Top of ${PROVIDER_LABEL} · ${strength}${RST}"
+    else
+      box_row "  ${DIM}Tied with ${top} · ${strength}${RST}"
+    fi
     ;;
   SWITCH)
     box_row "${YELLOW}${SYM_WARN} SWITCH${RST}  $(highlight_model "$tracked")"
-    box_row "  ${SYM_ARROW} ${BOLD}${top}${RST} ${DIM}${top_level} ($(runs_label "$top_n"))${RST}"
-    box_row "  ${DIM}Tracked ${tracked_level} ($(runs_label "$tracked_n")) · gap ${gap}${RST}"
-    box_row "  ${DIM}${noise_row}${RST}"
+    box_row "  ${SYM_ARROW} ${BOLD}${top}${RST} ${DIM}· ${strength}${RST}"
     ;;
   NO_DATA)
     box_row "${GRAY}? NO DATA${RST}  $(highlight_model "$tracked")"

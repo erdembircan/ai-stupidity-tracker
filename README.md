@@ -86,14 +86,12 @@ ast --graph=claude-opus-4-6      # start graphing one model...
 
 The verdict is measured, not guessed. For every model of the selected provider, `ast` pulls the real code-benchmark runs of the last 24 hours (`/api/models/<id>/history?period=24h`, hourly suite only, synthetic placeholder rows excluded) and takes their average as the model's *level*. The top model is the one with the highest level. The gap between your model's level and the top level is then compared with the *noise band* — how much scores normally jump from one run to the next, computed from those same runs across all models. Gap inside the band means the two models are not distinguishable on today's data: `KEEP`. Gap beyond the band: `SWITCH`, and the box names the top model.
 
-The rule uses whatever runs exist. With one run per model it compares those single runs; as runs accumulate, the levels and the band become sharper on their own. The box always shows the run counts it worked from.
+The rule uses whatever runs exist. With one run per model it compares those single runs; as runs accumulate, the levels and the band become sharper on their own. Under the verdict the box gives one word for how much to trust it: `confident` when the gap sits well inside the band (KEEP) or well beyond it (SWITCH), `uncertain` when it sits near the edge and the next run could flip the call.
 
 ```
   ╭── Switch Suggestion ────────────────────────────────╮
   │ ⚠ SWITCH  claude-sonnet-4-6                         │
-  │   → claude-opus-5 82.0 (3 runs)                     │
-  │   Tracked 71.0 (2 runs) · gap 11.0                  │
-  │   Noise band ±2.8                                   │
+  │   → claude-opus-5 · confident                       │
   ╰─────────────────────────────────────────────────────╯
 ```
 
