@@ -9,7 +9,7 @@ A CLI tool that tracks AI model performance on [aistupidlevel.info](https://aist
 ## What it shows
 
 - **Global Index** — overall AI health score and trend
-- **Model Rankings** — where all tracked models rank on the leaderboard
+- **Model Rankings** — where all tracked models rank on the leaderboard, with per-refresh movement in watch mode
 - **Recommendations (7d)** — 7-day rolling picks: best for code, most reliable, fastest, best value
 - **Best Coder** — provider's top model for coding, scored from its latest real 9-axis code-benchmark run using the site's published axis weights
 - **Alerts** — active degradations, instability warnings, and models to avoid
@@ -68,6 +68,20 @@ ast --openai --json            # OpenAI data as JSON
 ast --openai --watch           # Live OpenAI dashboard
 ast --openai --section=coder   # OpenAI best coder only
 ```
+
+## Rank movement
+
+In watch mode the Rankings box carries a movement column between the rank and the model name. It compares each model's position against the previous refresh, so you can see at a glance what the last interval did to the leaderboard.
+
+```
+  ╭── Claude Rankings ──────────────────────────────────╮
+  │ #1  ↑3  claude-opus-5              82  ★ EXCELLENT  │
+  │ #2  ↓1  claude-opus-4-8            81  ★ EXCELLENT  │
+  │ #5  ·   claude-sonnet-4-20250514   64  ⚠ VOLATILE   │
+  ╰─────────────────────────────────────────────────────╯
+```
+
+`↑` and `↓` name the rank the model came from — `↑3` means it climbed from #3 to #1. A dim `·` means the model held its position. A blank column means there is nothing to compare against yet: the first frame of a watch session, a model that has just appeared in the rankings, and every one-shot report, since a single report has no previous refresh to measure against.
 
 ## Switching models live
 
