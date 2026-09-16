@@ -955,3 +955,136 @@ setup() {
   echo "$output" | jq empty
   [ "$(echo "$output" | jq -e 'has("switchSuggestion")')" = "false" ]
 }
+
+# ── Rank Movement ──────────────────────────────────
+
+render_ranks() {
+  # $1 = previous-rank JSON map
+  env NO_COLOR=1 bash -c '
+    source "$1"
+    PROVIDER=anthropic
+    PROVIDER_LABEL=Claude
+    MODEL_NAME_PATTERN=claude
+    SECTIONS=rankings
+    render "$(cat "$2")" "$(cat "$3")" "2026-01-01 00:00" "$4"
+  ' _ "$AST" "$DIR/test/fixtures/dashboard.json" "$DIR/test/fixtures/global-index.json" "$1"
+}
+
+@test "rank_change_col is blank when there is no previous rank map" {
+  run bash -c '
+    export NO_COLOR=1
+    source "'"$AST"'"
+    printf "[%s]" "$(rank_change_col 1 claude-opus-5 "")"
+  '
+  [ "$status" -eq 0 ]
+  [ "$output" = "[    ]" ]
+}
+
+@test "rank_change_col is blank when the model is absent from a non-empty prev map" {
+  run bash -c '
+    export NO_COLOR=1
+    source "'"$AST"'"
+    printf "[%s]" "$(rank_change_col 1 claude-opus-5 "{\"claude-opus-4-8\":2}")"
+  '
+  [ "$status" -eq 0 ]
+  [ "$output" = "[    ]" ]
+}
+
+@test "rank_change_col marks an unchanged position with a dim dot" {
+  run bash -c '
+    export NO_COLOR=1
+    source "'"$AST"'"
+    printf "[%s]" "$(rank_change_col 1 claude-opus-5 "{\"claude-opus-5\":1}")"
+  '
+  [ "$status" -eq 0 ]
+  [ "$output" = "[·   ]" ]
+}
+
+@test "rank_change_col shows an up arrow for a single-digit previous rank" {
+  run bash -c '
+    export NO_COLOR=1
+    source "'"$AST"'"
+    printf "[%s]" "$(rank_change_col 1 claude-opus-5 "{\"claude-opus-5\":3}")"
+  '
+  [ "$status" -eq 0 ]
+  [ "$output" = "[↑3  ]" ]
+}
+
+@test "rank_change_col shows a down arrow for a single-digit previous rank" {
+  run bash -c '
+    export NO_COLOR=1
+    source "'"$AST"'"
+    printf "[%s]" "$(rank_change_col 2 claude-opus-4-8 "{\"claude-opus-4-8\":1}")"
+  '
+  [ "$status" -eq 0 ]
+  [ "$output" = "[↓1  ]" ]
+}
+
+@test "rank_change_col shows an up arrow for a two-digit previous rank" {
+  run bash -c '
+    export NO_COLOR=1
+    source "'"$AST"'"
+    printf "[%s]" "$(rank_change_col 9 claude-sonnet-4-5-20250929 "{\"claude-sonnet-4-5-20250929\":13}")"
+  '
+  [ "$status" -eq 0 ]
+  [ "$output" = "[↑13 ]" ]
+}
+
+@test "rank_change_col shows a down arrow for a two-digit previous rank" {
+  run bash -c '
+    export NO_COLOR=1
+    source "'"$AST"'"
+    printf "[%s]" "$(rank_change_col 13 claude-opus-4-1-20250805 "{\"claude-opus-4-1-20250805\":9}")"
+  '
+  [ "$status" -eq 0 ]
+  [ "$output" = "[↓9  ]" ]
+}
+
+@test "rankings render: identical prev map marks unchanged rows with a dot" {
+  prev='{"claude-opus-5":1,"claude-opus-4-8":2,"claude-sonnet-4-20250514":5,"claude-opus-4-5-20251101":6,"claude-sonnet-4-6":7,"claude-sonnet-4-5-20250929":9,"claude-opus-4-6":11,"claude-opus-4-1-20250805":13,"claude-opus-4-7":25}'
+  run render_ranks "$prev"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"│ #1  ·   claude-opus-5"* ]]
+  [[ "$output" == *"│ #11 ·   claude-opus-4-6"* ]]
+}
+
+@test "rankings render: identical prev map has no arrows" {
+  prev='{"claude-opus-5":1,"claude-opus-4-8":2,"claude-sonnet-4-20250514":5,"claude-opus-4-5-20251101":6,"claude-sonnet-4-6":7,"claude-sonnet-4-5-20250929":9,"claude-opus-4-6":11,"claude-opus-4-1-20250805":13,"claude-opus-4-7":25}'
+  run render_ranks "$prev"
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"↑"* ]]
+  [[ "$output" != *"↓"* ]]
+}
+
+@test "rankings render: identical prev map marks the unavailable row too" {
+  prev='{"claude-opus-5":1,"claude-opus-4-8":2,"claude-sonnet-4-20250514":5,"claude-opus-4-5-20251101":6,"claude-sonnet-4-6":7,"claude-sonnet-4-5-20250929":9,"claude-opus-4-6":11,"claude-opus-4-1-20250805":13,"claude-opus-4-7":25}'
+  run render_ranks "$prev"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"│ #25 ·   claude-opus-4-7"* ]]
+}
+
+@test "rankings render: mixed prev map shows arrows and dots together" {
+  prev='{"claude-opus-5":3,"claude-opus-4-8":1,"claude-sonnet-4-20250514":5,"claude-opus-4-5-20251101":6,"claude-sonnet-4-6":7,"claude-sonnet-4-5-20250929":9,"claude-opus-4-6":2,"claude-opus-4-1-20250805":13,"claude-opus-4-7":25}'
+  run render_ranks "$prev"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"│ #1  ↑3  claude-opus-5"* ]]
+  [[ "$output" == *"│ #2  ↓1  claude-opus-4-8"* ]]
+  [[ "$output" == *"│ #11 ↓2  claude-opus-4-6"* ]]
+  [[ "$output" == *"│ #5  ·   claude-sonnet-4-20250514"* ]]
+}
+
+@test "rankings render: empty prev map leaves every row blank" {
+  run render_ranks "{}"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"│ #1      claude-opus-5"* ]]
+  rankings_lines=$(printf '%s\n' "$output" | grep 'claude-')
+  [[ "$rankings_lines" != *"·"* ]]
+}
+
+@test "one-shot rankings output has no movement markers" {
+  run env NO_COLOR=1 "$AST" --section=rankings
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"·"* ]]
+  [[ "$output" != *"↑"* ]]
+  [[ "$output" != *"↓"* ]]
+}

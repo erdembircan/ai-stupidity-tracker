@@ -61,6 +61,7 @@ readonly SYM_BULLET='•'
 readonly SYM_UP='↑'
 readonly SYM_DOWN='↓'
 readonly SYM_POINTER='▸'
+readonly SYM_STABLE='·'
 
 # ── Box Drawing Helpers ─────────────────────────────
 # Right border column (2 indent + BOX_WIDTH)
@@ -650,6 +651,41 @@ render_global() {
   printf "\n"
 }
 
+# ── Rank Change Column ─────────────────────────────
+# Emits the movement cell for one ranking row, always 4 visible columns
+# wide so the name column stays aligned. Three states: a model with no
+# previous rank — the first watch frame, or a model that just appeared —
+# gets a blank cell; a model that held its position gets a dim dot; a
+# model that moved gets an arrow and the rank it moved from. One-shot
+# runs have no previous data at all, so every cell is blank there.
+rank_change_col() {
+  local rank="$1" name="$2" prev_ranks="${3:-}"
+  local blank='    '
+  if [[ -z "$prev_ranks" ]]; then
+    printf '%s' "$blank"
+    return
+  fi
+  local prev_rank
+  prev_rank=$(printf '%s\n' "$prev_ranks" | jq -r --arg n "$name" '.[$n] // empty')
+  if [[ -z "$prev_rank" ]]; then
+    printf '%s' "$blank"
+    return
+  fi
+  if ((prev_rank == rank)); then
+    printf '%s' "${GRAY}${SYM_STABLE}${RST}   "
+    return
+  fi
+  local arrow_text
+  if ((rank < prev_rank)); then
+    arrow_text="${GREEN}${SYM_UP}${prev_rank}${RST}"
+  else
+    arrow_text="${RED}${SYM_DOWN}${prev_rank}${RST}"
+  fi
+  local pad=$((4 - 1 - ${#prev_rank}))
+  ((pad < 0)) && pad=0
+  printf '%s%*s' "$arrow_text" "$pad" ''
+}
+
 render_rankings() {
   box_top "${PROVIDER_LABEL} Rankings"
   if ((R_MODEL_COUNT == 0)); then
@@ -660,12 +696,14 @@ render_rankings() {
       rank_str=$(printf '#%-2s' "$rank")
       local name_display
       name_display=$(highlight_model "$name")
+      local change_col
+      change_col=$(rank_change_col "$rank" "$name" "${R_PREV_RANKS:-}")
 
       if [[ "$status" == "unavailable" ]]; then
         local pad_len=$((R_MAX_NAME_LEN - ${#name}))
         local pad_str
         pad_str=$(printf '%*s' "$pad_len" '')
-        box_row "${BOLD}${WHITE}${rank_str}${RST}     ${name_display}${pad_str} ${GRAY}${SYM_CROSS}   ${SYM_CROSS} UNAVAILABLE${RST}"
+        box_row "${BOLD}${WHITE}${rank_str}${RST} ${change_col}${name_display}${pad_str} ${GRAY}${SYM_CROSS}   ${SYM_CROSS} UNAVAILABLE${RST}"
         continue
       fi
 
@@ -673,22 +711,6 @@ render_rankings() {
       sc=$(status_color "$status")
       local sl
       sl=$(status_label "$status")
-      local change_col="    "
-      if [[ -n "$R_PREV_RANKS" ]]; then
-        local prev_rank
-        prev_rank=$(printf '%s\n' "$R_PREV_RANKS" | jq -r --arg n "$name" '.[$n] // empty')
-        if [[ -n "$prev_rank" ]] && ((prev_rank != rank)); then
-          local arrow_text
-          if ((rank < prev_rank)); then
-            arrow_text="${GREEN}${SYM_UP}${prev_rank}${RST}"
-          else
-            arrow_text="${RED}${SYM_DOWN}${prev_rank}${RST}"
-          fi
-          local visible_len=$((1 + ${#prev_rank}))
-          local pad=$((4 - visible_len))
-          change_col="${arrow_text}$(printf '%*s' "$pad" '')"
-        fi
-      fi
       local score_str
       score_str=$(printf '%-3s' "$score")
       local sym

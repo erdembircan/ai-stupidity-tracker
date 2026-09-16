@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- The Rankings movement column now marks a model that held its position with a dim `·` instead of leaving the cell blank. Blank is now reserved for rows with nothing to compare against — the first frame of a watch session, a model that has just entered the rankings, and one-shot reports. Rows for `unavailable` models take part in the column too, which they previously did not
+
 ## [1.6.0] - 2026-09-10
 
 ### Changed
