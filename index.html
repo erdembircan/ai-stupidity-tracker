@@ -381,7 +381,7 @@
       <tr>
         <td>stable</td>
         <td class="check">✅</td>
-        <!-- auto-updated by CI --> <td>1.6.0</td>
+        <!-- auto-updated by CI --> <td>1.7.0</td>
       </tr>
       <tr>
         <td>head</td>
@@ -413,17 +413,10 @@
          it, and never remove the markers. -->
     <!-- CHANGELOG:START -->
     <section class="changelog">
-      <p class="section-label">What's new in v1.6.0 <span class="changelog-date">2026-09-10</span></p>
-      <h3 class="changelog-kind">Changed</h3>
+      <p class="section-label">What's new in v1.7.0 <span class="changelog-date">2026-09-17</span></p>
+      <h3 class="changelog-kind">Added</h3>
       <ul class="changelog-list">
-        <li><code>Switch Suggestion</code> no longer reads a tier from the API. It now measures: for every model of the provider it takes the real code-benchmark runs of the last 24 hours, uses their average as the model's level, and compares the gap to the top model's level against the run-to-run noise measured from those same runs. Gap inside the noise band is <code>KEEP</code>, beyond it is <code>SWITCH</code>. The box shows the verdict, the model it was measured against, and one word — <code>confident</code> or <code>uncertain</code> — for how close the gap sits to the noise edge. <code>UNKNOWN</code> is replaced by <code>NO DATA</code> (no real run in the last 24 hours)</li>
-        <li><code>Best Coder</code> and <code>Switch Suggestion</code> now read the per-model history endpoint (<code>/api/models/&lt;id&gt;/history?period=24h</code>) and skip rows the site marks as synthetic placeholders; the old <code>/dashboard/history</code> fetch is gone</li>
-        <li><code>Switch Suggestion</code> also reads the site's drift detector (<code>/api/drift/batch</code>): a tracked model under a <code>DEGRADATION</code> or <code>CRITICAL</code> alert is told to <code>SWITCH</code> regardless of the gap, alerted models are never offered as the target, and a <code>WARNING</code> on a kept model shows as <code>drift warning</code></li>
-      </ul>
-      <h3 class="changelog-kind">Fixed</h3>
-      <ul class="changelog-list">
-        <li>The site switched from placeholder data to real benchmark runs on 2026-09-10, and real runs carry the nine documented axes again. <code>Best Coder</code> read the seven placeholder axes and found nothing, showing "Could not calculate coding scores"; it now reads the nine axes (<code>correctness</code>, <code>complexity</code>, <code>codeQuality</code>, <code>efficiency</code>, <code>stability</code>, <code>edgeCases</code>, <code>debugging</code>, <code>format</code>, <code>safety</code>) with the published weights 40/20/15/10/5/3/3/2/2. The breakdown row is <code>Correctness</code>, <code>Complexity</code>, <code>Quality</code>; in <code>--json</code>, <code>bestCoder.spec</code> is replaced by <code>bestCoder.complexity</code></li>
-        <li><code>Switch Suggestion</code> showed <code>UNAVAILABLE</code> for every model because the tier it parsed only ever existed in the placeholder data</li>
+        <li>The Rankings movement column now marks a model that held its position with a dim <code>·</code> instead of leaving the cell blank. Blank is now reserved for rows with nothing to compare against — the first frame of a watch session, a model that has just entered the rankings, and one-shot reports. Rows for <code>unavailable</code> models take part in the column too, which they previously did not</li>
       </ul>
       <p class="changelog-more"><a href="https://github.com/erdembircan/ai-stupidity-tracker/blob/master/CHANGELOG.md">Full changelog</a></p>
     </section>
